@@ -72,7 +72,8 @@ def build_leads(db_path: Path, as_of: date, min_value: float = 100_000) -> pd.Da
     con.close()
     df["situs_line"] = df["situs_line"].str.replace(r"\s+", " ", regex=True).str.strip()
     # mailing == situs (line 1, or line 2 when line 1 is a c/o) and zip5 match
-    m1 = df["owner_addr1"].map(norm_addr); m2 = df["owner_addr2"].map(norm_addr); s = df["situs_line"].map(norm_addr)
+    m1 = df["owner_addr1"].map(norm_addr); m2 = df["owner_addr2"].map(norm_addr)
+    s = (df["situs_line"] + df["situs_unit"].fillna("").map(lambda u: f" UNIT {u}" if u else "")).map(norm_addr)
     zip_ok = df["owner_zip"].fillna("").str[:5] == df["situs_zip"].fillna("").str[:5]
     df["mail_eq_situs"] = ((m1 == s) | (m2 == s)) & zip_ok & (s != "")
     df["po_box"] = df["owner_addr1"].fillna("").str.upper().str.contains(r"P\.?\s*O\.?\s*BOX|PO BOX", regex=True)
