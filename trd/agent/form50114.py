@@ -50,7 +50,7 @@ def form_values(claim: dict, ex: dict, over65: bool, signed_on: date, dl_number:
         "Property OwnerAuthorized Representative Name": name,
         "TitleAuthorization": "Property Owner",
         "Date 1": _mdy(signed_on),
-        "Additional Information": f"Late application under Tax Code §11.431 for tax years {', '.join(map(str, years[:-1]))}. Prepared with Austin Refund Desk; applicant signed electronically.",
+        "Additional Information": f"Late application under Tax Code §11.431 for tax years {', '.join(map(str, years[:-1]))}. Prepared with Texas Refund Desk; applicant signed electronically.",
     }
     if cust.get("prev_homestead_address"):
         text["Previous County"] = cust.get("prev_homestead_county") or ""
@@ -105,7 +105,7 @@ def fill_50114(claim: dict, ex: dict, over65: bool = False, signed_on: date | No
     line("The applicant consented to sign electronically (ESIGN; Tex. Bus. & Com. Code ch. 322) and typed their name as their signature on this application.", False, 9)
     line("A copy of the applicant's Texas driver's license/ID accompanies this application (Tax Code §11.43(j)).", False, 9)
     y -= 6; line("PREPARER", True)
-    line("Prepared by Austin Refund Desk (a private company; not affiliated with any government agency) at the applicant's direction.", False, 9)
+    line("Prepared by Texas Refund Desk (a private company; not affiliated with any government agency) at the applicant's direction.", False, 9)
     line(f"Generated {datetime.utcnow().isoformat(timespec='seconds')}Z", False, 8)
     c.showPage(); c.save(); audit.seek(0)
     writer.append(PdfReader(audit))

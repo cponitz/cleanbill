@@ -72,12 +72,12 @@ Deno.serve(async (req: Request) => {
   // 2. submit through the real claim endpoint
   const fd = new FormData();
   fd.set("c", TEST_CODE); fd.set("owned_jan1", "yes"); fd.set("primary", "yes"); fd.set("other_hs", "no");
-  fd.set("full_name", "Richard L Garcia"); fd.set("email", "selftest@example.com"); fd.set("phone", "");
+  fd.set("full_name", "Richard L Garcia"); fd.set("email", "selftest@example.com"); fd.set("phone", ""); fd.set("household", "single"); fd.set("prev_homestead", "no");
   fd.set("agree_terms", "on"); fd.set("agree_esign", "on"); fd.set("agree_free", "on"); fd.set("signature_name", "Richard L Garcia");
   const pdfBytes = await syntheticIdPdf();
   fd.set("dl_front", new File([pdfBytes.slice().buffer as ArrayBuffer], "front.pdf", { type: "application/pdf" }));
   const res = await fetch(`${base}/functions/v1/claim`, { method: "POST", body: fd, headers: { "x-forwarded-for": "203.0.113.7", "user-agent": "selftest" } });
-  const claimHtml = await res.text();
+  const claimJson = await res.json().catch(() => ({ ok: false })) as { ok?: boolean; errors?: string[] };
 
   // 3. wait for process-claim (kicked in the background by the claim page) — poll up to ~45 s
   let cust: Record<string, unknown> | null = null;
@@ -95,7 +95,7 @@ Deno.serve(async (req: Request) => {
   const expected = scenario === "mismatch" ? "needs_dl_update" : "ready_to_submit";
   return Response.json({
     scenario, expected_status: expected, pass: cust?.status === expected,
-    claim_http: res.status, claim_page_ok: claimHtml.includes("we have everything"), elapsed_ms: Date.now() - t0,
+    claim_http: res.status, claim_api_ok: claimJson.ok === true, claim_errors: claimJson.errors ?? null, elapsed_ms: Date.now() - t0,
     customer: cust && { status: cust.status, status_reason: cust.status_reason, signature_ip: cust.signature_ip },
     documents: docs, filings, messages: msgs, audit,
   }, { headers: { "cache-control": "no-store" } });
