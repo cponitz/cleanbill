@@ -1,0 +1,25 @@
+[project]
+name = "texas-refund-desk"
+version = "0.1.0"
+description = "Texas Refund Desk — finds Austin homeowners owed retroactive property-tax refunds and prepares their exemption filings."
+requires-python = ">=3.11"
+dependencies = [
+  "duckdb>=1.0",
+  "pandas>=2.2",
+  "anthropic>=0.40",
+  "reportlab>=4.0",
+  "qrcode[pil]>=7.4",
+  "pillow>=10",
+  "pypdf>=3.17",
+  "rapidfuzz>=3.0",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["trd*"]
