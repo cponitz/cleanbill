@@ -1,0 +1,154 @@
+{
+ "APPRAISAL_INFO": [
+  {
+   "name": "prop_id",
+   "start": 1,
+   "length": 12,
+   "type": "int"
+  },
+  {
+   "name": "prop_type_cd",
+   "start": 13,
+   "length": 5,
+   "type": "str"
+  },
+  {
+   "name": "py_owner_name",
+   "start": 18,
+   "length": 70,
+   "type": "str"
+  },
+  {
+   "name": "py_addr_line1",
+   "start": 88,
+   "length": 60,
+   "type": "str"
+  },
+  {
+   "name": "py_addr_line2",
+   "start": 148,
+   "length": 60,
+   "type": "str"
+  },
+  {
+   "name": "py_addr_city",
+   "start": 208,
+   "length": 50,
+   "type": "str"
+  },
+  {
+   "name": "py_addr_state",
+   "start": 258,
+   "length": 50,
+   "type": "str"
+  },
+  {
+   "name": "py_addr_zip",
+   "start": 308,
+   "length": 5,
+   "type": "str"
+  },
+  {
+   "name": "py_address_suppress_flag",
+   "start": 313,
+   "length": 1,
+   "type": "bool"
+  },
+  {
+   "name": "py_confidential_flag",
+   "start": 314,
+   "length": 1,
+   "type": "bool"
+  },
+  {
+   "name": "situs_num",
+   "start": 315,
+   "length": 15,
+   "type": "str"
+  },
+  {
+   "name": "situs_street_prefx",
+   "start": 330,
+   "length": 10,
+   "type": "str"
+  },
+  {
+   "name": "situs_street",
+   "start": 340,
+   "length": 50,
+   "type": "str"
+  },
+  {
+   "name": "situs_street_sufix",
+   "start": 390,
+   "length": 10,
+   "type": "str"
+  },
+  {
+   "name": "situs_unit",
+   "start": 400,
+   "length": 5,
+   "type": "str"
+  },
+  {
+   "name": "situs_city",
+   "start": 405,
+   "length": 30,
+   "type": "str"
+  },
+  {
+   "name": "situs_zip",
+   "start": 435,
+   "length": 10,
+   "type": "str"
+  },
+  {
+   "name": "imprv_state_cd",
+   "start": 445,
+   "length": 5,
+   "type": "str"
+  },
+  {
+   "name": "appraised_val",
+   "start": 450,
+   "length": 15,
+   "type": "num"
+  },
+  {
+   "name": "market_value",
+   "start": 465,
+   "length": 15,
+   "type": "num"
+  },
+  {
+   "name": "deed_dt",
+   "start": 480,
+   "length": 10,
+   "type": "date"
+  },
+  {
+   "name": "hs_exempt",
+   "start": 490,
+   "length": 1,
+   "type": "bool"
+  },
+  {
+   "name": "ov65_exempt",
+   "start": 491,
+   "length": 1,
+   "type": "bool"
+  },
+  {
+   "name": "dp_exempt",
+   "start": 492,
+   "length": 1,
+   "type": "bool"
+  },
+  {
+   "name": "dvhs_exempt",
+   "start": 493,
+   "length": 1,
+   "type": "bool"
+  }
+ ]
+}

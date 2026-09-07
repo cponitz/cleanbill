@@ -1,0 +1,34 @@
+name: claims-agent (shadow mode)
+# Runs the claims agent over open claims every 30 minutes. Drafts only; a human approves in /ops.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      customer:
+        description: "Run for one customer id (optional)"
+        required: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e . && pip install pytest
+      - run: python -m pytest -q
+      - name: run agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "${{ github.event.inputs.customer }}" ]; then
+            python -m trd.agent.run --store supabase --customer "${{ github.event.inputs.customer }}"
+          else
+            python -m trd.agent.run --store supabase --statuses submitted,needs_dl_update,needs_review
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: agent-trace, path: data/out/agent_run.json, if-no-files-found: ignore }
