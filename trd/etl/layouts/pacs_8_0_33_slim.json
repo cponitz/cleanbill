@@ -1,0 +1,341 @@
+{
+ "APPRAISAL_INFO": [
+  {
+   "name": "prop_id",
+   "start": 1,
+   "length": 12,
+   "type": "int",
+   "orig_start": 1
+  },
+  {
+   "name": "prop_type_cd",
+   "start": 13,
+   "length": 5,
+   "type": "str",
+   "orig_start": 13
+  },
+  {
+   "name": "prop_val_yr",
+   "start": 18,
+   "length": 5,
+   "type": "num",
+   "orig_start": 18
+  },
+  {
+   "name": "sup_num",
+   "start": 23,
+   "length": 12,
+   "type": "int",
+   "orig_start": 23
+  },
+  {
+   "name": "geo_id",
+   "start": 35,
+   "length": 50,
+   "type": "str",
+   "orig_start": 547
+  },
+  {
+   "name": "py_owner_name",
+   "start": 85,
+   "length": 70,
+   "type": "str",
+   "orig_start": 609
+  },
+  {
+   "name": "udi_group",
+   "start": 155,
+   "length": 12,
+   "type": "int",
+   "orig_start": 680
+  },
+  {
+   "name": "py_addr_line1",
+   "start": 167,
+   "length": 60,
+   "type": "str",
+   "orig_start": 694
+  },
+  {
+   "name": "py_addr_line2",
+   "start": 227,
+   "length": 60,
+   "type": "str",
+   "orig_start": 754
+  },
+  {
+   "name": "py_addr_line3",
+   "start": 287,
+   "length": 60,
+   "type": "str",
+   "orig_start": 814
+  },
+  {
+   "name": "py_addr_city",
+   "start": 347,
+   "length": 50,
+   "type": "str",
+   "orig_start": 874
+  },
+  {
+   "name": "py_addr_state",
+   "start": 397,
+   "length": 50,
+   "type": "str",
+   "orig_start": 924
+  },
+  {
+   "name": "py_addr_zip",
+   "start": 447,
+   "length": 5,
+   "type": "str",
+   "orig_start": 979
+  },
+  {
+   "name": "py_confidential_flag",
+   "start": 452,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 990
+  },
+  {
+   "name": "py_address_suppress_flag",
+   "start": 453,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 991
+  },
+  {
+   "name": "py_addr_ml_deliverable",
+   "start": 454,
+   "length": 1,
+   "type": "str",
+   "orig_start": 1012
+  },
+  {
+   "name": "situs_street_prefx",
+   "start": 455,
+   "length": 10,
+   "type": "str",
+   "orig_start": 1040
+  },
+  {
+   "name": "situs_street",
+   "start": 465,
+   "length": 50,
+   "type": "str",
+   "orig_start": 1050
+  },
+  {
+   "name": "situs_street_suffix",
+   "start": 515,
+   "length": 10,
+   "type": "str",
+   "orig_start": 1100
+  },
+  {
+   "name": "situs_city",
+   "start": 525,
+   "length": 30,
+   "type": "str",
+   "orig_start": 1110
+  },
+  {
+   "name": "situs_zip",
+   "start": 555,
+   "length": 10,
+   "type": "str",
+   "orig_start": 1140
+  },
+  {
+   "name": "legal_desc",
+   "start": 565,
+   "length": 255,
+   "type": "str",
+   "orig_start": 1150
+  },
+  {
+   "name": "appraised_val",
+   "start": 820,
+   "length": 15,
+   "type": "num",
+   "orig_start": 1916
+  },
+  {
+   "name": "ten_percent_cap",
+   "start": 835,
+   "length": 15,
+   "type": "num",
+   "orig_start": 1931
+  },
+  {
+   "name": "assessed_val",
+   "start": 850,
+   "length": 15,
+   "type": "num",
+   "orig_start": 1946
+  },
+  {
+   "name": "deed_book_id",
+   "start": 865,
+   "length": 20,
+   "type": "str",
+   "orig_start": 1994
+  },
+  {
+   "name": "deed_book_page",
+   "start": 885,
+   "length": 20,
+   "type": "str",
+   "orig_start": 2014
+  },
+  {
+   "name": "deed_dt",
+   "start": 905,
+   "length": 25,
+   "type": "date",
+   "orig_start": 2034,
+   "format": "%m-%d-%Y"
+  },
+  {
+   "name": "jan1_owner_name",
+   "start": 930,
+   "length": 70,
+   "type": "str",
+   "orig_start": 2203
+  },
+  {
+   "name": "jan1_addr_line1",
+   "start": 1000,
+   "length": 60,
+   "type": "str",
+   "orig_start": 2273
+  },
+  {
+   "name": "jan1_addr_city",
+   "start": 1060,
+   "length": 50,
+   "type": "str",
+   "orig_start": 2453
+  },
+  {
+   "name": "jan1_addr_state",
+   "start": 1110,
+   "length": 50,
+   "type": "str",
+   "orig_start": 2503
+  },
+  {
+   "name": "jan1_addr_zip",
+   "start": 1160,
+   "length": 5,
+   "type": "str",
+   "orig_start": 2558
+  },
+  {
+   "name": "hs_exempt",
+   "start": 1165,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2609
+  },
+  {
+   "name": "ov65_exempt",
+   "start": 1166,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2610
+  },
+  {
+   "name": "ov65s_exempt",
+   "start": 1167,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2661
+  },
+  {
+   "name": "dp_exempt",
+   "start": 1168,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2662
+  },
+  {
+   "name": "dv1_exempt",
+   "start": 1169,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2663
+  },
+  {
+   "name": "dv2_exempt",
+   "start": 1170,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2665
+  },
+  {
+   "name": "dv3_exempt",
+   "start": 1171,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2667
+  },
+  {
+   "name": "dv4_exempt",
+   "start": 1172,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2669
+  },
+  {
+   "name": "ex_exempt",
+   "start": 1173,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 2671
+  },
+  {
+   "name": "imprv_state_cd",
+   "start": 1174,
+   "length": 10,
+   "type": "str",
+   "orig_start": 2732
+  },
+  {
+   "name": "land_state_cd",
+   "start": 1184,
+   "length": 10,
+   "type": "str",
+   "orig_start": 2742
+  },
+  {
+   "name": "market_value",
+   "start": 1194,
+   "length": 14,
+   "type": "num",
+   "orig_start": 4214
+  },
+  {
+   "name": "situs_num",
+   "start": 1208,
+   "length": 15,
+   "type": "str",
+   "orig_start": 4460
+  },
+  {
+   "name": "situs_unit",
+   "start": 1223,
+   "length": 5,
+   "type": "str",
+   "orig_start": 4475
+  },
+  {
+   "name": "dvhs_exempt",
+   "start": 1228,
+   "length": 1,
+   "type": "bool",
+   "orig_start": 5463
+  }
+ ]
+}

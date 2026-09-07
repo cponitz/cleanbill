@@ -37,10 +37,31 @@ def read_fwf_spec(fobj, spec: list[dict], chunksize: int = 200_000):
         yield chunk
 
 
-def load_export(export_zip: Path, layout: dict, db_path: Path, tables: list[str] | None = None) -> dict[str, int]:
+def _load_stream(con, table: str, spec: list[dict], text) -> int:
+    con.execute(f"drop table if exists {table.lower()}")
+    first = True
+    for chunk in read_fwf_spec(text, spec):
+        con.register("chunk_df", chunk)
+        con.execute(f"create table {table.lower()} as select * from chunk_df" if first else f"insert into {table.lower()} select * from chunk_df")
+        con.unregister("chunk_df"); first = False
+    n = con.execute(f"select count(*) from {table.lower()}").fetchone()[0]
+    print(f"{table}: {n:,} rows")
+    return n
+
+
+def load_export(export: Path, layout: dict, db_path: Path, tables: list[str] | None = None) -> dict[str, int]:
+    """`export` may be TCAD's zip, or a single fixed-width .txt/.gz already cut to a slim layout (one table)."""
+    import gzip
     con = duckdb.connect(str(db_path))
     counts: dict[str, int] = {}
-    with zipfile.ZipFile(export_zip) as z:
+    export = Path(export)
+    if export.suffix.lower() in (".txt", ".gz"):
+        table = (tables or list(layout))[0]
+        opener = gzip.open if export.suffix.lower() == ".gz" else open
+        with opener(export, "rt", encoding="latin-1", errors="replace") as text:
+            counts[table] = _load_stream(con, table, layout[table], text)
+        con.close(); return counts
+    with zipfile.ZipFile(export) as z:
         members = {Path(n).name.upper(): n for n in z.namelist()}
         for table, spec in layout.items():
             if tables and table not in tables:
@@ -48,18 +69,8 @@ def load_export(export_zip: Path, layout: dict, db_path: Path, tables: list[str]
             fname = next((m for m in members if m.startswith(table.upper()) and m.endswith(".TXT")), None)
             if not fname:
                 print(f"skip {table}: no file"); continue
-            con.execute(f"drop table if exists {table.lower()}")
-            first = True
             with z.open(members[fname]) as raw:
-                text = io.TextIOWrapper(raw, encoding="latin-1", errors="replace")
-                for chunk in read_fwf_spec(text, spec):
-                    if first:
-                        con.register("chunk_df", chunk); con.execute(f"create table {table.lower()} as select * from chunk_df"); first = False
-                    else:
-                        con.register("chunk_df", chunk); con.execute(f"insert into {table.lower()} select * from chunk_df")
-                    con.unregister("chunk_df")
-            counts[table] = con.execute(f"select count(*) from {table.lower()}").fetchone()[0]
-            print(f"{table}: {counts[table]:,} rows")
+                counts[table] = _load_stream(con, table, spec, io.TextIOWrapper(raw, encoding="latin-1", errors="replace"))
     con.close()
     return counts
 

@@ -1,0 +1,4948 @@
+{
+"APPRAISAL_INFO": [
+{
+"name": "prop_id",
+"dtype": "int(12)",
+"start": 1,
+"length": 12,
+"desc": "Property ID"
+},
+{
+"name": "prop_type_cd",
+"dtype": "char(5)",
+"start": 13,
+"length": 5,
+"desc": "Property Type Code:\nR = Real\nP = Business Personal Property\nM = Mobile Home\nMN = Mineral\nA = Automobiles"
+},
+{
+"name": "prop_val_yr",
+"dtype": "numeric(5)",
+"start": 18,
+"length": 5,
+"desc": "Appraisal or Tax Year"
+},
+{
+"name": "sup_num",
+"dtype": "int(12)",
+"start": 23,
+"length": 12,
+"desc": "Supplement Version Number - 0 = represents certified data, supplemental data otherwise"
+},
+{
+"name": "sup_action",
+"dtype": "char(2)",
+"start": 35,
+"length": 2,
+"desc": "Supplemental Action - If sup_num > 0, indicates the action to be taken on the property:\n'A' - Add\n'M' - Modify\n'D' - Delete"
+},
+{
+"name": "sup_cd",
+"dtype": "char(10)",
+"start": 37,
+"length": 10,
+"desc": "Supplement Change Code - User defined"
+},
+{
+"name": "sup_desc",
+"dtype": "char(500)",
+"start": 47,
+"length": 500,
+"desc": "Supplement Change Description"
+},
+{
+"name": "geo_id",
+"dtype": "char(50)",
+"start": 547,
+"length": 50,
+"desc": "Geographic ID"
+},
+{
+"name": "py_owner_id",
+"dtype": "int(12)",
+"start": 597,
+"length": 12,
+"desc": "Property Year Owner ID \u2013 TP Internal ID"
+},
+{
+"name": "py_owner_name",
+"dtype": "char(70)",
+"start": 609,
+"length": 70,
+"desc": "Property Year Owner Name"
+},
+{
+"name": "partial_owner",
+"dtype": "char(1)",
+"start": 679,
+"length": 1,
+"desc": "Partial Owner ('T' or 'F')\nThis indicates if there are other owners for this property.  The additional owners will appear as separate records in this layout."
+},
+{
+"name": "udi_group",
+"dtype": "int(12)",
+"start": 680,
+"length": 12,
+"desc": "This field indicates the UDI group that a partial owner is part of.  This is used to group multi owner properties."
+},
+{
+"name": "filler",
+"dtype": "char(2)",
+"start": 692,
+"length": 2,
+"desc": "Not In Use"
+},
+{
+"name": "py_addr_line1",
+"dtype": "char(60)",
+"start": 694,
+"length": 60,
+"desc": "Property Year Owner Address Line 1"
+},
+{
+"name": "py_addr_line2",
+"dtype": "char(60)",
+"start": 754,
+"length": 60,
+"desc": "Property Year Owner Address Line 2"
+},
+{
+"name": "py_addr_line3",
+"dtype": "char(60)",
+"start": 814,
+"length": 60,
+"desc": "Property Year Owner Address Line 3"
+},
+{
+"name": "py_addr_city",
+"dtype": "char(50)",
+"start": 874,
+"length": 50,
+"desc": "Property Year Owner Address City"
+},
+{
+"name": "py_addr_state",
+"dtype": "char(50)",
+"start": 924,
+"length": 50,
+"desc": "Property Year Owner Address State"
+},
+{
+"name": "py_addr_country",
+"dtype": "char(5)",
+"start": 974,
+"length": 5,
+"desc": "Property Year Owner Address Country"
+},
+{
+"name": "py_addr_zip",
+"dtype": "char(5)",
+"start": 979,
+"length": 5,
+"desc": "Property Year Owner Address Zip (Zip Only)"
+},
+{
+"name": "py_addr_zip_cass",
+"dtype": "char(4)",
+"start": 984,
+"length": 4,
+"desc": "Property Year Owner Address Zip Cass (Cass Only)"
+},
+{
+"name": "py_addr_zip_rt",
+"dtype": "char(2)",
+"start": 988,
+"length": 2,
+"desc": "Property Year Owner Address Zip Route (Route Only)"
+},
+{
+"name": "py_confidential_flag",
+"dtype": "char(1)",
+"start": 990,
+"length": 1,
+"desc": "Property Year Owner Confidential Flag ('T' or 'F')"
+},
+{
+"name": "py_address_suppress_flag",
+"dtype": "char(1)",
+"start": 991,
+"length": 1,
+"desc": "Property Year Owner \nAddress Suppression Flag ('T' or 'F')"
+},
+{
+"name": "filler",
+"dtype": "char(20)",
+"start": 992,
+"length": 20,
+"desc": "Not In Use"
+},
+{
+"name": "py_addr_ml_deliverable",
+"dtype": "char(1)",
+"start": 1012,
+"length": 1,
+"desc": "Property Year Owner Address\nY = deliverable address\nN = undeliverable address"
+},
+{
+"name": "filler",
+"dtype": "char(27)",
+"start": 1013,
+"length": 27,
+"desc": "Not In Use"
+},
+{
+"name": "situs_street_prefx",
+"dtype": "char(10)",
+"start": 1040,
+"length": 10,
+"desc": "Situs/Location Street Prefix"
+},
+{
+"name": "situs_street",
+"dtype": "char(50)",
+"start": 1050,
+"length": 50,
+"desc": "Situs/Location Street"
+},
+{
+"name": "situs_street_suffix",
+"dtype": "char(10)",
+"start": 1100,
+"length": 10,
+"desc": "Situs/Location Street Suffix"
+},
+{
+"name": "situs_city",
+"dtype": "char(30)",
+"start": 1110,
+"length": 30,
+"desc": "Situs/Location City"
+},
+{
+"name": "situs_zip",
+"dtype": "char(10)",
+"start": 1140,
+"length": 10,
+"desc": "Situs/Location Zip"
+},
+{
+"name": "legal_desc",
+"dtype": "char(255)",
+"start": 1150,
+"length": 255,
+"desc": "Legal Description"
+},
+{
+"name": "legal_desc2",
+"dtype": "char(255)",
+"start": 1405,
+"length": 255,
+"desc": "Additional Legal Description"
+},
+{
+"name": "legal_acreage",
+"dtype": "numeric(16)",
+"start": 1660,
+"length": 16,
+"desc": "Legal Acreage (4 Decimals)"
+},
+{
+"name": "abs_subdv_cd",
+"dtype": "char(10)",
+"start": 1676,
+"length": 10,
+"desc": "Abstract/Subdivision code"
+},
+{
+"name": "hood_cd",
+"dtype": "char(10)",
+"start": 1686,
+"length": 10,
+"desc": "Neighborhood code"
+},
+{
+"name": "block",
+"dtype": "char(50)",
+"start": 1696,
+"length": 50,
+"desc": "Block"
+},
+{
+"name": "tract_or_lot",
+"dtype": "char(50)",
+"start": 1746,
+"length": 50,
+"desc": "Tract/lot"
+},
+{
+"name": "land_hstd_val",
+"dtype": "numeric(15)",
+"start": 1796,
+"length": 15,
+"desc": "Land Homestead Value"
+},
+{
+"name": "land_non_hstd_val",
+"dtype": "numeric(15)",
+"start": 1811,
+"length": 15,
+"desc": "Land Non-Homestead Value"
+},
+{
+"name": "imprv_hstd_val",
+"dtype": "numeric(15)",
+"start": 1826,
+"length": 15,
+"desc": "Improvement Homestead Value"
+},
+{
+"name": "imprv_non_hstd_val",
+"dtype": "numeric(15)",
+"start": 1841,
+"length": 15,
+"desc": "Improvement Non-Homestead value"
+},
+{
+"name": "ag_use_val",
+"dtype": "numeric(15)",
+"start": 1856,
+"length": 15,
+"desc": "Agriculture Use Value"
+},
+{
+"name": "ag_market",
+"dtype": "numeric(15)",
+"start": 1871,
+"length": 15,
+"desc": "Agriculture Market Value"
+},
+{
+"name": "timber_use",
+"dtype": "numeric(15)",
+"start": 1886,
+"length": 15,
+"desc": "Timber Use Value"
+},
+{
+"name": "timber_market",
+"dtype": "numeric(15)",
+"start": 1901,
+"length": 15,
+"desc": "Timber Market Value"
+},
+{
+"name": "appraised_val",
+"dtype": "numeric(15)",
+"start": 1916,
+"length": 15,
+"desc": "Appraised Value"
+},
+{
+"name": "ten_percent_cap",
+"dtype": "numeric(15)",
+"start": 1931,
+"length": 15,
+"desc": "Ten Percent Homestead Cap Adjustment"
+},
+{
+"name": "assessed_val",
+"dtype": "numeric(15)",
+"start": 1946,
+"length": 15,
+"desc": "Assessed Value (Appraised - Cap)"
+},
+{
+"name": "filler",
+"dtype": "char(20)",
+"start": 1961,
+"length": 20,
+"desc": "Not In Use"
+},
+{
+"name": "arb_protest_flag",
+"dtype": "char(1)",
+"start": 1981,
+"length": 1,
+"desc": "ARB Protest Flag; indicates if a protest has been filed on behalf of this property.  (T / F)"
+},
+{
+"name": "filler",
+"dtype": "int(12)",
+"start": 1982,
+"length": 12,
+"desc": "Not In Use"
+},
+{
+"name": "deed_book_id",
+"dtype": "char(20)",
+"start": 1994,
+"length": 20,
+"desc": "Deed Book ID"
+},
+{
+"name": "deed_book_page",
+"dtype": "char(20)",
+"start": 2014,
+"length": 20,
+"desc": "Deed Book Page"
+},
+{
+"name": "deed_dt",
+"dtype": "char(25)",
+"start": 2034,
+"length": 25,
+"desc": "Deed Date"
+},
+{
+"name": "mortgage_co_id",
+"dtype": "int(12)",
+"start": 2059,
+"length": 12,
+"desc": "Mortgage Company ID"
+},
+{
+"name": "mortage_co_name",
+"dtype": "char(70)",
+"start": 2071,
+"length": 70,
+"desc": "Name of Mortgage Company"
+},
+{
+"name": "mortgage_acct_id",
+"dtype": "char(50)",
+"start": 2141,
+"length": 50,
+"desc": "Mortgage Loan Number"
+},
+{
+"name": "jan1_owner_id",
+"dtype": "int(12)",
+"start": 2191,
+"length": 12,
+"desc": "January 1 Owner ID"
+},
+{
+"name": "jan1_owner_name",
+"dtype": "char(70)",
+"start": 2203,
+"length": 70,
+"desc": "January 1 Owner Name"
+},
+{
+"name": "jan1_addr_line1",
+"dtype": "char(60)",
+"start": 2273,
+"length": 60,
+"desc": "January 1 Address Line 1"
+},
+{
+"name": "jan1_addr_line2",
+"dtype": "char(60)",
+"start": 2333,
+"length": 60,
+"desc": "January 1 Address Line 2"
+},
+{
+"name": "jan1_addr_line3",
+"dtype": "char(60)",
+"start": 2393,
+"length": 60,
+"desc": "January 1 Address Line 3"
+},
+{
+"name": "jan1_addr_city",
+"dtype": "char(50)",
+"start": 2453,
+"length": 50,
+"desc": "January 1 Address City"
+},
+{
+"name": "jan1_addr_state",
+"dtype": "char(50)",
+"start": 2503,
+"length": 50,
+"desc": "January 1 Address State"
+},
+{
+"name": "jan1_addr_country",
+"dtype": "char(5)",
+"start": 2553,
+"length": 5,
+"desc": "January 1 Address Country"
+},
+{
+"name": "jan1_addr_zip",
+"dtype": "char(5)",
+"start": 2558,
+"length": 5,
+"desc": "January 1 Address Zip  (Zip Only)"
+},
+{
+"name": "jan1_addr_zip_cass",
+"dtype": "char(4)",
+"start": 2563,
+"length": 4,
+"desc": "January 1 Address Zip Cass (Cass Only)"
+},
+{
+"name": "jan1_addr_zip_rt",
+"dtype": "char(2)",
+"start": 2567,
+"length": 2,
+"desc": "January 1 Address Zip  Route (Route Only)"
+},
+{
+"name": "jan1_confidential_flag",
+"dtype": "char(1)",
+"start": 2569,
+"length": 1,
+"desc": "January 1 Owner Confidential Flag ('T' or 'F')"
+},
+{
+"name": "jan1_address_suppress_flag",
+"dtype": "char(1)",
+"start": 2570,
+"length": 1,
+"desc": "January 1 Owner \nAddress Suppression Flag ('T' or 'F')"
+},
+{
+"name": "filler",
+"dtype": "char(37)",
+"start": 2571,
+"length": 37,
+"desc": "Not In Use"
+},
+{
+"name": "jan1_ml_deliverable",
+"dtype": "char(1)",
+"start": 2608,
+"length": 1,
+"desc": "January 1 Owner Address\nY = deliverable address\nN = undeliverable address"
+},
+{
+"name": "hs_exempt",
+"dtype": "char(1)",
+"start": 2609,
+"length": 1,
+"desc": "Homestead Exemption    (\u2018T\u2019 or \u2018F\u2019)\n\u2018T\u2019 indicates that the property has the exemption"
+},
+{
+"name": "ov65_exempt",
+"dtype": "char(1)",
+"start": 2610,
+"length": 1,
+"desc": "Over 65 Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ov65_prorate_begin",
+"dtype": "char(25)",
+"start": 2611,
+"length": 25,
+"desc": "date the exemption began \u2013 used for proration"
+},
+{
+"name": "ov65_prorate_end",
+"dtype": "char(25)",
+"start": 2636,
+"length": 25,
+"desc": "date the exemption ended \u2013 used for proration"
+},
+{
+"name": "ov65s_exempt",
+"dtype": "char(1)",
+"start": 2661,
+"length": 1,
+"desc": "Over 65 Surviving Spouse (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "dp_exempt",
+"dtype": "char(1)",
+"start": 2662,
+"length": 1,
+"desc": "Disabled Person (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "dv1_exempt",
+"dtype": "char(1)",
+"start": 2663,
+"length": 1,
+"desc": "Disabled Veteran - 10% to 30%  (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "dv1s_exempt",
+"dtype": "char(1)",
+"start": 2664,
+"length": 1,
+"desc": "Disabled Veteran - 10% to 30%  Surviving Spouse"
+},
+{
+"name": "dv2_exempt",
+"dtype": "char(1)",
+"start": 2665,
+"length": 1,
+"desc": "Disabled Veteran - 31% to 50%  (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "dv2s_exempt",
+"dtype": "char(1)",
+"start": 2666,
+"length": 1,
+"desc": "Disabled Veteran - 31% to 50% Surviving Spouse"
+},
+{
+"name": "dv3_exempt",
+"dtype": "char(1)",
+"start": 2667,
+"length": 1,
+"desc": "Disabled Veteran - 51% to 70% ('T' or 'F')"
+},
+{
+"name": "dv3s_exempt",
+"dtype": "char(1)",
+"start": 2668,
+"length": 1,
+"desc": "Disabled Veteran - 51% to 70% Surviving Spouse"
+},
+{
+"name": "dv4_exempt",
+"dtype": "char(1)",
+"start": 2669,
+"length": 1,
+"desc": "Disabled Veteran - 71% to 100%  (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "dv4s_exempt",
+"dtype": "char(1)",
+"start": 2670,
+"length": 1,
+"desc": "Disabled Veteran - 71% to 100% Surviving Spouse"
+},
+{
+"name": "ex_exempt",
+"dtype": "char(1)",
+"start": 2671,
+"length": 1,
+"desc": "EX (Total Exemption) (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_prorate_begin",
+"dtype": "char(25)",
+"start": 2672,
+"length": 25,
+"desc": "Date the exemption began \u2013 used for proration"
+},
+{
+"name": "ex_prorate_end",
+"dtype": "char(25)",
+"start": 2697,
+"length": 25,
+"desc": "Date the exemption ended \u2013 used for proration"
+},
+{
+"name": "lve_exempt",
+"dtype": "char(1)",
+"start": 2722,
+"length": 1,
+"desc": "Leased vehicle exemption"
+},
+{
+"name": "ab_exempt",
+"dtype": "char(1)",
+"start": 2723,
+"length": 1,
+"desc": "Abatement (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "en_exempt",
+"dtype": "char(1)",
+"start": 2724,
+"length": 1,
+"desc": "Energy  Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "fr_exempt",
+"dtype": "char(1)",
+"start": 2725,
+"length": 1,
+"desc": "Freeport Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ht_exempt",
+"dtype": "char(1)",
+"start": 2726,
+"length": 1,
+"desc": "Historical Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "pro_exempt",
+"dtype": "char(1)",
+"start": 2727,
+"length": 1,
+"desc": "Prorated Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "pc_exempt",
+"dtype": "char(1)",
+"start": 2728,
+"length": 1,
+"desc": "Pollution Control Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "so_exempt",
+"dtype": "char(1)",
+"start": 2729,
+"length": 1,
+"desc": "Solar Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex366_exempt",
+"dtype": "char(1)",
+"start": 2730,
+"length": 1,
+"desc": "Exemption for properties under $500 ('T' or 'F')"
+},
+{
+"name": "ch_exempt",
+"dtype": "char(1)",
+"start": 2731,
+"length": 1,
+"desc": "Charitable Exemption ('T' or 'F')"
+},
+{
+"name": "imprv_state_cd",
+"dtype": "char(10)",
+"start": 2732,
+"length": 10,
+"desc": "State Code that is on the improvements"
+},
+{
+"name": "land_state_cd",
+"dtype": "char(10)",
+"start": 2742,
+"length": 10,
+"desc": "State Code that is on the land"
+},
+{
+"name": "personal_state_cd",
+"dtype": "char(10)",
+"start": 2752,
+"length": 10,
+"desc": "State Code that is on the personal property"
+},
+{
+"name": "mineral_state_cd",
+"dtype": "char(10)",
+"start": 2762,
+"length": 10,
+"desc": "State Code that is on the mineral"
+},
+{
+"name": "land_acres",
+"dtype": "numeric(20)",
+"start": 2772,
+"length": 20,
+"desc": "Sum of the acres based on land segments"
+},
+{
+"name": "entity_agent_id",
+"dtype": "int(12)",
+"start": 2792,
+"length": 12,
+"desc": "Agent for Entity Documents (I.E. Statements)\nIf id <> 0, then will contain information for the agent that is to receive entity documents"
+},
+{
+"name": "entity_agent_name",
+"dtype": "char(70)",
+"start": 2804,
+"length": 70,
+"desc": "Entity Agent Name"
+},
+{
+"name": "entity_agent_addr_line1",
+"dtype": "char(60)",
+"start": 2874,
+"length": 60,
+"desc": "Entity Agent Address Line 1"
+},
+{
+"name": "entity_agent_addr_line2",
+"dtype": "char(60)",
+"start": 2934,
+"length": 60,
+"desc": "Entity Agent Address Line 2"
+},
+{
+"name": "entity_agent_addr_line3",
+"dtype": "char(60)",
+"start": 2994,
+"length": 60,
+"desc": "Entity Agent Address Line 3"
+},
+{
+"name": "entity_agent_city",
+"dtype": "char(50)",
+"start": 3054,
+"length": 50,
+"desc": "Entity Agent Address City"
+},
+{
+"name": "entity_agent_state",
+"dtype": "char(50)",
+"start": 3104,
+"length": 50,
+"desc": "Entity Agent Address State"
+},
+{
+"name": "entity_agent_country",
+"dtype": "char(5)",
+"start": 3154,
+"length": 5,
+"desc": "Entity Agent Address Country"
+},
+{
+"name": "entity_agent_zip",
+"dtype": "char(5)",
+"start": 3159,
+"length": 5,
+"desc": "Entity Agent Address Zip (Zip Only)"
+},
+{
+"name": "entity_agent_cass",
+"dtype": "char(4)",
+"start": 3164,
+"length": 4,
+"desc": "Entity Agent Address Zip Cass (Cass Only)"
+},
+{
+"name": "entity_agent_rt",
+"dtype": "char(2)",
+"start": 3168,
+"length": 2,
+"desc": "Entity Agent Address Zip Route (Route Only)"
+},
+{
+"name": "filler",
+"dtype": "char(34)",
+"start": 3170,
+"length": 34,
+"desc": "Filler"
+},
+{
+"name": "ca_agent_id",
+"dtype": "int(12)",
+"start": 3204,
+"length": 12,
+"desc": "Agent for Chief Appraiser Documents (I.E. Appraisal Notice)\nIf id <> 0, then will contain information for the agent that is to receive chief appraiser documents"
+},
+{
+"name": "ca_agent_name",
+"dtype": "char(70)",
+"start": 3216,
+"length": 70,
+"desc": "Chief Appraiser Agent Name"
+},
+{
+"name": "ca_agent_addr_line1",
+"dtype": "char(60)",
+"start": 3286,
+"length": 60,
+"desc": "Chief Appraiser Address Line 1"
+},
+{
+"name": "ca_agent_addr_line2",
+"dtype": "char(60)",
+"start": 3346,
+"length": 60,
+"desc": "Chief Appraiser Address Line 2"
+},
+{
+"name": "ca_agent_addr_line3",
+"dtype": "char(60)",
+"start": 3406,
+"length": 60,
+"desc": "Chief Appraiser Address Line 3"
+},
+{
+"name": "ca_agent_city",
+"dtype": "char(50)",
+"start": 3466,
+"length": 50,
+"desc": "Chief Appraiser Address City"
+},
+{
+"name": "ca_agent_state",
+"dtype": "char(50)",
+"start": 3516,
+"length": 50,
+"desc": "Chief Appraiser Address State"
+},
+{
+"name": "ca_agent_country",
+"dtype": "char(5)",
+"start": 3566,
+"length": 5,
+"desc": "Chief Appraiser Address Country"
+},
+{
+"name": "ca_agent_zip",
+"dtype": "char(5)",
+"start": 3571,
+"length": 5,
+"desc": "Chief Appraiser Address Zip (Zip Only)"
+},
+{
+"name": "ca_agent_zip_cass",
+"dtype": "char(4)",
+"start": 3576,
+"length": 4,
+"desc": "Chief Appraiser Address Zip Cass (Cass Only)"
+},
+{
+"name": "ca_agent_zip_rt",
+"dtype": "char(2)",
+"start": 3580,
+"length": 2,
+"desc": "Chief Appraiser Address Zip Route (Route Only)"
+},
+{
+"name": "filler",
+"dtype": "filler",
+"start": 3582,
+"length": 34,
+"desc": "Filler"
+},
+{
+"name": "arb_agent_id",
+"dtype": "int(12)",
+"start": 3616,
+"length": 12,
+"desc": "Agent for ARB Documents (I.E. ARB Notice)\nIf id <> 0, then will contain information for the agent that is to receive arb documents"
+},
+{
+"name": "arb_agent_name",
+"dtype": "char(70)",
+"start": 3628,
+"length": 70,
+"desc": "ARB Agent Name"
+},
+{
+"name": "arb_agent_addr_line1",
+"dtype": "char(60)",
+"start": 3698,
+"length": 60,
+"desc": "ARB Agent Line 1"
+},
+{
+"name": "arb_agent_addr_line2",
+"dtype": "char(60)",
+"start": 3758,
+"length": 60,
+"desc": "ARB Agent Line 2"
+},
+{
+"name": "arb_agent_addr_line3",
+"dtype": "char(60)",
+"start": 3818,
+"length": 60,
+"desc": "ARB Agent Line 3"
+},
+{
+"name": "arb_agent_city",
+"dtype": "char(50)",
+"start": 3878,
+"length": 50,
+"desc": "ARB Agent City"
+},
+{
+"name": "arb_agent_state",
+"dtype": "char(50)",
+"start": 3928,
+"length": 50,
+"desc": "ARB Agent State"
+},
+{
+"name": "arb_agent_country",
+"dtype": "char(5)",
+"start": 3978,
+"length": 5,
+"desc": "ARB Agent County"
+},
+{
+"name": "arb_agent_zip",
+"dtype": "char(5)",
+"start": 3983,
+"length": 5,
+"desc": "ARB Agent Zip (Zip Only)"
+},
+{
+"name": "arb_agent_zip_cass",
+"dtype": "char(4)",
+"start": 3988,
+"length": 4,
+"desc": "ARB Agent Zip Cass (Cass Only)"
+},
+{
+"name": "arb_agent_zip_rt",
+"dtype": "char(2)",
+"start": 3992,
+"length": 2,
+"desc": "ARB Agent Zip Route (Route Only)"
+},
+{
+"name": "filler",
+"dtype": "char(34)",
+"start": 3994,
+"length": 28,
+"desc": "filler"
+},
+{
+"name": "ownership_pct",
+"dtype": "char(34)",
+"start": 4022,
+"length": 6,
+"desc": "Ownership Pct - Decimal(5,2)"
+},
+{
+"name": "mineral_type_of_int",
+"dtype": "char(5)",
+"start": 4028,
+"length": 5,
+"desc": "Mineral Interest Type"
+},
+{
+"name": "mineral_int_pct",
+"dtype": "char(15)",
+"start": 4033,
+"length": 15,
+"desc": "Mineral Interest Percent (10 Decimals)"
+},
+{
+"name": "productivity_use_code",
+"dtype": "char(3)",
+"start": 4048,
+"length": 3,
+"desc": "Productivity Use Code"
+},
+{
+"name": "prop_owner_sequence",
+"dtype": "char(40)",
+"start": 4051,
+"length": 40,
+"desc": "Unique identifier for the property owner combination. If the property has one owner then property will have a single entry in the file and the prop_owner_sequence will be the prop_id. If the property has multiple owners then the file will have an entry for each owner. The first owner will have a prop_owner_sequence equal to the prop_id and subsequent owners will have entries like prop_id-owner_sequence. Examples:\n\nPID: 10300; 1 owner:\n\nprop_owner_sequence = 10300\n\nPID: 10301; 3 owners:\n\nprop_owner_sequence for owner 1 = 10301\nprop_owner_sequence for owner 2 = 10301-1\nprop_owner_sequence for owner 3 = 10301-2"
+},
+{
+"name": "timber_78_market",
+"dtype": "int(12)",
+"start": 4091,
+"length": 12,
+"desc": "1978 timber market value"
+},
+{
+"name": "ag_late_loss",
+"dtype": "int(12)",
+"start": 4103,
+"length": 12,
+"desc": "Late ag loss"
+},
+{
+"name": "late_freeport_penalty",
+"dtype": "int(12)",
+"start": 4115,
+"length": 12,
+"desc": "Late freeport penalty"
+},
+{
+"name": "filler",
+"dtype": "char(2)",
+"start": 4127,
+"length": 2,
+"desc": "Not In Use"
+},
+{
+"name": "filler",
+"dtype": "char(5)",
+"start": 4129,
+"length": 5,
+"desc": "Not In Use"
+},
+{
+"name": "filler",
+"dtype": "char(2)",
+"start": 4134,
+"length": 2,
+"desc": "Not In Use"
+},
+{
+"name": "dba",
+"dtype": "char(40)",
+"start": 4136,
+"length": 40,
+"desc": "Doing business as"
+},
+{
+"name": "filler",
+"dtype": "char(38)",
+"start": 4176,
+"length": 38,
+"desc": "Not In Use"
+},
+{
+"name": "market_value",
+"dtype": "numeric(14)",
+"start": 4214,
+"length": 14,
+"desc": "Property market value"
+},
+{
+"name": "mineral_lease_id",
+"dtype": "char(20)",
+"start": 4228,
+"length": 20,
+"desc": "Mineral Lease ID"
+},
+{
+"name": "mineral_rrc_num",
+"dtype": "char(45)",
+"start": 4248,
+"length": 45,
+"desc": "Mineral RRC Number"
+},
+{
+"name": "filler",
+"dtype": "char(70)",
+"start": 4293,
+"length": 67,
+"desc": "Not In Use"
+},
+{
+"name": "filler",
+"dtype": "char(25)",
+"start": 4360,
+"length": 25,
+"desc": "Not In Use (OV65 Deferral Date in previous version)"
+},
+{
+"name": "filler",
+"dtype": "char(25)",
+"start": 4385,
+"length": 25,
+"desc": "Not In Use (DP Deferral Date in previous version)"
+},
+{
+"name": "ref_id1",
+"dtype": "char(25)",
+"start": 4410,
+"length": 25,
+"desc": "Property Reference ID 1"
+},
+{
+"name": "ref_id2",
+"dtype": "char(25)",
+"start": 4435,
+"length": 25,
+"desc": "Property Reference ID 2"
+},
+{
+"name": "situs_num",
+"dtype": "char(15)",
+"start": 4460,
+"length": 15,
+"desc": "Situs Number"
+},
+{
+"name": "situs_unit",
+"dtype": "char(5)",
+"start": 4475,
+"length": 5,
+"desc": "Situs Unit #"
+},
+{
+"name": "appr_owner_id",
+"dtype": "int(12)",
+"start": 4480,
+"length": 12,
+"desc": "Current Appraisal Owner ID"
+},
+{
+"name": "appr_owner_name",
+"dtype": "char(70)",
+"start": 4492,
+"length": 70,
+"desc": "Current Appraisal Owner Name"
+},
+{
+"name": "appr_addr_line1",
+"dtype": "char(60)",
+"start": 4562,
+"length": 60,
+"desc": "Current Appraisal Address Line 1"
+},
+{
+"name": "appr_addr_line2",
+"dtype": "char(60)",
+"start": 4622,
+"length": 60,
+"desc": "Current Appraisal Address Line 2"
+},
+{
+"name": "appr_addr_line3",
+"dtype": "char(60)",
+"start": 4682,
+"length": 60,
+"desc": "Current Appraisal Address Line 3"
+},
+{
+"name": "appr_addr_city",
+"dtype": "char(50)",
+"start": 4742,
+"length": 50,
+"desc": "Current Appraisal Address City"
+},
+{
+"name": "appr_addr_state",
+"dtype": "char(50)",
+"start": 4792,
+"length": 50,
+"desc": "Current Appraisal Address State"
+},
+{
+"name": "appr_addr_country",
+"dtype": "char(5)",
+"start": 4842,
+"length": 5,
+"desc": "Current Appraisal Address Country"
+},
+{
+"name": "appr_addr_zip",
+"dtype": "char(5)",
+"start": 4847,
+"length": 5,
+"desc": "Current Appraisal Address Zip (Zip Only)"
+},
+{
+"name": "appr_addr_zip_cass",
+"dtype": "char(4)",
+"start": 4852,
+"length": 4,
+"desc": "Current Appraisal Address Zip Cass (Cass Only)"
+},
+{
+"name": "appr_addr_zip_cass_route",
+"dtype": "char(2)",
+"start": 4856,
+"length": 2,
+"desc": "Current Appraisal Address Zip Rt (Route Only)"
+},
+{
+"name": "appr_ml_deliverable",
+"dtype": "char(1)",
+"start": 4858,
+"length": 1,
+"desc": "Current Appraisal Owner Address\nY = deliverable address\nN = undeliverable address"
+},
+{
+"name": "appr_confidential_flag",
+"dtype": "char(1)",
+"start": 4859,
+"length": 1,
+"desc": "Current Appraisal Owner\nConfidential Flag ('T' or 'F')"
+},
+{
+"name": "appr_address_suppress_flag",
+"dtype": "char(1)",
+"start": 4860,
+"length": 1,
+"desc": "Current Appraisal Owner \nAddress Suppression Flag ('T' or 'F')"
+},
+{
+"name": "appr_confidential_name",
+"dtype": "char(70)",
+"start": 4861,
+"length": 70,
+"desc": "Current Appraisal Owner Confidential Name"
+},
+{
+"name": "py_confidential_name",
+"dtype": "char(70)",
+"start": 4931,
+"length": 70,
+"desc": "Property Year Owner Confidential Name"
+},
+{
+"name": "jan1_confidential_name",
+"dtype": "char(70)",
+"start": 5001,
+"length": 70,
+"desc": "Jan 1 Owner Confidential Name"
+},
+{
+"name": "filler",
+"dtype": "char(5)",
+"start": 5071,
+"length": 5,
+"desc": "Not In Use (SIC Code moved to end of file due to length change)"
+},
+{
+"name": "rendition_filed",
+"dtype": "char(1)",
+"start": 5076,
+"length": 1,
+"desc": "Rendition Filed ('T' or 'F')"
+},
+{
+"name": "rendition_date",
+"dtype": "char(25)",
+"start": 5077,
+"length": 25,
+"desc": "Rendition Filed Date"
+},
+{
+"name": "rendition_penalty",
+"dtype": "numeric(15)",
+"start": 5102,
+"length": 15,
+"desc": "If > 0, indicates that a Rendition Penalty should be calculated."
+},
+{
+"name": "rendition_penalty_date_paid",
+"dtype": "char(25)",
+"start": 5117,
+"length": 25,
+"desc": "Rendition 10% Penalty Date Paid"
+},
+{
+"name": "rendition_fraud_penalty",
+"dtype": "numeric(15)",
+"start": 5142,
+"length": 15,
+"desc": "Rendition Fraud Penalty"
+},
+{
+"name": "rendition_fraud_penalty_date_paid",
+"dtype": "char(25)",
+"start": 5157,
+"length": 25,
+"desc": "Rendition Fraud Penalty Date Paid"
+},
+{
+"name": "filler",
+"dtype": "char(20)",
+"start": 5182,
+"length": 20,
+"desc": "Not In Use"
+},
+{
+"name": "entities",
+"dtype": "char(140)",
+"start": 5202,
+"length": 140,
+"desc": "Entities list"
+},
+{
+"name": "eco_exempt",
+"dtype": "char(1)",
+"start": 5342,
+"length": 1,
+"desc": "eco exemption"
+},
+{
+"name": "dataset_id",
+"dtype": "numeric(15)",
+"start": 5343,
+"length": 15,
+"desc": "Unique number that identifies this export"
+},
+{
+"name": "deed_num",
+"dtype": "char(50)",
+"start": 5358,
+"length": 50,
+"desc": "Deed Number"
+},
+{
+"name": "chodo_exempt",
+"dtype": "char(1)",
+"start": 5408,
+"length": 1,
+"desc": "Exemption for charitable organizations providing low-income housing ('T' or 'F')"
+},
+{
+"name": "local_option_pct_only_flag_hs",
+"dtype": "char(1)",
+"start": 5409,
+"length": 1,
+"desc": "Local option flag for Homesite Percentage ('T' or 'F')"
+},
+{
+"name": "local_option_pct_only_flag_ov65",
+"dtype": "char(1)",
+"start": 5410,
+"length": 1,
+"desc": "Local option flag for OV65 exemption ('T' or 'F')"
+},
+{
+"name": "local_option_pct_only_flag_ov65s",
+"dtype": "char(1)",
+"start": 5411,
+"length": 1,
+"desc": "Local option flag for OV65S exemption ('T' or 'F')"
+},
+{
+"name": "local_option_pct_only_flag_dp",
+"dtype": "char(1)",
+"start": 5412,
+"length": 1,
+"desc": "Local option flag for DP exemption ('T' or 'F')"
+},
+{
+"name": "freeze_only_flag_ov65",
+"dtype": "char(1)",
+"start": 5413,
+"length": 1,
+"desc": "Freeze only flag for OV65 exemption ('T' or 'F')"
+},
+{
+"name": "freeze_only_flag_ov65s",
+"dtype": "char(1)",
+"start": 5414,
+"length": 1,
+"desc": "Freeze only flag for OV65S exemption ('T' or 'F')"
+},
+{
+"name": "freeze_only_flag_dp",
+"dtype": "char(1)",
+"start": 5415,
+"length": 1,
+"desc": "Freeze only flag for DP exemption ('T' or 'F')"
+},
+{
+"name": "apply_percent_exemption_flag",
+"dtype": "char(1)",
+"start": 5416,
+"length": 1,
+"desc": "Apply percent exemption flag ('T' or 'F')"
+},
+{
+"name": "exemption_percentage",
+"dtype": "numeric(15)",
+"start": 5417,
+"length": 15,
+"desc": "Exemption percentage (string representing a floating point number)"
+},
+{
+"name": "vit_flag",
+"dtype": "char(1)",
+"start": 5432,
+"length": 1,
+"desc": "VIT flag; 'T' if property is VIT, otherwise 'F'"
+},
+{
+"name": "lih_exempt",
+"dtype": "char(1)",
+"start": 5433,
+"length": 1,
+"desc": "Exemption for charitable organizations providing low-income housing with volunteer labor ('T' or 'F')"
+},
+{
+"name": "git_exempt",
+"dtype": "char(1)",
+"start": 5434,
+"length": 1,
+"desc": "Goods in Transit Exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "dps_exempt",
+"dtype": "char(1)",
+"start": 5435,
+"length": 1,
+"desc": "Disabled Person - Surviving Spouse (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "filler",
+"dtype": "char(25)",
+"start": 5436,
+"length": 25,
+"desc": "Not In Use (DPS Deferral Date in previous version)"
+},
+{
+"name": "local_option_pct_only_flag_dps",
+"dtype": "char(1)",
+"start": 5461,
+"length": 1,
+"desc": "Local option flag for DPS exemption ('T' or 'F')"
+},
+{
+"name": "freeze_only_flag_dps",
+"dtype": "char(1)",
+"start": 5462,
+"length": 1,
+"desc": "Freeze only flag for DPS exemption ('T' or 'F')"
+},
+{
+"name": "dvhs_exempt",
+"dtype": "char(1)",
+"start": 5463,
+"length": 1,
+"desc": "Disabled Veteran Homestead - 100% ('T' or 'F')"
+},
+{
+"name": "hs_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5464,
+"length": 4,
+"desc": "Qualify Year for HS exemption"
+},
+{
+"name": "ov65_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5468,
+"length": 4,
+"desc": "Qualify Year for OV65 exemption"
+},
+{
+"name": "ov65s_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5472,
+"length": 4,
+"desc": "Qualify Year for OV65S exemption"
+},
+{
+"name": "dp_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5476,
+"length": 4,
+"desc": "Qualify Year for DP exemption"
+},
+{
+"name": "dps_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5480,
+"length": 4,
+"desc": "Qualify Year for DPS exemption"
+},
+{
+"name": "dv1_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5484,
+"length": 4,
+"desc": "Qualify Year for DV1 exemption"
+},
+{
+"name": "dv1s_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5488,
+"length": 4,
+"desc": "Qualify Year for DV1S exemption"
+},
+{
+"name": "dv2_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5492,
+"length": 4,
+"desc": "Qualify Year for DV2 exemption"
+},
+{
+"name": "dv2s_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5496,
+"length": 4,
+"desc": "Qualify Year for DV2S exemption"
+},
+{
+"name": "dv3_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5500,
+"length": 4,
+"desc": "Qualify Year for DV3 exemption"
+},
+{
+"name": "dv3s_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5504,
+"length": 4,
+"desc": "Qualify Year for DV3S exemption"
+},
+{
+"name": "dv4_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5508,
+"length": 4,
+"desc": "Qualify Year for DV4 exemption"
+},
+{
+"name": "dv4s_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5512,
+"length": 4,
+"desc": "Qualify Year for DV4S exemption"
+},
+{
+"name": "dvhs_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5516,
+"length": 4,
+"desc": "Qualify Year for DVHS exemption"
+},
+{
+"name": "ex_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5520,
+"length": 4,
+"desc": "Qualify Year for EX exemption"
+},
+{
+"name": "ab_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5524,
+"length": 4,
+"desc": "Qualify Year for AB exemption"
+},
+{
+"name": "en_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5528,
+"length": 4,
+"desc": "Qualify Year for EN exemption"
+},
+{
+"name": "fr_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5532,
+"length": 4,
+"desc": "Qualify Year for FR exemption"
+},
+{
+"name": "ht_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5536,
+"length": 4,
+"desc": "Qualify Year for HT exemption"
+},
+{
+"name": "pro_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5540,
+"length": 4,
+"desc": "Qualify Year for PRO exemption"
+},
+{
+"name": "pc_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5544,
+"length": 4,
+"desc": "Qualify Year for PC exemption"
+},
+{
+"name": "so_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5548,
+"length": 4,
+"desc": "Qualify Year for SO exemption"
+},
+{
+"name": "ex366_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5552,
+"length": 4,
+"desc": "Qualify Year for EX366 exemption"
+},
+{
+"name": "ch_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5556,
+"length": 4,
+"desc": "Qualify Year for CH exemption"
+},
+{
+"name": "eco_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5560,
+"length": 4,
+"desc": "Qualify Year for ECO exemption"
+},
+{
+"name": "chodo_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5564,
+"length": 4,
+"desc": "Qualify Year for CHODO exemption"
+},
+{
+"name": "lih_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5568,
+"length": 4,
+"desc": "Qualify Year for LIH exemption"
+},
+{
+"name": "git_qualify_yr",
+"dtype": "numeric(4)",
+"start": 5572,
+"length": 4,
+"desc": "Qualify Year for GIT exemption"
+},
+{
+"name": "mortgage_addr_line1",
+"dtype": "char(60)",
+"start": 5576,
+"length": 60,
+"desc": "Mortgage Company Address Line 1"
+},
+{
+"name": "mortgage_addr_line2",
+"dtype": "char(60)",
+"start": 5636,
+"length": 60,
+"desc": "Mortgage Company Address Line 2"
+},
+{
+"name": "mortgage_addr_line3",
+"dtype": "char(60)",
+"start": 5696,
+"length": 60,
+"desc": "Mortgage Company Address Line 3"
+},
+{
+"name": "mortgage_addr_city",
+"dtype": "char(50)",
+"start": 5756,
+"length": 50,
+"desc": "Mortgage Company Address City"
+},
+{
+"name": "mortgage_addr_state",
+"dtype": "char(50)",
+"start": 5806,
+"length": 50,
+"desc": "Mortgage Company Address State"
+},
+{
+"name": "mortgage_addr_country",
+"dtype": "char(5)",
+"start": 5856,
+"length": 5,
+"desc": "Mortgage Company Address Country"
+},
+{
+"name": "mortgage_addr_zip",
+"dtype": "char(5)",
+"start": 5861,
+"length": 5,
+"desc": "Mortgage Company Address Zip (Zip Only)"
+},
+{
+"name": "mortgage_addr_zip_cass",
+"dtype": "char(4)",
+"start": 5866,
+"length": 4,
+"desc": "Mortgage Company Address Zip Cass (Cass Only)"
+},
+{
+"name": "mortgage_addr_zip_rt",
+"dtype": "char(2)",
+"start": 5870,
+"length": 2,
+"desc": "Mortgage Company Address Zip Route (Route Only)"
+},
+{
+"name": "mortgage_addr_ml_deliverable",
+"dtype": "char(1)",
+"start": 5872,
+"length": 1,
+"desc": "Mortgage Company Address\nY = deliverable address\nN = undeliverable address"
+},
+{
+"name": "sic_code",
+"dtype": "char(10)",
+"start": 5873,
+"length": 10,
+"desc": "SIC Code (new position in file due to change in length from 5 to 10)"
+},
+{
+"name": "omitted_property_flag",
+"dtype": "char(1)",
+"start": 5883,
+"length": 1,
+"desc": "Omitted Property\nY = Omitted\nN = Not omitted"
+},
+{
+"name": "hs_prorate_begin",
+"dtype": "char(25)",
+"start": 5884,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "hs_prorate_end",
+"dtype": "char(25)",
+"start": 5909,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "ov65s_prorate_begin",
+"dtype": "char(25)",
+"start": 5934,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "ov65s_prorate_end",
+"dtype": "char(25)",
+"start": 5959,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dp_prorate_begin",
+"dtype": "char(25)",
+"start": 5984,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dp_prorate_end",
+"dtype": "char(25)",
+"start": 6009,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv1_prorate_begin",
+"dtype": "char(25)",
+"start": 6034,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv1_prorate_end",
+"dtype": "char(25)",
+"start": 6059,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv1s_prorate_begin",
+"dtype": "char(25)",
+"start": 6084,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv1s_prorate_end",
+"dtype": "char(25)",
+"start": 6109,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv2_prorate_begin",
+"dtype": "char(25)",
+"start": 6134,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv2_prorate_end",
+"dtype": "char(25)",
+"start": 6159,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv2s_prorate_begin",
+"dtype": "char(25)",
+"start": 6184,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv2s_prorate_end",
+"dtype": "char(25)",
+"start": 6209,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv3_prorate_begin",
+"dtype": "char(25)",
+"start": 6234,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv3_prorate_end",
+"dtype": "char(25)",
+"start": 6259,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv3s_prorate_begin",
+"dtype": "char(25)",
+"start": 6284,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv3s_prorate_end",
+"dtype": "char(25)",
+"start": 6309,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv4_prorate_begin",
+"dtype": "char(25)",
+"start": 6334,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv4_prorate_end",
+"dtype": "char(25)",
+"start": 6359,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dv4s_prorate_begin",
+"dtype": "char(25)",
+"start": 6384,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dv4s_prorate_end",
+"dtype": "char(25)",
+"start": 6409,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "lve_prorate_begin",
+"dtype": "char(25)",
+"start": 6434,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "lve_prorate_end",
+"dtype": "char(25)",
+"start": 6459,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "ab_prorate_begin",
+"dtype": "char(25)",
+"start": 6484,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "ab_prorate_end",
+"dtype": "char(25)",
+"start": 6509,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "en_prorate_begin",
+"dtype": "char(25)",
+"start": 6534,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "en_prorate_end",
+"dtype": "char(25)",
+"start": 6559,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "fr_prorate_begin",
+"dtype": "char(25)",
+"start": 6584,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "fr_prorate_end",
+"dtype": "char(25)",
+"start": 6609,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "ht_prorate_begin",
+"dtype": "char(25)",
+"start": 6634,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "ht_prorate_end",
+"dtype": "char(25)",
+"start": 6659,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "pro_prorate_begin",
+"dtype": "char(25)",
+"start": 6684,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "pro_prorate_end",
+"dtype": "char(25)",
+"start": 6709,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "pc_prorate_begin",
+"dtype": "char(25)",
+"start": 6734,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "pc_prorate_end",
+"dtype": "char(25)",
+"start": 6759,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "so_prorate_begin",
+"dtype": "char(25)",
+"start": 6784,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "so_prorate_end",
+"dtype": "char(25)",
+"start": 6809,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "ex366_prorate_begin",
+"dtype": "char(25)",
+"start": 6834,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "ex366_prorate_end",
+"dtype": "char(25)",
+"start": 6859,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "ch_prorate_begin",
+"dtype": "char(25)",
+"start": 6884,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "ch_prorate_end",
+"dtype": "char(25)",
+"start": 6909,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "dps_prorate_begin",
+"dtype": "char(25)",
+"start": 6934,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "dps_prorate_end",
+"dtype": "char(25)",
+"start": 6959,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "eco_prorate_begin",
+"dtype": "char(25)",
+"start": 6984,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "eco_prorate_end",
+"dtype": "char(25)",
+"start": 7009,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "chodo_prorate_begin",
+"dtype": "char(25)",
+"start": 7034,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "chodo_prorate_end",
+"dtype": "char(25)",
+"start": 7059,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "lih_prorate_begin",
+"dtype": "char(25)",
+"start": 7084,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "lih_prorate_end",
+"dtype": "char(25)",
+"start": 7109,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "git_prorate_begin",
+"dtype": "char(25)",
+"start": 7134,
+"length": 25,
+"desc": "date the exemption began - used for proration"
+},
+{
+"name": "git_prorate_end",
+"dtype": "char(25)",
+"start": 7159,
+"length": 25,
+"desc": "date the exemption ended - used for proration"
+},
+{
+"name": "clt_exempt",
+"dtype": "char(1)",
+"start": 7184,
+"length": 1,
+"desc": "Exemption for community land trust ('T' or 'F')"
+},
+{
+"name": "clt_prorate_begin",
+"dtype": "char(25)",
+"start": 7185,
+"length": 25,
+"desc": "date the exemption began \u2013 used for proration"
+},
+{
+"name": "clt_prorate_end",
+"dtype": "char(25)",
+"start": 7210,
+"length": 25,
+"desc": "date the exemption ended \u2013 used for proration"
+},
+{
+"name": "clt_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7235,
+"length": 4,
+"desc": "Qualify Year for CLT exemption"
+},
+{
+"name": "dvhss_exempt",
+"dtype": "char(1)",
+"start": 7239,
+"length": 1,
+"desc": "Exemption for DVHS Surviving Spouse ('T' or 'F')"
+},
+{
+"name": "dvhss_prorate_begin",
+"dtype": "char(25)",
+"start": 7240,
+"length": 25,
+"desc": "date the exemption began \u2013 used for proration"
+},
+{
+"name": "dvhss_prorate_end",
+"dtype": "char(25)",
+"start": 7265,
+"length": 25,
+"desc": "date the exemption ended \u2013 used for proration"
+},
+{
+"name": "dvhss_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7290,
+"length": 4,
+"desc": "Qualify Year for DVHS Surviving Spouse exemption"
+},
+{
+"name": "omitted_imprv_hstd_val",
+"dtype": "numeric(15)",
+"start": 7294,
+"length": 15,
+"desc": "Omitted Improvement Homestead Value"
+},
+{
+"name": "omitted_imprv_non_hstd_val",
+"dtype": "numeric(15)",
+"start": 7309,
+"length": 15,
+"desc": "Omitted Improvement Non-Homestead Value"
+},
+{
+"name": "dvhs_prorate_begin",
+"dtype": "char(25)",
+"start": 7324,
+"length": 25,
+"desc": "date the exemption began \u2013 used for proration"
+},
+{
+"name": "dvhs_prorate_end",
+"dtype": "char(25)",
+"start": 7349,
+"length": 25,
+"desc": "date the exemption ended \u2013 used for proration"
+},
+{
+"name": "ex_xd_exempt",
+"dtype": "char(1)",
+"start": 7374,
+"length": 1,
+"desc": "EX-XD 11.181 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xd_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7375,
+"length": 4,
+"desc": "Qualify Year for EX-XD 11.181 exemption"
+},
+{
+"name": "ex_xd_prorate_begin",
+"dtype": "char(25)",
+"start": 7379,
+"length": 25,
+"desc": "Proration begin date for EX-XD 11.181 exemption"
+},
+{
+"name": "ex_xd_prorate_end",
+"dtype": "char(25)",
+"start": 7404,
+"length": 25,
+"desc": "Proration end date for EX-XD 11.181 exemption"
+},
+{
+"name": "ex_xf_exempt",
+"dtype": "char(1)",
+"start": 7429,
+"length": 1,
+"desc": "EX-XF 11.183 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xf_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7430,
+"length": 4,
+"desc": "Qualify Year for EX-XF 11.183 exemption"
+},
+{
+"name": "ex_xf_prorate_begin",
+"dtype": "char(25)",
+"start": 7434,
+"length": 25,
+"desc": "Proration begin date for EX-XF 11.183 exemption"
+},
+{
+"name": "ex_xf_prorate_end",
+"dtype": "char(25)",
+"start": 7459,
+"length": 25,
+"desc": "Proration end date for EX-XF 11.183 exemption"
+},
+{
+"name": "ex_xg_exempt",
+"dtype": "char(1)",
+"start": 7484,
+"length": 1,
+"desc": "EX-XG 11.184 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xg_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7485,
+"length": 4,
+"desc": "Qualify Year for EX-XG 11.184 exemption"
+},
+{
+"name": "ex_xg_prorate_begin",
+"dtype": "char(25)",
+"start": 7489,
+"length": 25,
+"desc": "Proration begin date for EX-XG 11.184 exemption"
+},
+{
+"name": "ex_xg_prorate_end",
+"dtype": "char(25)",
+"start": 7514,
+"length": 25,
+"desc": "Proration end date for EX-XG 11.184 exemption"
+},
+{
+"name": "ex_xh_exempt",
+"dtype": "char(1)",
+"start": 7539,
+"length": 1,
+"desc": "EX-XH 11.185 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xh_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7540,
+"length": 4,
+"desc": "Qualify Year for EX-XH 11.185 exemption"
+},
+{
+"name": "ex_xh_prorate_begin",
+"dtype": "char(25)",
+"start": 7544,
+"length": 25,
+"desc": "Proration begin date for EX-XH 11.185 exemption"
+},
+{
+"name": "ex_xh_prorate_end",
+"dtype": "char(25)",
+"start": 7569,
+"length": 25,
+"desc": "Proration end date for EX-XH 11.185 exemption"
+},
+{
+"name": "ex_xi_exempt",
+"dtype": "char(1)",
+"start": 7594,
+"length": 1,
+"desc": "EX-XI 11.19 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xi_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7595,
+"length": 4,
+"desc": "Qualify Year forEX-XI 11.19 exemption"
+},
+{
+"name": "ex_xi_prorate_begin",
+"dtype": "char(25)",
+"start": 7599,
+"length": 25,
+"desc": "Proration begin date for EX-XI 11.19 exemption"
+},
+{
+"name": "ex_xi_prorate_end",
+"dtype": "char(25)",
+"start": 7624,
+"length": 25,
+"desc": "Proration end date for EX-XI 11.19 exemption"
+},
+{
+"name": "ex_xj_exempt",
+"dtype": "char(1)",
+"start": 7649,
+"length": 1,
+"desc": "EX-XJ 11.21 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xj_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7650,
+"length": 4,
+"desc": "Qualify Year for EX-XJ 11.21 exemption"
+},
+{
+"name": "ex_xj_prorate_begin",
+"dtype": "char(25)",
+"start": 7654,
+"length": 25,
+"desc": "Proration begin date for EX-XJ 11.21 exemption"
+},
+{
+"name": "ex_xj_prorate_end",
+"dtype": "char(25)",
+"start": 7679,
+"length": 25,
+"desc": "Proration end date for EX-XJ 11.21 exemption"
+},
+{
+"name": "ex_xl_exempt",
+"dtype": "char(1)",
+"start": 7704,
+"length": 1,
+"desc": "EX-XL 11.231 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xl_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7705,
+"length": 4,
+"desc": "Qualify Year for EX-XL 11.231 exemption"
+},
+{
+"name": "ex_xl_prorate_begin",
+"dtype": "char(25)",
+"start": 7709,
+"length": 25,
+"desc": "Proration begin date for EX-XL 11.231 exemption"
+},
+{
+"name": "ex_xl_prorate_end",
+"dtype": "char(25)",
+"start": 7734,
+"length": 25,
+"desc": "Proration end date for EX-XL 11.231 exemption"
+},
+{
+"name": "ex_xm_exempt",
+"dtype": "char(1)",
+"start": 7759,
+"length": 1,
+"desc": "EX-XM 11.25 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xm_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7760,
+"length": 4,
+"desc": "Qualify Year for EX-XM 11.25 exemption"
+},
+{
+"name": "ex_xm_prorate_begin",
+"dtype": "char(25)",
+"start": 7764,
+"length": 25,
+"desc": "Proration begin date for EX-XM 11.25 exemption"
+},
+{
+"name": "ex_xm_prorate_end",
+"dtype": "char(25)",
+"start": 7789,
+"length": 25,
+"desc": "Proration end date for EX-XM 11.25 exemption"
+},
+{
+"name": "ex_xn_exempt",
+"dtype": "char(1)",
+"start": 7814,
+"length": 1,
+"desc": "EX-XN 11.252 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xn_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7815,
+"length": 4,
+"desc": "Qualify Year for EX-XN 11.252 exemption"
+},
+{
+"name": "ex_xn_prorate_begin",
+"dtype": "char(25)",
+"start": 7819,
+"length": 25,
+"desc": "Proration begin date for EX-XN 11.252 exemption"
+},
+{
+"name": "ex_xn_prorate_end",
+"dtype": "char(25)",
+"start": 7844,
+"length": 25,
+"desc": "Proration end date for EX-XN 11.252 exemption"
+},
+{
+"name": "ex_xo_exempt",
+"dtype": "char(1)",
+"start": 7869,
+"length": 1,
+"desc": "EX-XO 11.254 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xo_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7870,
+"length": 4,
+"desc": "Qualify Year for EX-XO 11.254 exemption"
+},
+{
+"name": "ex_xo_prorate_begin",
+"dtype": "char(25)",
+"start": 7874,
+"length": 25,
+"desc": "Proration begin date for EX-XO 11.254 exemption"
+},
+{
+"name": "ex_xo_prorate_end",
+"dtype": "char(25)",
+"start": 7899,
+"length": 25,
+"desc": "Proration end date for EX-XO 11.254 exemption"
+},
+{
+"name": "ex_xp_exempt",
+"dtype": "char(1)",
+"start": 7924,
+"length": 1,
+"desc": "EX-XP 11.271 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xp_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7925,
+"length": 4,
+"desc": "Qualify Year for EX-XP 11.271 exemption"
+},
+{
+"name": "ex_xp_prorate_begin",
+"dtype": "char(25)",
+"start": 7929,
+"length": 25,
+"desc": "Proration begin date for EX-XP 11.271 exemption"
+},
+{
+"name": "ex_xp_prorate_end",
+"dtype": "char(25)",
+"start": 7954,
+"length": 25,
+"desc": "Proration end date for EX-XP 11.271 exemption"
+},
+{
+"name": "ex_xq_exempt",
+"dtype": "char(1)",
+"start": 7979,
+"length": 1,
+"desc": "EX-XQ 11.29 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xq_qualify_yr",
+"dtype": "numeric(4)",
+"start": 7980,
+"length": 4,
+"desc": "Qualify Year for EX-XQ 11.29 exemption"
+},
+{
+"name": "ex_xq_prorate_begin",
+"dtype": "char(25)",
+"start": 7984,
+"length": 25,
+"desc": "Proration begin date for EX-XQ 11.29 exemption"
+},
+{
+"name": "ex_xq_prorate_end",
+"dtype": "char(25)",
+"start": 8009,
+"length": 25,
+"desc": "Proration end date for EX-XQ exemption 11.29 exemption"
+},
+{
+"name": "ex_xr_exempt",
+"dtype": "char(1)",
+"start": 8034,
+"length": 1,
+"desc": "EX-XR 11.30 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xr_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8035,
+"length": 4,
+"desc": "Qualify Year for EX-XR 11.30 exemption"
+},
+{
+"name": "ex_xr_prorate_begin",
+"dtype": "char(25)",
+"start": 8039,
+"length": 25,
+"desc": "Proration begin date for EX-XR 11.30 exemption"
+},
+{
+"name": "ex_xr_prorate_end",
+"dtype": "char(25)",
+"start": 8064,
+"length": 25,
+"desc": "Proration end date for EX-XR 11.30 exemption"
+},
+{
+"name": "ex_xs_exempt",
+"dtype": "char(1)",
+"start": 8089,
+"length": 1,
+"desc": "EX-XS 11.33 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xs_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8090,
+"length": 4,
+"desc": "Qualify Year for EX-XS 11.33 exemption"
+},
+{
+"name": "ex_xs_prorate_begin",
+"dtype": "char(25)",
+"start": 8094,
+"length": 25,
+"desc": "Proration begin date for EX-XS 11.33 exemption"
+},
+{
+"name": "ex_xs_prorate_end",
+"dtype": "char(25)",
+"start": 8119,
+"length": 25,
+"desc": "Proration end date for EX-XS 11.33 exemption"
+},
+{
+"name": "ex_xt_exempt",
+"dtype": "char(1)",
+"start": 8144,
+"length": 1,
+"desc": "EX-XT 11.34 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xt_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8145,
+"length": 4,
+"desc": "Qualify Year for EX-XT 11.34 exemption"
+},
+{
+"name": "ex_xt_prorate_begin",
+"dtype": "char(25)",
+"start": 8149,
+"length": 25,
+"desc": "Proration begin date for EX-XT 11.34 exemption"
+},
+{
+"name": "ex_xt_prorate_end",
+"dtype": "char(25)",
+"start": 8174,
+"length": 25,
+"desc": "Proration end date for EX-XT 11.34 exemption"
+},
+{
+"name": "ex_xu_exempt",
+"dtype": "char(1)",
+"start": 8199,
+"length": 1,
+"desc": "EX-XU 11.23 exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xu_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8200,
+"length": 4,
+"desc": "Qualify Year for EX-XU 11.23 exemption"
+},
+{
+"name": "ex_xu_prorate_begin",
+"dtype": "char(25)",
+"start": 8204,
+"length": 25,
+"desc": "Proration begin date for EX-XU 11.23 exemption"
+},
+{
+"name": "ex_xu_prorate_end",
+"dtype": "char(25)",
+"start": 8229,
+"length": 25,
+"desc": "Proration end date for EX-XU 11.23 exemption"
+},
+{
+"name": "ex_xv_exempt",
+"dtype": "char(1)",
+"start": 8254,
+"length": 1,
+"desc": "EX-XV  exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xv_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8255,
+"length": 4,
+"desc": "Qualify Year for EX-XV exemption"
+},
+{
+"name": "ex_xv_prorate_begin",
+"dtype": "char(25)",
+"start": 8259,
+"length": 25,
+"desc": "Proration begin date for EX-XV exemption"
+},
+{
+"name": "ex_xv_prorate_end",
+"dtype": "char(25)",
+"start": 8284,
+"length": 25,
+"desc": "Proration end date for EX-XV exemption"
+},
+{
+"name": "ex_xa_exempt",
+"dtype": "char(1)",
+"start": 8309,
+"length": 1,
+"desc": "EX-XA  exemption (\u2018T\u2019 or \u2018F\u2019)"
+},
+{
+"name": "ex_xa_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8310,
+"length": 4,
+"desc": "Qualify Year for EX-XA exemption"
+},
+{
+"name": "ex_xa_prorate_begin",
+"dtype": "char(25)",
+"start": 8314,
+"length": 25,
+"desc": "Proration begin date for EX-XA exemption"
+},
+{
+"name": "ex_xa_prorate_end",
+"dtype": "char(25)",
+"start": 8339,
+"length": 25,
+"desc": "Proration end date for EX-XA exemption"
+},
+{
+"name": "lve_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8364,
+"length": 4,
+"desc": "Qualify Year for LVE exemption"
+},
+{
+"name": "ppv_exempt",
+"dtype": "char(1)",
+"start": 8368,
+"length": 1,
+"desc": "Personal Property Vehicle exemption"
+},
+{
+"name": "ppv_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8369,
+"length": 4,
+"desc": "Qualify Year for PPV exemption"
+},
+{
+"name": "ppv_prorate_begin",
+"dtype": "char(25)",
+"start": 8373,
+"length": 25,
+"desc": "date PPV exemption began - used for proration"
+},
+{
+"name": "ppv_prorate_end",
+"dtype": "char(25)",
+"start": 8398,
+"length": 25,
+"desc": "date PPV exemption ended - used for proration"
+},
+{
+"name": "dvch_exempt",
+"dtype": "char(1)",
+"start": 8423,
+"length": 1,
+"desc": "Disabled Veteran Charity Homestead"
+},
+{
+"name": "dvch_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8424,
+"length": 4,
+"desc": "Qualify Year for DVCH exemption"
+},
+{
+"name": "dvch_prorate_begin",
+"dtype": "char(25)",
+"start": 8428,
+"length": 25,
+"desc": "date DVCH exemption began - used for proration"
+},
+{
+"name": "dvch_prorate_end",
+"dtype": "char(25)",
+"start": 8453,
+"length": 25,
+"desc": "date DVCH exemption ended - used for proration"
+},
+{
+"name": "dvchs_exempt",
+"dtype": "char(1)",
+"start": 8478,
+"length": 1,
+"desc": "Disabled Veteran Charity Homestead Spouse"
+},
+{
+"name": "dvchs_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8479,
+"length": 4,
+"desc": "Qualify Year for DVCHS exemption"
+},
+{
+"name": "dvchs_prorate_begin",
+"dtype": "char(25)",
+"start": 8483,
+"length": 25,
+"desc": "date DVCHS exemption began - used for proration"
+},
+{
+"name": "dvchs_prorate_end",
+"dtype": "char(25)",
+"start": 8508,
+"length": 25,
+"desc": "date DVCHS exemption ended - used for proration"
+},
+{
+"name": "masss_exempt",
+"dtype": "char(1)",
+"start": 8533,
+"length": 1,
+"desc": "Member Armed Services Surviving Spouse"
+},
+{
+"name": "masss_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8534,
+"length": 4,
+"desc": "Qualify Year for MASSS exemption"
+},
+{
+"name": "masss_prorate_begin",
+"dtype": "char(25)",
+"start": 8538,
+"length": 25,
+"desc": "date MASSS exemption began - used for proration"
+},
+{
+"name": "masss_prorate_end",
+"dtype": "char(25)",
+"start": 8563,
+"length": 25,
+"desc": "date MASSS exemption ended - used for proration"
+},
+{
+"name": "pp_late_interstate_allocation_val",
+"dtype": "numeric(15)",
+"start": 8588,
+"length": 15,
+"desc": "Personal Property interstate allocation value that is subject to penalty"
+},
+{
+"name": "appraised_val_reflecting_productivity_loss",
+"dtype": "numeric(15)",
+"start": 8603,
+"length": 15,
+"desc": "Appraised Value reflecting Productivity Loss"
+},
+{
+"name": "assessed_val_reflecting_productivity_loss",
+"dtype": "numeric(15)",
+"start": 8618,
+"length": 15,
+"desc": "Assessed Value reflecting Productivity Loss"
+},
+{
+"name": "frss_exempt",
+"dtype": "char(1)",
+"start": 8633,
+"length": 1,
+"desc": "First Responder Surviving Spouse"
+},
+{
+"name": "frss_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8634,
+"length": 4,
+"desc": "Qualify Year for FRSS exemption"
+},
+{
+"name": "frss_prorate_begin",
+"dtype": "char(25)",
+"start": 8638,
+"length": 25,
+"desc": "date FRSS exemption began - used for proration"
+},
+{
+"name": "frss_prorate_end",
+"dtype": "char(25)",
+"start": 8663,
+"length": 25,
+"desc": "date FRSS exemption ended - used for proration"
+},
+{
+"name": "abmno_exempt",
+"dtype": "char(1)",
+"start": 8688,
+"length": 1,
+"desc": "ABMNO (Abatement-MNO) exemption"
+},
+{
+"name": "abmno_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8689,
+"length": 4,
+"desc": "Qualify Year for ABMNO exemption"
+},
+{
+"name": "abmno_prorate_begin",
+"dtype": "char(25)",
+"start": 8693,
+"length": 25,
+"desc": "date ABMNO exemption began - used for proration"
+},
+{
+"name": "abmno_prorate_end",
+"dtype": "char(25)",
+"start": 8718,
+"length": 25,
+"desc": "date ABMNO exemption ended - used for proration"
+},
+{
+"name": "mineral_lease_name",
+"dtype": "char(50)",
+"start": 8743,
+"length": 50,
+"desc": "Mineral Lease Name"
+},
+{
+"name": "mineral_lease_operator",
+"dtype": "char(50)",
+"start": 8793,
+"length": 50,
+"desc": "Mineral Lease Operator's Name"
+},
+{
+"name": "filler",
+"dtype": "char(25)",
+"start": 8843,
+"length": 25,
+"desc": "Not In Use(DV1S exemption deferral date in previous version)"
+},
+{
+"name": "filler",
+"dtype": "char(25)",
+"start": 8868,
+"length": 25,
+"desc": "Not In Use(DV2S exemption deferral date in previous version)"
+},
+{
+"name": "filler",
+"dtype": "char(25)",
+"start": 8893,
+"length": 25,
+"desc": "Not In Use(DV3S exemption deferral date in previous version)"
+},
+{
+"name": "filler",
+"dtype": "char(25)",
+"start": 8918,
+"length": 25,
+"desc": "Not In Use(DV4S exemption deferral date in previous version)"
+},
+{
+"name": "dstr_exempt",
+"dtype": "char(1)",
+"start": 8943,
+"length": 1,
+"desc": "Disaster Damage Exemption"
+},
+{
+"name": "dstr_qualify_yr",
+"dtype": "numeric(4)",
+"start": 8944,
+"length": 4,
+"desc": "Qualify Year for DSTR exemption"
+},
+{
+"name": "dstr_prorate_begin",
+"dtype": "char(25)",
+"start": 8948,
+"length": 25,
+"desc": "Date DSTR exemption began - used for proration"
+},
+{
+"name": "dstr_prorate_end",
+"dtype": "char(25)",
+"start": 8973,
+"length": 25,
+"desc": "Date DSTR exemption ended - used for proration"
+},
+{
+"name": "late_correction_val",
+"dtype": "numeric(15)",
+"start": 8998,
+"length": 15,
+"desc": "Late correction value subject to penalty"
+},
+{
+"name": "dstrs_exempt",
+"dtype": "char(1)",
+"start": 9013,
+"length": 1,
+"desc": "Disaster Damage Exemption - STATE"
+},
+{
+"name": "dstrs_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9014,
+"length": 4,
+"desc": "Qualify Year for DSTRS exemption"
+},
+{
+"name": "dstrs_prorate_begin",
+"dtype": "char(25)",
+"start": 9018,
+"length": 25,
+"desc": "Date DSTRS exemption began - used for proration"
+},
+{
+"name": "dstrs_prorate_end",
+"dtype": "char(25)",
+"start": 9043,
+"length": 25,
+"desc": "Date DSTRS exemption ended - used for proration"
+},
+{
+"name": "nhs_cap_loss",
+"dtype": "numeric(15)",
+"start": 9068,
+"length": 15,
+"desc": "23.321 Cap Loss"
+},
+{
+"name": "ccf_exempt",
+"dtype": "char(1)",
+"start": 9083,
+"length": 1,
+"desc": "Child Care Factility Exemption ('T' or 'F')"
+},
+{
+"name": "ccf_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9084,
+"length": 4,
+"desc": "Qualify Year for CCF exemption"
+},
+{
+"name": "ccf_prorate_begin",
+"dtype": "char(25)",
+"start": 9088,
+"length": 25,
+"desc": "date CCF exemption began - used for proration"
+},
+{
+"name": "ccf_prorate_end",
+"dtype": "char(25)",
+"start": 9113,
+"length": 25,
+"desc": "date CCF exemption ended - used for proration"
+},
+{
+"name": "med_exempt",
+"dtype": "char(1)",
+"start": 9138,
+"length": 1,
+"desc": "Medical or Biomedical Property Exemption ('T' or 'F')"
+},
+{
+"name": "med_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9139,
+"length": 4,
+"desc": "Qualify Year for MED exemption"
+},
+{
+"name": "med_prorate_begin",
+"dtype": "char(25)",
+"start": 9143,
+"length": 25,
+"desc": "date MED exemption began - used for proration"
+},
+{
+"name": "med_prorate_end",
+"dtype": "char(25)",
+"start": 9168,
+"length": 25,
+"desc": "date MED exemption ended - used for proration"
+},
+{
+"name": "jeti_exempt",
+"dtype": "char(1)",
+"start": 9193,
+"length": 1,
+"desc": "403.601 JOBS, ENERGY, TECHNOLOGY, INNOVATION ACT Exemption ('T' or 'F')"
+},
+{
+"name": "jeti_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9194,
+"length": 4,
+"desc": "Qualify Year for JETI exemption"
+},
+{
+"name": "jeti_prorate_begin",
+"dtype": "char(25)",
+"start": 9198,
+"length": 25,
+"desc": "date JETI exemption began - used for proration"
+},
+{
+"name": "jeti_prorate_end",
+"dtype": "char(25)",
+"start": 9223,
+"length": 25,
+"desc": "date JETI exemption ended - used for proration"
+},
+{
+"name": "pp_late_freeport_val",
+"dtype": "numeric(15)",
+"start": 9248,
+"length": 15,
+"desc": "Personal Property freeport value that is subject to penalty"
+},
+{
+"name": "bsi_exempt",
+"dtype": "char(1)",
+"start": 9263,
+"length": 1,
+"desc": "11.38 Border Security Infrastructure Exemption ('T' or 'F')"
+},
+{
+"name": "bsi_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9264,
+"length": 4,
+"desc": "Qualify Year for BSI exemption"
+},
+{
+"name": "bsi_prorate_begin",
+"dtype": "char(25)",
+"start": 9268,
+"length": 25,
+"desc": "date BSI exemption began - used for proration"
+},
+{
+"name": "bsi_prorate_end",
+"dtype": "char(25)",
+"start": 9293,
+"length": 25,
+"desc": "date BSI exemption ended - used for proration"
+},
+{
+"name": "qvss_exempt",
+"dtype": "char(1)",
+"start": 9318,
+"length": 1,
+"desc": "11.136 Qualifying Veteran Surviving Spouse Exemption ('T' or 'F')"
+},
+{
+"name": "qvss_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9319,
+"length": 4,
+"desc": "Qualify Year for QVSS exemption"
+},
+{
+"name": "qvss_prorate_begin",
+"dtype": "char(25)",
+"start": 9323,
+"length": 25,
+"desc": "date QVSS exemption began - used for proration"
+},
+{
+"name": "qvss_prorate_end",
+"dtype": "char(25)",
+"start": 9348,
+"length": 25,
+"desc": "date QVSS exemption ended - used for proration"
+},
+{
+"name": "df_exempt",
+"dtype": "char(1)",
+"start": 9373,
+"length": 1,
+"desc": "11.351 Temporary Exemption for Fire Destroyed HS Exemption ('T' or 'F')"
+},
+{
+"name": "df_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9374,
+"length": 4,
+"desc": "Qualify Year for DF exemption"
+},
+{
+"name": "df_prorate_begin",
+"dtype": "char(25)",
+"start": 9378,
+"length": 25,
+"desc": "date DF exemption began - used for proration"
+},
+{
+"name": "df_prorate_end",
+"dtype": "char(25)",
+"start": 9403,
+"length": 25,
+"desc": "date DF exemption ended - used for proration"
+},
+{
+"name": "bpp_ex_exempt",
+"dtype": "char(1)",
+"start": 9428,
+"length": 1,
+"desc": "BPPEX - Tax Code 11.145 (b) Exemption by a taxing unit (applies to all taxing units) of $125,000 of the appraised value of BPP the person owns that is held for production of income and has taxable situs at the same location in taxing unit."
+},
+{
+"name": "bpp_ex_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9429,
+"length": 4,
+"desc": "Qualify Year for BPPEX exemption"
+},
+{
+"name": "bpp_ex_prorate_begin",
+"dtype": "char(25)",
+"start": 9433,
+"length": 25,
+"desc": "date BPPEX exemption began - used for proration"
+},
+{
+"name": "bpp_ex_prorate_end",
+"dtype": "char(25)",
+"start": 9458,
+"length": 25,
+"desc": "date BPPEX exemption ended - used for proration"
+},
+{
+"name": "bpp_tu_d_exempt",
+"dtype": "char(1)",
+"start": 9483,
+"length": 1,
+"desc": "BPPEX_TU_D - Tax Code 11.145(d) "
+},
+{
+"name": "bpp_tu_d_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9484,
+"length": 4,
+"desc": "Qualify Year for BPPEX_TU exemption"
+},
+{
+"name": "bpp_tu_d_prorate_begin",
+"dtype": "char(25)",
+"start": 9488,
+"length": 25,
+"desc": "date BPPEX_TU exemption began - used for proration"
+},
+{
+"name": "bpp_tu_d_prorate_end",
+"dtype": "char(25)",
+"start": 9513,
+"length": 25,
+"desc": "date BPPEX_TU exemption ended - used for proration"
+},
+{
+"name": "bpp_tu_d1_exempt",
+"dtype": "char(1)",
+"start": 9538,
+"length": 1,
+"desc": "BPPEX_TU_D1 - Tax Code 11.145(d-1) "
+},
+{
+"name": "bpp_tu_d1_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9539,
+"length": 4,
+"desc": "Qualify Year for BPPEX_TU_D1 exemption"
+},
+{
+"name": "bpp_tu_d1_prorate_begin",
+"dtype": "char(25)",
+"start": 9543,
+"length": 25,
+"desc": "date BPPEX_TU_D1 exemption began - used for proration"
+},
+{
+"name": "bpp_tu_d1_prorate_end",
+"dtype": "char(25)",
+"start": 9568,
+"length": 25,
+"desc": "date BPPEX_TU_D1 exemption ended - used for proration"
+},
+{
+"name": "bpp_ex_al_exempt",
+"dtype": "char(1)",
+"start": 9593,
+"length": 1,
+"desc": "BPPEX_AL - 11.145 (F) Related business/unified business enterprise is aggregated and treated as one for purposes of the exemption."
+},
+{
+"name": "bpp_ex_al_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9594,
+"length": 4,
+"desc": "Qualify Year for BPPEX_AL exemption"
+},
+{
+"name": "bpp_ex_al_prorate_begin",
+"dtype": "char(25)",
+"start": 9598,
+"length": 25,
+"desc": "date BPPEX_AL exemption began - used for proration"
+},
+{
+"name": "bpp_ex_al_prorate_end",
+"dtype": "char(25)",
+"start": 9623,
+"length": 25,
+"desc": "date BPPEX_AL exemption ended - used for proration"
+},
+{
+"name": "ex_hfc_exempt",
+"dtype": "char(1)",
+"start": 9648,
+"length": 1,
+"desc": "HB21_Housing Finance Corp Exemption (housing finance corporation) Exemption ('T' or 'F')"
+},
+{
+"name": "ex_hfc_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9649,
+"length": 4,
+"desc": "Qualify Year for EX-HFC Exemption (housing finance corporation)  "
+},
+{
+"name": "ex_hfc_prorate_begin",
+"dtype": "char(25)",
+"start": 9653,
+"length": 25,
+"desc": "date EX-HFC Exemption (housing finance corporation)  began - used for proration"
+},
+{
+"name": "ex_hfc_prorate_end",
+"dtype": "char(25)",
+"start": 9678,
+"length": 25,
+"desc": "date EX-HFC Exemption (housing finance corporation)   ended - used for proration"
+},
+{
+"name": "ex_pfc_exempt",
+"dtype": "char(1)",
+"start": 9703,
+"length": 1,
+"desc": "HB21_Housing Finance Corp Exemption (public finance corporation) ('T' or 'F')"
+},
+{
+"name": "ex_pfc_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9704,
+"length": 4,
+"desc": "Qualify Year for EX-PFC"
+},
+{
+"name": "ex_pfc_prorate_begin",
+"dtype": "char(25)",
+"start": 9708,
+"length": 25,
+"desc": "date EX-PFC began - used for proration"
+},
+{
+"name": "ex_pfc_prorate_end",
+"dtype": "char(25)",
+"start": 9733,
+"length": 25,
+"desc": "date EX-PFC ended - used for proration"
+},
+{
+"name": "ftz_exempt",
+"dtype": "char(1)",
+"start": 9758,
+"length": 1,
+"desc": "Foreign Trade Zone Exemption"
+},
+{
+"name": "ftz_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9759,
+"length": 4,
+"desc": "Qualify Year for FTZ Exemption"
+},
+{
+"name": "ftz_prorate_begin",
+"dtype": "char(25)",
+"start": 9763,
+"length": 25,
+"desc": "date FTZ exemption began - used for proration"
+},
+{
+"name": "ftz_prorate_end",
+"dtype": "char(25)",
+"start": 9788,
+"length": 25,
+"desc": "date FTZ exemption ended - used for proration"
+},
+{
+"name": "afhs_exempt",
+"dtype": "char(1)",
+"start": 9813,
+"length": 1,
+"desc": "Animal Feed Held for Sale Exemption"
+},
+{
+"name": "afhs_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9814,
+"length": 4,
+"desc": "Qualify Year for AFHS Exemption"
+},
+{
+"name": "afhs_prorate_begin",
+"dtype": "char(25)",
+"start": 9818,
+"length": 25,
+"desc": "date AFHS exemption began - used for proration"
+},
+{
+"name": "afhs_prorate_end",
+"dtype": "char(25)",
+"start": 9843,
+"length": 25,
+"desc": "date AFHS exemption ended - used for proration"
+},
+{
+"name": "lgcc_exempt",
+"dtype": "char(1)",
+"start": 9868,
+"length": 1,
+"desc": "Landfill-Generated Gas Conversion Facility (13.311) exemption"
+},
+{
+"name": "lgcc_qualify_yr",
+"dtype": "numeric(4)",
+"start": 9869,
+"length": 4,
+"desc": "Qualify Year for LGCC Exemption"
+},
+{
+"name": "lgcc_prorate_begin",
+"dtype": "char(25)",
+"start": 9873,
+"length": 25,
+"desc": "date LGCC exemption began - used for proration"
+},
+{
+"name": "lgcc_prorate_end",
+"dtype": "char(25)",
+"start": 9898,
+"length": 25,
+"desc": "date LGCC exemption ended - used for proration"
+}
+],
+"APPRAISAL_ENTITY_INFO": [
+{
+"name": "prop_id",
+"dtype": "int(12)",
+"start": 1,
+"length": 12,
+"desc": "Property Id"
+},
+{
+"name": "prop_val_yr",
+"dtype": "numeric(5)",
+"start": 13,
+"length": 5,
+"desc": "Appraisal or Tax Year"
+},
+{
+"name": "sup_num",
+"dtype": "int(12)",
+"start": 18,
+"length": 12,
+"desc": "Supplement Version Number - 0 = represents certified data, supplemental data otherwise"
+},
+{
+"name": "owner_id",
+"dtype": "int(12)",
+"start": 30,
+"length": 12,
+"desc": "Owner Id"
+},
+{
+"name": "entity_id",
+"dtype": "int(12)",
+"start": 42,
+"length": 12,
+"desc": "Entity Id"
+},
+{
+"name": "entity_cd",
+"dtype": "char(10)",
+"start": 54,
+"length": 10,
+"desc": "10 character code that will represent the entity"
+},
+{
+"name": "entity_name",
+"dtype": "char(50)",
+"start": 64,
+"length": 50,
+"desc": "Descriptive Name of Entity"
+},
+{
+"name": "entity_xref_id",
+"dtype": "char(20)",
+"start": 114,
+"length": 20,
+"desc": "Entity Local Xref Id Number"
+},
+{
+"name": "filler",
+"dtype": "char(15)",
+"start": 134,
+"length": 15,
+"desc": "Not in use"
+},
+{
+"name": "assessed_val",
+"dtype": "numeric(15)",
+"start": 149,
+"length": 15,
+"desc": "Assessed Value"
+},
+{
+"name": "taxable_val",
+"dtype": "numeric(15)",
+"start": 164,
+"length": 15,
+"desc": "Taxable Value"
+},
+{
+"name": "ab_amt",
+"dtype": "numeric(15)",
+"start": 179,
+"length": 15,
+"desc": "Abatement Exemption Amount Granted by Entity"
+},
+{
+"name": "en_amt",
+"dtype": "numeric(15)",
+"start": 194,
+"length": 15,
+"desc": "Energy Exemption Amount Granted by Entity"
+},
+{
+"name": "fr_amt",
+"dtype": "numeric(15)",
+"start": 209,
+"length": 15,
+"desc": "Freeport Exemption Amount Granted by Entity"
+},
+{
+"name": "ht_amt",
+"dtype": "numeric(15)",
+"start": 224,
+"length": 15,
+"desc": "Historical Exemption Amount Granted by Entity"
+},
+{
+"name": "pro_amt",
+"dtype": "numeric(15)",
+"start": 239,
+"length": 15,
+"desc": "Prorated Exemption Amount Granted by Entity"
+},
+{
+"name": "pc_amt",
+"dtype": "numeric(15)",
+"start": 254,
+"length": 15,
+"desc": "Pollution Control Exemption Amount Granted by Entity"
+},
+{
+"name": "so_amt",
+"dtype": "numeric(15)",
+"start": 269,
+"length": 15,
+"desc": "Solar Exemption Amount Granted by Entity"
+},
+{
+"name": "ex366_amt",
+"dtype": "numeric(15)",
+"start": 284,
+"length": 15,
+"desc": "EX366 Exemption Amount Granted by Entity\nProperties under $500 minimum exemption"
+},
+{
+"name": "hs_amt",
+"dtype": "numeric(15)",
+"start": 299,
+"length": 15,
+"desc": "Homestead Amount granted by entity"
+},
+{
+"name": "ov65_amt",
+"dtype": "numeric(15)",
+"start": 314,
+"length": 15,
+"desc": "Over 65 Amount granted by entity"
+},
+{
+"name": "dp_amt",
+"dtype": "numeric(15)",
+"start": 329,
+"length": 15,
+"desc": "Disability Exemption Amount granted by entity"
+},
+{
+"name": "dv_amt",
+"dtype": "numeric(15)",
+"start": 344,
+"length": 15,
+"desc": "Disabled Veteran Amount granted by entity"
+},
+{
+"name": "ex_amt",
+"dtype": "numeric(15)",
+"start": 359,
+"length": 15,
+"desc": "Total Exemption Amount granted by entity\n(Needed for Prorated Total Exemption Accounts)"
+},
+{
+"name": "ch_amt",
+"dtype": "numeric(15)",
+"start": 374,
+"length": 15,
+"desc": "Charitable Exemption Amount granted by entity"
+},
+{
+"name": "market_value",
+"dtype": "numeric(15)",
+"start": 389,
+"length": 15,
+"desc": "Market Value"
+},
+{
+"name": "appraised_value",
+"dtype": "numeric(15)",
+"start": 404,
+"length": 15,
+"desc": "Appraised Value"
+},
+{
+"name": "hs_cap",
+"dtype": "numeric(15)",
+"start": 419,
+"length": 15,
+"desc": "HS Cap"
+},
+{
+"name": "ag_late_loss",
+"dtype": "numeric(15)",
+"start": 434,
+"length": 15,
+"desc": "Late ag loss"
+},
+{
+"name": "freeport_late_loss",
+"dtype": "numeric(15)",
+"start": 449,
+"length": 15,
+"desc": "Late Freeport Loss"
+},
+{
+"name": "hs_state_amt",
+"dtype": "numeric(15)",
+"start": 464,
+"length": 15,
+"desc": "Homestead Exemption State Amount"
+},
+{
+"name": "hs_local_amt",
+"dtype": "numeric(15)",
+"start": 479,
+"length": 15,
+"desc": "Homestead Exemption Local Amount"
+},
+{
+"name": "land_hstd_val",
+"dtype": "numeric(15)",
+"start": 494,
+"length": 15,
+"desc": "Land Homestead Value"
+},
+{
+"name": "land_non_hstd_val",
+"dtype": "numeric(15)",
+"start": 509,
+"length": 15,
+"desc": "Land Non Homestead Value"
+},
+{
+"name": "imprv_hstd_val",
+"dtype": "numeric(15)",
+"start": 524,
+"length": 15,
+"desc": "Improvement Homestead Value"
+},
+{
+"name": "imprv_non_hstd_val",
+"dtype": "numeric(15)",
+"start": 539,
+"length": 15,
+"desc": "Improvement Non Homestead Value"
+},
+{
+"name": "ag_use_val",
+"dtype": "numeric(15)",
+"start": 554,
+"length": 15,
+"desc": "Agriculture Use Value"
+},
+{
+"name": "ag_market_val",
+"dtype": "numeric(15)",
+"start": 569,
+"length": 15,
+"desc": "Agriculture Market Value"
+},
+{
+"name": "tim_use_val",
+"dtype": "numeric(15)",
+"start": 584,
+"length": 15,
+"desc": "Timber Use Value"
+},
+{
+"name": "tim_market_val",
+"dtype": "numeric(15)",
+"start": 599,
+"length": 15,
+"desc": "Timber Market Value"
+},
+{
+"name": "partial_entity",
+"dtype": "char(1)",
+"start": 614,
+"length": 1,
+"desc": "If \"T\" the property is not 100% within the entity."
+},
+{
+"name": "freeze_yr",
+"dtype": "numeric(4)",
+"start": 615,
+"length": 4,
+"desc": "Freeze Year"
+},
+{
+"name": "freeze_ceiling",
+"dtype": "numeric(15)",
+"start": 619,
+"length": 15,
+"desc": "Freeze Ceiling"
+},
+{
+"name": "freeze_transfer_flag",
+"dtype": "char(1)",
+"start": 634,
+"length": 1,
+"desc": "Freeze Transfer Flag"
+},
+{
+"name": "freeze_transfer_date",
+"dtype": "char(25)",
+"start": 635,
+"length": 25,
+"desc": "Freeze Transfer Date"
+},
+{
+"name": "freeze_previous_tax",
+"dtype": "numeric(15)",
+"start": 660,
+"length": 15,
+"desc": "Freeze Previous Tax"
+},
+{
+"name": "freeze_previous_tax_unfrozen",
+"dtype": "numeric(15)",
+"start": 675,
+"length": 15,
+"desc": "Freeze Previous Tax Unfrozen"
+},
+{
+"name": "freeze_transfer_percentage",
+"dtype": "numeric(9,6)",
+"start": 690,
+"length": 9,
+"desc": "Freeze Transfer Percentage"
+},
+{
+"name": "lve_amt",
+"dtype": "numeric(15)",
+"start": 699,
+"length": 15,
+"desc": "Leased vehicle exemption amount"
+},
+{
+"name": "eco_amt",
+"dtype": "numeric(15)",
+"start": 714,
+"length": 15,
+"desc": "ECO exemption amount"
+},
+{
+"name": "ag_use_val_ne",
+"dtype": "numeric(15)",
+"start": 729,
+"length": 15,
+"desc": "Ag use val non-exempt"
+},
+{
+"name": "ag_use_val_ex",
+"dtype": "numeric(15)",
+"start": 744,
+"length": 15,
+"desc": "Ag use val exempt"
+},
+{
+"name": "ag_market_ne",
+"dtype": "numeric(15)",
+"start": 759,
+"length": 15,
+"desc": "Ag market non-exempt"
+},
+{
+"name": "ag_market_ex",
+"dtype": "numeric(15)",
+"start": 774,
+"length": 15,
+"desc": "Ag market exempt"
+},
+{
+"name": "timber_use_ne",
+"dtype": "numeric(15)",
+"start": 789,
+"length": 15,
+"desc": "Timber use non-exempt"
+},
+{
+"name": "timber_use_ex",
+"dtype": "numeric(15)",
+"start": 804,
+"length": 15,
+"desc": "Timber use exempt"
+},
+{
+"name": "timber_market_ne",
+"dtype": "numeric(15)",
+"start": 819,
+"length": 15,
+"desc": "Timber market non-exempt"
+},
+{
+"name": "timber_market_ex",
+"dtype": "numeric(15)",
+"start": 834,
+"length": 15,
+"desc": "Timber market exempt"
+},
+{
+"name": "new val hs",
+"dtype": "numeric(15)",
+"start": 849,
+"length": 15,
+"desc": "New Homesite Value"
+},
+{
+"name": "new val nhs",
+"dtype": "numeric(15)",
+"start": 864,
+"length": 15,
+"desc": "New Non-Homesite Value"
+},
+{
+"name": "new val p",
+"dtype": "numeric(15)",
+"start": 879,
+"length": 15,
+"desc": "New Personal Value"
+},
+{
+"name": "new val taxable",
+"dtype": "numeric(15)",
+"start": 894,
+"length": 15,
+"desc": "New Taxable Value"
+},
+{
+"name": "dataset_id",
+"dtype": "numeric(15)",
+"start": 909,
+"length": 15,
+"desc": "Unique number that identifies this export"
+},
+{
+"name": "chodo_amt",
+"dtype": "numeric(15)",
+"start": 924,
+"length": 15,
+"desc": "CHODO Exemption Amount Granted by Entity"
+},
+{
+"name": "ent_pct_land_hs",
+"dtype": "numeric(15)",
+"start": 939,
+"length": 15,
+"desc": "Land Homesite Entity Percentage"
+},
+{
+"name": "ent_pct_land_nonhs",
+"dtype": "numeric(15)",
+"start": 954,
+"length": 15,
+"desc": "Land Non-Homesite Entity Percentage"
+},
+{
+"name": "ent_pct_imprv_hs",
+"dtype": "numeric(15)",
+"start": 969,
+"length": 15,
+"desc": "Improvement Homesite Entity Percentage"
+},
+{
+"name": "ent_pct_imprv_nonhs",
+"dtype": "numeric(15)",
+"start": 984,
+"length": 15,
+"desc": "Improvement Non-Homesite Entity Percentage"
+},
+{
+"name": "ent_pct_ag_use",
+"dtype": "numeric(15)",
+"start": 999,
+"length": 15,
+"desc": "Ag Use Entity Percentage"
+},
+{
+"name": "ent_pct_ag_mkt",
+"dtype": "numeric(15)",
+"start": 1014,
+"length": 15,
+"desc": "Ag Market Entity Percentage"
+},
+{
+"name": "ent_pct_tim_use",
+"dtype": "numeric(15)",
+"start": 1029,
+"length": 15,
+"desc": "Timber Use Entity Percentage"
+},
+{
+"name": "ent_pct_tim_mkt",
+"dtype": "numeric(15)",
+"start": 1044,
+"length": 15,
+"desc": "Timber Market Entity Percentage"
+},
+{
+"name": "ent_pct_pers",
+"dtype": "numeric(15)",
+"start": 1059,
+"length": 15,
+"desc": "Personal Property Entity Percentage"
+},
+{
+"name": "ent_pct_min",
+"dtype": "numeric(15)",
+"start": 1074,
+"length": 15,
+"desc": "Mineral Property Entity Percentage"
+},
+{
+"name": "ent_pct_auto",
+"dtype": "numeric(15)",
+"start": 1089,
+"length": 15,
+"desc": "Automotive Property Entity Percentage"
+},
+{
+"name": "lih_amt",
+"dtype": "numeric(15)",
+"start": 1104,
+"length": 15,
+"desc": "LIH Exemption Amount Granted by Entity"
+},
+{
+"name": "git_amt",
+"dtype": "numeric(15)",
+"start": 1119,
+"length": 15,
+"desc": "GIT Exemption Amount Granted by Entity"
+},
+{
+"name": "dvhs_amt",
+"dtype": "numeric(15)",
+"start": 1134,
+"length": 15,
+"desc": "Disabled Veteran Homestead Amount granted by entity"
+},
+{
+"name": "tax_increment_flag",
+"dtype": "char(1)",
+"start": 1149,
+"length": 1,
+"desc": "Tax Increment Flag ('T' or 'F')"
+},
+{
+"name": "tax_increment_imprv_val",
+"dtype": "numeric(15)",
+"start": 1150,
+"length": 15,
+"desc": "Tax Increment Improvement Value"
+},
+{
+"name": "tax_increment_land_val",
+"dtype": "numeric(15)",
+"start": 1165,
+"length": 15,
+"desc": "Tax Increment Land Value"
+},
+{
+"name": "weed_taxable_acres",
+"dtype": "numeric(15)",
+"start": 1180,
+"length": 15,
+"desc": "Weed Taxable Acres (4 Decimal Places)"
+},
+{
+"name": "hs_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1195,
+"length": 15,
+"desc": "Allocation Factor for HS exemption"
+},
+{
+"name": "ov65_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1210,
+"length": 15,
+"desc": "Allocation Factor for OV65 exemption"
+},
+{
+"name": "ov65s_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1225,
+"length": 15,
+"desc": "Allocation Factor for OV65S exemption"
+},
+{
+"name": "dp_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1240,
+"length": 15,
+"desc": "Allocation Factor for DP exemption"
+},
+{
+"name": "dps_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1255,
+"length": 15,
+"desc": "Allocation Factor for DPS exemption"
+},
+{
+"name": "dv1_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1270,
+"length": 15,
+"desc": "Allocation Factor for DV1 exemption"
+},
+{
+"name": "dv1s_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1285,
+"length": 15,
+"desc": "Allocation Factor for DV1S exemption"
+},
+{
+"name": "dv2_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1300,
+"length": 15,
+"desc": "Allocation Factor for DV2 exemption"
+},
+{
+"name": "dv2s_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1315,
+"length": 15,
+"desc": "Allocation Factor for DV2S exemption"
+},
+{
+"name": "dv3_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1330,
+"length": 15,
+"desc": "Allocation Factor for DV3 exemption"
+},
+{
+"name": "dv3s_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1345,
+"length": 15,
+"desc": "Allocation Factor for DV3S exemption"
+},
+{
+"name": "dv4_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1360,
+"length": 15,
+"desc": "Allocation Factor for DV4 exemption"
+},
+{
+"name": "dv4s_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1375,
+"length": 15,
+"desc": "Allocation Factor for DV4S exemption"
+},
+{
+"name": "dvhs_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1390,
+"length": 15,
+"desc": "Allocation Factor for DVHS exemption"
+},
+{
+"name": "ex_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1405,
+"length": 15,
+"desc": "Allocation Factor for EX exemption"
+},
+{
+"name": "ab_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1420,
+"length": 15,
+"desc": "Allocation Factor for AB exemption"
+},
+{
+"name": "en_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1435,
+"length": 15,
+"desc": "Allocation Factor for EN exemption"
+},
+{
+"name": "fr_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1450,
+"length": 15,
+"desc": "Allocation Factor for FR exemption"
+},
+{
+"name": "ht_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1465,
+"length": 15,
+"desc": "Allocation Factor for HT exemption"
+},
+{
+"name": "pro_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1480,
+"length": 15,
+"desc": "Allocation Factor for PRO exemption"
+},
+{
+"name": "pc_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1495,
+"length": 15,
+"desc": "Allocation Factor for PC exemption"
+},
+{
+"name": "so_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1510,
+"length": 15,
+"desc": "Allocation Factor for SO exemption"
+},
+{
+"name": "ex366_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1525,
+"length": 15,
+"desc": "Allocation Factor for EX366 exemption"
+},
+{
+"name": "ch_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1540,
+"length": 15,
+"desc": "Allocation Factor for CH exemption"
+},
+{
+"name": "eco_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1555,
+"length": 15,
+"desc": "Allocation Factor for ECO exemption"
+},
+{
+"name": "chodo_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1570,
+"length": 15,
+"desc": "Allocation Factor for CHODO exemption"
+},
+{
+"name": "lih_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1585,
+"length": 15,
+"desc": "Allocation Factor for LIH exemption"
+},
+{
+"name": "git_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1600,
+"length": 15,
+"desc": "Allocation Factor for GIT exemption"
+},
+{
+"name": "freeze_exmpt_type_cd",
+"dtype": "char(5)",
+"start": 1615,
+"length": 5,
+"desc": "Freeze Exemption Type"
+},
+{
+"name": "freeze_transfer_exmpt_type_cd",
+"dtype": "char(5)",
+"start": 1620,
+"length": 5,
+"desc": "Freeze Transfer Exemption Type"
+},
+{
+"name": "tax_increment_zone_cd",
+"dtype": "char(10)",
+"start": 1625,
+"length": 10,
+"desc": "Tax Increment Zone Code"
+},
+{
+"name": "tax_increment_zone_desc",
+"dtype": "char(50)",
+"start": 1635,
+"length": 50,
+"desc": "Tax Increment Zone Description"
+},
+{
+"name": "omitted_imprv_hstd_val",
+"dtype": "numeric(15)",
+"start": 1685,
+"length": 15,
+"desc": "Omitted Improvement Homestead Value by entity"
+},
+{
+"name": "omitted_imprv_non_hstd_val",
+"dtype": "numeric(15)",
+"start": 1700,
+"length": 15,
+"desc": "Omitted Improvement Non-Homestead Value by entity"
+},
+{
+"name": "clt_amt",
+"dtype": "numeric(15)",
+"start": 1715,
+"length": 15,
+"desc": "Community Land Trust Amount granted by entity"
+},
+{
+"name": "clt_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1730,
+"length": 15,
+"desc": "Allocation Factor for CLT exemption"
+},
+{
+"name": "dvhss_amt",
+"dtype": "numeric(15)",
+"start": 1745,
+"length": 15,
+"desc": "DVHS Surviving Spouse Amount granted by entity"
+},
+{
+"name": "dvhss_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1760,
+"length": 15,
+"desc": "Allocation Factor for DVHS Surviving Spouse  exemption"
+},
+{
+"name": "homestead_group_exemption_factor",
+"dtype": "numeric(15)",
+"start": 1775,
+"length": 15,
+"desc": "Homestead Group Exemption Factor (10 decimals)"
+},
+{
+"name": "ex_xd_amt",
+"dtype": "numeric(15)",
+"start": 1790,
+"length": 15,
+"desc": "EX-XD 11.181 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xd_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1805,
+"length": 15,
+"desc": "EX-XD 11.181 exemption Allocation Factor "
+},
+{
+"name": "ex_xf_amt",
+"dtype": "numeric(15)",
+"start": 1820,
+"length": 15,
+"desc": "EX-XF 11.183 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xf_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1835,
+"length": 15,
+"desc": "EX-XF 11.183 exemptionAllocation Factor"
+},
+{
+"name": "ex_xg_amt",
+"dtype": "numeric(15)",
+"start": 1850,
+"length": 15,
+"desc": "EX-XG 11.184 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xg_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1865,
+"length": 15,
+"desc": "EX-XG 11.184 Exemption Allocation Factor"
+},
+{
+"name": "ex_xh_amt",
+"dtype": "numeric(15)",
+"start": 1880,
+"length": 15,
+"desc": "EX-XH 11.185 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xh_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1895,
+"length": 15,
+"desc": "EX-XH 11.185 Exemption Allocation Factor"
+},
+{
+"name": "ex_xi_amt",
+"dtype": "numeric(15)",
+"start": 1910,
+"length": 15,
+"desc": "EX-XI 11.19 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xi_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1925,
+"length": 15,
+"desc": "EX-XI 11.19 Exemption Allocation Factor"
+},
+{
+"name": "ex_xj_amt",
+"dtype": "numeric(15)",
+"start": 1940,
+"length": 15,
+"desc": "EX-XJ 11.21 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xj_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1955,
+"length": 15,
+"desc": "EX-XJ 11.21 Exemption Allocation Factor"
+},
+{
+"name": "ex_xl_amt",
+"dtype": "numeric(15)",
+"start": 1970,
+"length": 15,
+"desc": "EX-XL 11.231 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xl_allocation_factor",
+"dtype": "numeric(15)",
+"start": 1985,
+"length": 15,
+"desc": "EX-XL 11.231 Exemption Allocation Factor"
+},
+{
+"name": "ex_xm_amt",
+"dtype": "numeric(15)",
+"start": 2000,
+"length": 15,
+"desc": "EX-XM 11.25 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xm_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2015,
+"length": 15,
+"desc": "EX-XM 11.25 Exemption Allocation Factor"
+},
+{
+"name": "ex_xn_amt",
+"dtype": "numeric(15)",
+"start": 2030,
+"length": 15,
+"desc": "EX-XN 11.252 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xn_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2045,
+"length": 15,
+"desc": "EX-XN 11.252 Exemption Allocation Factor"
+},
+{
+"name": "ex_xo_amt",
+"dtype": "numeric(15)",
+"start": 2060,
+"length": 15,
+"desc": "EX-XO 11.254 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xo_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2075,
+"length": 15,
+"desc": "EX-XO 11.254 Exemption Allocation Factor"
+},
+{
+"name": "ex_xp_amt",
+"dtype": "numeric(15)",
+"start": 2090,
+"length": 15,
+"desc": "EX-XP 11.271 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xp_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2105,
+"length": 15,
+"desc": "EX-XP 11.271 Exemption Allocation Factor"
+},
+{
+"name": "ex_xq_amt",
+"dtype": "numeric(15)",
+"start": 2120,
+"length": 15,
+"desc": "EX-XQ 11.29 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xq_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2135,
+"length": 15,
+"desc": "EX-XQ 11.29 Exemption Allocation Factor"
+},
+{
+"name": "ex_xr_amt",
+"dtype": "numeric(15)",
+"start": 2150,
+"length": 15,
+"desc": "EX-XR 11.30 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xr_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2165,
+"length": 15,
+"desc": "EX-XR 11.30 Exemption Allocation Factor"
+},
+{
+"name": "ex_xs_amt",
+"dtype": "numeric(15)",
+"start": 2180,
+"length": 15,
+"desc": "EX-XS 11.33 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xs_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2195,
+"length": 15,
+"desc": "EX-XS 11.33 Exemption Allocation Factor"
+},
+{
+"name": "ex_xt_amt",
+"dtype": "numeric(15)",
+"start": 2210,
+"length": 15,
+"desc": "EX-XT 11.34 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xt_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2225,
+"length": 15,
+"desc": "EX-XT 11.34 Exemption Allocation Factor"
+},
+{
+"name": "ex_xu_amt",
+"dtype": "numeric(15)",
+"start": 2240,
+"length": 15,
+"desc": "EX-XU 11.23 Exemption Amount granted by entity"
+},
+{
+"name": "ex_xu_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2255,
+"length": 15,
+"desc": "EX-XU 11.23 Exemption Allocation Factor"
+},
+{
+"name": "ex_xv_amt",
+"dtype": "numeric(15)",
+"start": 2270,
+"length": 15,
+"desc": "EX-XV Exemption Amount granted by entity"
+},
+{
+"name": "ex_xv_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2285,
+"length": 15,
+"desc": "EX-XV Exemption Allocation Factor"
+},
+{
+"name": "ex_xa_amt",
+"dtype": "numeric(15)",
+"start": 2300,
+"length": 15,
+"desc": "EX-XA Exemption Amount granted by entity"
+},
+{
+"name": "ex_xa_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2315,
+"length": 15,
+"desc": "EX-XA Exemption Allocation Factor"
+},
+{
+"name": "lve_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2330,
+"length": 15,
+"desc": "Leased vehicle exemption allocation factor"
+},
+{
+"name": "ppv_amt",
+"dtype": "numeric(15)",
+"start": 2345,
+"length": 15,
+"desc": "Personal Property vehicle exemption amount"
+},
+{
+"name": "ppv_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2360,
+"length": 15,
+"desc": "Personal Property vehicle exemption allocation factor"
+},
+{
+"name": "dvch_amt",
+"dtype": "numeric(15)",
+"start": 2375,
+"length": 15,
+"desc": "Disabled Veteran Charity Homestead exemption amount"
+},
+{
+"name": "dvch_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2390,
+"length": 15,
+"desc": "Disabled Veteran Charity Homestead exemption allocation factor"
+},
+{
+"name": "dvchs_amt",
+"dtype": "numeric(15)",
+"start": 2405,
+"length": 15,
+"desc": "Disabled Veteran Charity Homestead Spouse exemption amount"
+},
+{
+"name": "dvchs_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2420,
+"length": 15,
+"desc": "Disabled Veteran Charity Homestead Spouse exemption allocation factor"
+},
+{
+"name": "masss_amt",
+"dtype": "numeric(15)",
+"start": 2435,
+"length": 15,
+"desc": "Member Armed Services Surviving Spouse exemption amount"
+},
+{
+"name": "masss_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2450,
+"length": 15,
+"desc": "Member Armed Services Surviving Spouse exemption allocation factor"
+},
+{
+"name": "pp_late_interstate_allocation_val",
+"dtype": "numeric(15)",
+"start": 2465,
+"length": 15,
+"desc": "Property interstate allocation value that is subject to penalty by entity"
+},
+{
+"name": "frss_amt",
+"dtype": "numeric(15)",
+"start": 2480,
+"length": 15,
+"desc": "First Responder Surviving Spouse exemption amount"
+},
+{
+"name": "frss_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2495,
+"length": 15,
+"desc": "First Responder Surviving Spouse exemption allocation factor"
+},
+{
+"name": "abmno_amt",
+"dtype": "numeric(15)",
+"start": 2510,
+"length": 15,
+"desc": "ABMNO (Abatement-MNO) exemption amount"
+},
+{
+"name": "abmno_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2525,
+"length": 15,
+"desc": "ABMNO (Abatement-MNO) exemption allocation factor"
+},
+{
+"name": "dstr_amt",
+"dtype": "numeric(15)",
+"start": 2540,
+"length": 15,
+"desc": "Disaster Damage Exemption amount"
+},
+{
+"name": "dstr_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2555,
+"length": 15,
+"desc": "Disaster Damage Exemption allocation factor"
+},
+{
+"name": "late_correction_val",
+"dtype": "numeric(15)",
+"start": 2570,
+"length": 15,
+"desc": "Late correction value subject to penalty"
+},
+{
+"name": "dstrs_amt",
+"dtype": "numeric(15)",
+"start": 2585,
+"length": 15,
+"desc": "Disaster Damage Exemption State amount"
+},
+{
+"name": "dstrs_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2600,
+"length": 15,
+"desc": "Disaster Damage Exemption State allocation factor"
+},
+{
+"name": "err_exemption_removal_increase",
+"dtype": "numeric(15)",
+"start": 2615,
+"length": 15,
+"desc": "Erroneous Exemption Removal Increase"
+},
+{
+"name": "mcr_freeze_ceiling_reduction_amount",
+"dtype": "numeric(15)",
+"start": 2630,
+"length": 15,
+"desc": "Maximum Compressed Rate Reduction Amount Applied to Freeze Ceiling"
+},
+{
+"name": "freeze_ceiling_override",
+"dtype": "char(1)",
+"start": 2645,
+"length": 15,
+"desc": "(T or F) indicates that freeze ceiling was not entered by client and not calculated by the system"
+},
+{
+"name": "nhs_cap_loss",
+"dtype": "numeric(15)",
+"start": 2646,
+"length": 15,
+"desc": "23.321 Cap Loss"
+},
+{
+"name": "ccf_amt",
+"dtype": "numeric(15)",
+"start": 2661,
+"length": 15,
+"desc": "Child Care Facility exemption amount"
+},
+{
+"name": "ccf_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2676,
+"length": 15,
+"desc": "Child Care Facility exemption allocation factor"
+},
+{
+"name": "med_amt",
+"dtype": "numeric(15)",
+"start": 2691,
+"length": 15,
+"desc": "Medical or Biomedical Property exemption amount"
+},
+{
+"name": "med_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2706,
+"length": 15,
+"desc": "Medical or Biomedical Property exemption allocation factor"
+},
+{
+"name": "jeti_amt",
+"dtype": "numeric(15)",
+"start": 2721,
+"length": 15,
+"desc": "403.601 JOBS, ENERGY, TECHNOLOGY, INNOVATION ACT exemption amount"
+},
+{
+"name": "jeti_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2736,
+"length": 15,
+"desc": "403.601 JOBS, ENERGY, TECHNOLOGY, INNOVATION ACT exemption allocation factor"
+},
+{
+"name": "pp_late_freeport_val",
+"dtype": "numeric(15)",
+"start": 2751,
+"length": 15,
+"desc": "Property freeport value that is subject to penalty by entity"
+},
+{
+"name": "bsi_amt",
+"dtype": "numeric(15)",
+"start": 2766,
+"length": 15,
+"desc": "BSI exemption amount"
+},
+{
+"name": "bsi_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2781,
+"length": 15,
+"desc": "BSI exemption allocation factor"
+},
+{
+"name": "qvss_amt",
+"dtype": "numeric(15)",
+"start": 2796,
+"length": 15,
+"desc": "QVSS exemption amount"
+},
+{
+"name": "qvss_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2811,
+"length": 15,
+"desc": "QVSS exemption allocation factor"
+},
+{
+"name": "df_amt",
+"dtype": "numeric(15)",
+"start": 2826,
+"length": 15,
+"desc": "DF exemption amont"
+},
+{
+"name": "df_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2841,
+"length": 15,
+"desc": "DF exemption allocation factor"
+},
+{
+"name": "bpp_ex_amt",
+"dtype": "numeric(15)",
+"start": 2856,
+"length": 15,
+"desc": "BPPEX exemption amount"
+},
+{
+"name": "bpp_ex_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2871,
+"length": 15,
+"desc": "BPPEX exemption allocation factor"
+},
+{
+"name": "bpp_ex_tu_d_amt",
+"dtype": "numeric(15)",
+"start": 2886,
+"length": 15,
+"desc": "BPPEX_TU_D exemption amount"
+},
+{
+"name": "bpp_ex_tu_d_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2901,
+"length": 15,
+"desc": "BPPEX_TU_D exemption allocation factor"
+},
+{
+"name": "bpp_ex_tu_d1_amt",
+"dtype": "numeric(15)",
+"start": 2916,
+"length": 15,
+"desc": "BPPEX_TU_D1 exemption amount"
+},
+{
+"name": "bpp_ex_tu_d1_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2931,
+"length": 15,
+"desc": "BPPEX_TU_D1 exemption allocation factor"
+},
+{
+"name": "bpp_ex_al_amt",
+"dtype": "numeric(15)",
+"start": 2946,
+"length": 15,
+"desc": "BPPEX_AL exemption amount"
+},
+{
+"name": "bpp_ex_al_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2961,
+"length": 15,
+"desc": "BPPEX_AL exemption allocation factor"
+},
+{
+"name": "ex_hfc_amt",
+"dtype": "numeric(15)",
+"start": 2976,
+"length": 15,
+"desc": "EX-HFC exemption amount"
+},
+{
+"name": "ex_hfc_allocation_factor",
+"dtype": "numeric(15)",
+"start": 2991,
+"length": 15,
+"desc": "EX-HFC exemption allocation factor"
+},
+{
+"name": "ex_pfc_amt",
+"dtype": "numeric(15)",
+"start": 3006,
+"length": 15,
+"desc": "EX-PFC exemption amount"
+},
+{
+"name": "ex_pfc_allocation_factor",
+"dtype": "numeric(15)",
+"start": 3021,
+"length": 15,
+"desc": "EX-PFC exemption allocation factor"
+},
+{
+"name": "ftz_amt",
+"dtype": "numeric(15)",
+"start": 3036,
+"length": 15,
+"desc": "FTZ exemption amount"
+},
+{
+"name": "ftz_allocation_factor",
+"dtype": "numeric(15)",
+"start": 3051,
+"length": 15,
+"desc": "FTZ exemption allocation factor"
+},
+{
+"name": "builder_inventory_pct",
+"dtype": "numeric(15)",
+"start": 3066,
+"length": 15,
+"desc": "Percentage used to adjust value for builder inventory discount"
+},
+{
+"name": "delete_taxingunit",
+"dtype": "char(1)",
+"start": 3081,
+"length": 1,
+"desc": "if \"T\" then taxing unit has been deleted for this property"
+},
+{
+"name": "afhs_amt",
+"dtype": "numeric(15)",
+"start": 3082,
+"length": 15,
+"desc": "AFHS exemption amount"
+},
+{
+"name": "afhs_allocation_factor",
+"dtype": "numeric(15)",
+"start": 3097,
+"length": 15,
+"desc": "AFHS exemption allocation factor"
+},
+{
+"name": "lgcc_amt",
+"dtype": "numeric(15)",
+"start": 3112,
+"length": 15,
+"desc": "LGCC exemption amount"
+},
+{
+"name": "lgcc_allocation_factor",
+"dtype": "numeric(15)",
+"start": 3127,
+"length": 15,
+"desc": "LGCC exemption allocation factor"
+}
+]
+}

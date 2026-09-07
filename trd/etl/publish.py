@@ -37,7 +37,9 @@ def rows_from_csv(path: Path, limit: int | None = None, tax_year: int = 2026) ->
             "est_refund_total": float(d["est_refund_total"]), "est_refund_by_year": json.loads(d["est_refund_by_year"]) if isinstance(d["est_refund_by_year"], str) else d["est_refund_by_year"],
             "est_forward_annual": float(d["est_forward_annual"]), "estimate_unconfirmed": bool(d.get("estimate_unconfirmed", False)), "status": "new",
         })
-    return props, leads
+    def clean(d: dict) -> dict:
+        return {k: (None if isinstance(v, float) and pd.isna(v) else v) for k, v in d.items()}
+    return [clean(p) for p in props], [clean(l) for l in leads]
 
 
 def sql_literal(v) -> str:

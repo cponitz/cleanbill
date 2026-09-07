@@ -27,7 +27,8 @@ from trd.estimator import estimate_refund, refundable_tax_years
 
 ENTITY_RE = re.compile(r"\b(LLC|L\.L\.C|INC|CORP|CORPORATION|LP|LLP|LTD|TRUST|TRUSTEE|TR|ESTATE OF|PARTNERS|PARTNERSHIP|HOLDINGS|PROPERTIES|"
                        r"INVESTMENTS|INVESTMENT|CHURCH|CITY OF|COUNTY|STATE OF|BANK|HOMES|BUILDERS|DEVELOPMENT|ASSOC|ASSOCIATION|FOUNDATION|"
-                       r"UNIVERSITY|SCHOOL|HOUSING|AUTHORITY|REALTY|RENTALS|VENTURES|CAPITAL|GROUP|ENTERPRISES|CO\b|COMPANY)\b", re.I)
+                       r"UNIVERSITY|SCHOOL|HOUSING|AUTHORITY|REALTY|RENTALS|VENTURES|CAPITAL|GROUP|ENTERPRISES|CO\b|COMPANY|GALLERY|STUDIO|SERVICES|MINISTRIES|"
+                       r"CENTER|CLINIC|DENTAL|CONSTRUCTION|MANAGEMENT|MGMT|RESTAURANT|STORE|SHOP|SALON|CHILDCARE|DAYCARE|ACADEMY|FUND|SERIES|PLLC|PC\b|DDS|MD\b)\b", re.I)
 RES_STATE_CODES = ("A1", "A3", "A4")  # single-family, condo, townhome (A2 mobile homes excluded for MVP)
 CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I
 
@@ -38,7 +39,8 @@ def new_claim_code() -> str:
 
 
 def norm_addr(s: str) -> str:
-    s = re.sub(r"[^A-Z0-9 ]", " ", (s or "").upper())
+    if s is None or (isinstance(s, float) and s != s): s = ""
+    s = re.sub(r"[^A-Z0-9 ]", " ", str(s).upper())
     s = re.sub(r"\b(STREET)\b", "ST", s); s = re.sub(r"\b(AVENUE)\b", "AVE", s); s = re.sub(r"\b(DRIVE)\b", "DR", s)
     s = re.sub(r"\b(ROAD)\b", "RD", s); s = re.sub(r"\b(LANE)\b", "LN", s); s = re.sub(r"\b(BOULEVARD)\b", "BLVD", s)
     s = re.sub(r"\b(COURT)\b", "CT", s); s = re.sub(r"\b(CIRCLE)\b", "CIR", s); s = re.sub(r"\b(PLACE)\b", "PL", s)
@@ -50,7 +52,7 @@ def build_leads(db_path: Path, as_of: date, min_value: float = 100_000) -> pd.Da
     con = duckdb.connect(str(db_path), read_only=True)
     cols = {r[1].lower() for r in con.execute("pragma table_info('appraisal_info')").fetchall()}
     def has(c): return c in cols
-    situs = " || ' ' || ".join(f"coalesce({c}, '')" for c in ("situs_num", "situs_street_prefx", "situs_street", "situs_street_sufix") if has(c))
+    situs = " || ' ' || ".join(f"coalesce({c}, '')" for c in ("situs_num", "situs_street_prefx", "situs_street", "situs_street_suffix", "situs_street_sufix") if has(c))
     unit = "coalesce(situs_unit,'')" if has("situs_unit") else "''"
     suppress = " or ".join(f"coalesce({c}, false)" for c in ("py_address_suppress_flag", "py_confidential_flag") if has(c)) or "false"
     exempt_flags = " or ".join(f"coalesce({c}, false)" for c in ("hs_exempt", "ov65_exempt", "ov65s_exempt", "dp_exempt", "dvhs_exempt") if has(c))
@@ -100,7 +102,7 @@ def build_leads(db_path: Path, as_of: date, min_value: float = 100_000) -> pd.Da
     leads["est_forward_annual"] = ests.map(lambda e: e.forward_annual)
     leads["estimate_unconfirmed"] = ests.map(lambda e: e.unconfirmed)
     leads["claim_code"] = [new_claim_code() for _ in range(len(leads))]
-    leads["situs_full"] = (leads["situs_line"] + leads["situs_unit"].map(lambda u: f" UNIT {u}" if u else "") + ", " + leads["situs_city"].fillna("AUSTIN") + ", TX " + leads["situs_zip"].fillna("").str[:5]).str.replace(r"\s+", " ", regex=True)
+    leads["situs_full"] = (leads["situs_line"] + leads["situs_unit"].map(lambda u: f" UNIT {u}" if u else "") + ", " + leads["situs_city"].replace("", None).fillna(leads["owner_city"]).fillna("AUSTIN") + ", TX " + leads["situs_zip"].fillna("").str[:5]).str.replace(r"\s+", " ", regex=True)
     return leads.sort_values(["tier", "est_refund_total"], ascending=[True, False]).reset_index(drop=True)
 
 
