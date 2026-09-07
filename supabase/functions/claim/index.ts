@@ -6,7 +6,7 @@ import { renderAgreement, renderClaim, renderClosed, renderNotFound, renderThank
 
 const CODE_RE = /^TRD-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 const MAX_BYTES = 15 * 1024 * 1024;
-const MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MIMES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 
 function normCode(raw: string | null): string | null {
   if (!raw) return null;
@@ -20,6 +20,7 @@ async function loadLead(sb: ReturnType<typeof serviceClient>, code: string) {
   const { data: lead } = await sb.from("leads").select("*").eq("claim_code", code).maybeSingle();
   if (!lead) return null;
   const { data: prop } = await sb.from("properties").select("prop_id, owner_name, situs_full").eq("prop_id", lead.prop_id).single();
+  if (!prop) return null;
   return { lead, prop };
 }
 
@@ -81,7 +82,7 @@ Deno.serve(async (req: Request) => {
     if (!fullName || !email || !sig) problems.push("Name, email, and typed signature are required.");
     if (!consents) problems.push("Please check all three agreement boxes.");
     if (!(front instanceof File) || front.size === 0) problems.push("Please add a photo of the front of your license.");
-    else if (front.size > MAX_BYTES || !MIMES.has(front.type)) problems.push("License photo must be a JPEG/PNG/WebP under 15 MB.");
+    else if (front.size > MAX_BYTES || !MIMES.has(front.type)) problems.push("License photo must be a JPEG/PNG/WebP/PDF under 15 MB.");
     if (sig && fullName && sig.toLowerCase().replace(/\s+/g, " ") !== fullName.toLowerCase().replace(/\s+/g, " ")) {
       problems.push("Your typed signature must match your full name exactly.");
     }
@@ -105,7 +106,7 @@ Deno.serve(async (req: Request) => {
     const uploads: Array<{ kind: string; file: File }> = [{ kind: "dl_front", file: front as File }];
     if (back instanceof File && back.size > 0 && back.size <= MAX_BYTES && MIMES.has(back.type)) uploads.push({ kind: "dl_back", file: back });
     for (const u of uploads) {
-      const ext = u.file.type === "image/png" ? "png" : u.file.type === "image/webp" ? "webp" : "jpg";
+      const ext = u.file.type === "image/png" ? "png" : u.file.type === "image/webp" ? "webp" : u.file.type === "application/pdf" ? "pdf" : "jpg";
       const path = `${cust.id}/${u.kind}.${ext}`;
       const { error: upErr } = await sb.storage.from("ids").upload(path, u.file, { contentType: u.file.type, upsert: true });
       if (upErr) return html(renderClaim(lead, prop, "Upload failed: " + upErr.message), 500);

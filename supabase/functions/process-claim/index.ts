@@ -48,7 +48,10 @@ function b64(bytes: Uint8Array): string {
 
 export async function extractId(key: string, images: Array<{ mime: string; data: Uint8Array }>): Promise<{ fields: Extracted; usage: { input_tokens: number; output_tokens: number }; cost: number }> {
   const content: unknown[] = [];
-  for (const im of images) content.push({ type: "image", source: { type: "base64", media_type: im.mime, data: b64(im.data) } });
+  for (const im of images) {
+    if (im.mime === "application/pdf") content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64(im.data) } });
+    else content.push({ type: "image", source: { type: "base64", media_type: im.mime, data: b64(im.data) } });
+  }
   content.push({
     type: "text",
     text: "Extract the fields from this government-issued ID exactly as printed. Dates as YYYY-MM-DD. If the card is not legible, set readable=false and explain in issues. Do not guess a field you cannot read — leave it empty and lower its confidence.",
@@ -74,7 +77,7 @@ export async function extractId(key: string, images: Array<{ mime: string; data:
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const h = await crypto.subtle.digest("SHA-256", bytes);
+  const h = await crypto.subtle.digest("SHA-256", bytes.slice().buffer as ArrayBuffer);
   return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 

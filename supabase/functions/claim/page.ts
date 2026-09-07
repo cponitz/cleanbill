@@ -101,8 +101,8 @@ ${error ? `<div class="err">${esc(error)}</div>` : ""}
 
 <h2>2 · Your Texas driver's license or ID</h2>
 <p>Texas law requires a copy of your Texas driver's license or DPS ID with the application, and <b>the address on it must match ${esc(prop.situs_full)}</b>.</p>
-<div class="file"><div>📷 Front of your license</div><input type="file" name="dl_front" accept="image/jpeg,image/png,image/webp" capture="environment" required></div>
-<div class="file"><div>Back (optional)</div><input type="file" name="dl_back" accept="image/jpeg,image/png,image/webp" capture="environment"></div>
+<div class="file"><div>📷 Front of your license</div><input type="file" name="dl_front" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" required></div>
+<div class="file"><div>Back (optional)</div><input type="file" name="dl_back" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment"></div>
 <p class="note">Your ID is used only to prepare your application, stored encrypted, and deleted 30 days after filing. ID numbers are confidential under Texas Tax Code §11.48. <b>Address on your license doesn't match?</b> You can update it online with the Texas DPS in about 10 minutes — we'll send the link and hold your claim until then.</p>
 
 <h2>3 · Contact</h2>
