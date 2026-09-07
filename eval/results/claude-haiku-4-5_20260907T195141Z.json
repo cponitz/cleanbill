@@ -1,0 +1,1438 @@
+{
+  "summary": {
+    "model": "claude-haiku-4-5",
+    "n": 30,
+    "field_accuracy": {
+      "first_name": 0.8333333333333334,
+      "last_name": 0.9666666666666667,
+      "dob": 1.0,
+      "expiry": 1.0,
+      "dl_number": 1.0,
+      "address_line1": 0.9666666666666667,
+      "zip": 1.0
+    },
+    "overall_field_accuracy": 0.9666666666666667,
+    "all_fields_correct_rate": 0.8,
+    "cost_total_usd": 0.1187,
+    "cost_per_image_usd": 0.00396,
+    "avg_input_tokens": 2156.6,
+    "avg_output_tokens": 359.76666666666665,
+    "elapsed_s": 103.5
+  },
+  "rows": [
+    {
+      "id": "id_00",
+      "conditions": [
+        "low_light",
+        "glare",
+        "crop"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "JENNIFER",
+        "last_name": "RODRIGUEZ",
+        "dob": "1997-12-07",
+        "expiry": "2027-03-11",
+        "dl_number": "59081935",
+        "address_line1": "9648 BERKMAN DR",
+        "zip": "78749"
+      },
+      "expected": {
+        "first_name": "JENNIFER",
+        "last_name": "RODRIGUEZ",
+        "dob": "1997-12-07",
+        "expiry": "2027-03-11",
+        "dl_number": "59081935",
+        "address_line1": "9648 BERKMAN DR",
+        "zip": "78749"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [
+        "Glare/reflection obscuring portions of card"
+      ],
+      "usage": {
+        "input_tokens": 2103,
+        "output_tokens": 366
+      }
+    },
+    {
+      "id": "id_01",
+      "conditions": [
+        "rotated",
+        "blur"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "ROSA",
+        "last_name": "DE LA CRUZ",
+        "dob": "1941-10-15",
+        "expiry": "2028-03-29",
+        "dl_number": "59982352",
+        "address_line1": "1696 MANCHACA RD UNIT B",
+        "zip": "78759"
+      },
+      "expected": {
+        "first_name": "ROSA",
+        "last_name": "DE LA CRUZ",
+        "dob": "1941-10-15",
+        "expiry": "2028-03-29",
+        "dl_number": "59982352",
+        "address_line1": "1696 MANCHACA RD UNIT B",
+        "zip": "78759"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2607,
+        "output_tokens": 342
+      }
+    },
+    {
+      "id": "id_02",
+      "conditions": [
+        "rotated"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "NANCY",
+        "last_name": "DAVIS",
+        "dob": "1992-12-31",
+        "expiry": "2030-11-12",
+        "dl_number": "15262308",
+        "address_line1": "11048 CAMERON RD",
+        "zip": "78759"
+      },
+      "expected": {
+        "first_name": "NANCY",
+        "last_name": "DAVIS",
+        "dob": "1992-12-31",
+        "expiry": "2030-11-12",
+        "dl_number": "15262308",
+        "address_line1": "11048 CAMERON RD",
+        "zip": "78759"
+      },
+      "confidence": {
+        "name": 1.0,
+        "dob": 1.0,
+        "address": 1.0,
+        "dl_number": 1.0,
+        "expiry": 1.0
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2069,
+        "output_tokens": 336
+      }
+    },
+    {
+      "id": "id_03",
+      "conditions": [
+        "rotated",
+        "noise"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "RICHARD",
+        "last_name": "GARCIA",
+        "dob": "1963-07-11",
+        "expiry": "2031-09-03",
+        "dl_number": "17912728",
+        "address_line1": "3675 DUVAL ST",
+        "zip": "78721"
+      },
+      "expected": {
+        "first_name": "RICHARD",
+        "last_name": "GARCIA",
+        "dob": "1963-07-11",
+        "expiry": "2031-09-03",
+        "dl_number": "17912728",
+        "address_line1": "3675 DUVAL ST",
+        "zip": "78721"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 1867,
+        "output_tokens": 355
+      }
+    },
+    {
+      "id": "id_04",
+      "conditions": [
+        "rotated",
+        "low_light"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "JAMES",
+        "last_name": "MILLER",
+        "dob": "1987-05-02",
+        "expiry": "2031-06-25",
+        "dl_number": "73041297",
+        "address_line1": "7489 PLEASANT VALLEY RD",
+        "zip": "78748"
+      },
+      "expected": {
+        "first_name": "JAMES",
+        "last_name": "MILLER",
+        "dob": "1987-05-02",
+        "expiry": "2031-06-25",
+        "dl_number": "73041297",
+        "address_line1": "7489 PLEASANT VALLEY RD",
+        "zip": "78748"
+      },
+      "confidence": {
+        "name": 1.0,
+        "dob": 1.0,
+        "address": 1.0,
+        "dl_number": 1.0,
+        "expiry": 1.0
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2212,
+        "output_tokens": 350
+      }
+    },
+    {
+      "id": "id_05",
+      "conditions": [
+        "rotated",
+        "blur",
+        "noise"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "LISA",
+        "last_name": "DAVIS",
+        "dob": "1949-12-16",
+        "expiry": "2028-04-01",
+        "dl_number": "57651800",
+        "address_line1": "10735 KOENIG LN",
+        "zip": "78721"
+      },
+      "expected": {
+        "first_name": "LISA",
+        "last_name": "DAVIS",
+        "dob": "1949-12-16",
+        "expiry": "2028-04-01",
+        "dl_number": "57651800",
+        "address_line1": "10735 KOENIG LN",
+        "zip": "78721"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2607,
+        "output_tokens": 372
+      }
+    },
+    {
+      "id": "id_06",
+      "conditions": [
+        "blur",
+        "crop"
+      ],
+      "ok": {
+        "first_name": false,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": false,
+      "got": {
+        "first_name": "LINDA MARIE",
+        "last_name": "LOPEZ",
+        "dob": "1964-11-09",
+        "expiry": "2027-10-09",
+        "dl_number": "12796941",
+        "address_line1": "3049 MANCHACA RD #12",
+        "zip": "78741"
+      },
+      "expected": {
+        "first_name": "LINDA",
+        "last_name": "LOPEZ",
+        "dob": "1964-11-09",
+        "expiry": "2027-10-09",
+        "dl_number": "12796941",
+        "address_line1": "3049 MANCHACA RD #12",
+        "zip": "78741"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 1907,
+        "output_tokens": 363
+      }
+    },
+    {
+      "id": "id_07",
+      "conditions": [
+        "rotated",
+        "crop"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "PATRICIA",
+        "last_name": "TAYLOR",
+        "dob": "1970-11-30",
+        "expiry": "2031-01-03",
+        "dl_number": "21409377",
+        "address_line1": "1618 CAMERON RD UNIT B",
+        "zip": "78749"
+      },
+      "expected": {
+        "first_name": "PATRICIA",
+        "last_name": "TAYLOR",
+        "dob": "1970-11-30",
+        "expiry": "2031-01-03",
+        "dl_number": "21409377",
+        "address_line1": "1618 CAMERON RD UNIT B",
+        "zip": "78749"
+      },
+      "confidence": {
+        "name": 1.0,
+        "dob": 1.0,
+        "address": 1.0,
+        "dl_number": 1.0,
+        "expiry": 1.0
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2138,
+        "output_tokens": 371
+      }
+    },
+    {
+      "id": "id_08",
+      "conditions": [
+        "glare"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "LISA",
+        "last_name": "RODRIGUEZ",
+        "dob": "1961-12-25",
+        "expiry": "2031-12-07",
+        "dl_number": "30993162",
+        "address_line1": "6059 MANCHACA RD APT 204",
+        "zip": "78704"
+      },
+      "expected": {
+        "first_name": "LISA",
+        "last_name": "RODRIGUEZ",
+        "dob": "1961-12-25",
+        "expiry": "2031-12-07",
+        "dl_number": "30993162",
+        "address_line1": "6059 MANCHACA RD APT 204",
+        "zip": "78704"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.9,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2275,
+        "output_tokens": 362
+      }
+    },
+    {
+      "id": "id_09",
+      "conditions": [
+        "rotated",
+        "glare",
+        "noise"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "AIKO",
+        "last_name": "WILSON",
+        "dob": "1941-04-11",
+        "expiry": "2030-09-16",
+        "dl_number": "73952301",
+        "address_line1": "3682 BURNET RD",
+        "zip": "78723"
+      },
+      "expected": {
+        "first_name": "AIKO",
+        "last_name": "WILSON",
+        "dob": "1941-04-11",
+        "expiry": "2030-09-16",
+        "dl_number": "73952301",
+        "address_line1": "3682 BURNET RD",
+        "zip": "78723"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 1938,
+        "output_tokens": 350
+      }
+    },
+    {
+      "id": "id_10",
+      "conditions": [
+        "rotated"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "LISA",
+        "last_name": "SILVA",
+        "dob": "1967-06-28",
+        "expiry": "2030-06-28",
+        "dl_number": "17983652",
+        "address_line1": "9922 BRAKER LN",
+        "zip": "78702"
+      },
+      "expected": {
+        "first_name": "LISA",
+        "last_name": "SILVA",
+        "dob": "1967-06-28",
+        "expiry": "2030-06-28",
+        "dl_number": "17983652",
+        "address_line1": "9922 BRAKER LN",
+        "zip": "78702"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2127,
+        "output_tokens": 349
+      }
+    },
+    {
+      "id": "id_11",
+      "conditions": [
+        "noise",
+        "crop"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "THOMAS",
+        "last_name": "JACKSON",
+        "dob": "1979-02-15",
+        "expiry": "2031-12-24",
+        "dl_number": "37415439",
+        "address_line1": "11810 BLUEBONNET LN",
+        "zip": "78723"
+      },
+      "expected": {
+        "first_name": "THOMAS",
+        "last_name": "JACKSON",
+        "dob": "1979-02-15",
+        "expiry": "2031-12-24",
+        "dl_number": "37415439",
+        "address_line1": "11810 BLUEBONNET LN",
+        "zip": "78723"
+      },
+      "confidence": {
+        "name": 1.0,
+        "dob": 1.0,
+        "address": 1.0,
+        "dl_number": 1.0,
+        "expiry": 1.0
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2249,
+        "output_tokens": 339
+      }
+    },
+    {
+      "id": "id_12",
+      "conditions": [
+        "low_light",
+        "glare"
+      ],
+      "ok": {
+        "first_name": false,
+        "last_name": false,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": false,
+      "got": {
+        "first_name": "KIM",
+        "last_name": "LISA L",
+        "dob": "1962-09-06",
+        "expiry": "2030-11-09",
+        "dl_number": "17594763",
+        "address_line1": "12014 WOODROW AVE",
+        "zip": "78759"
+      },
+      "expected": {
+        "first_name": "LISA",
+        "last_name": "KIM",
+        "dob": "1962-09-06",
+        "expiry": "2030-11-09",
+        "dl_number": "17594763",
+        "address_line1": "12014 WOODROW AVE",
+        "zip": "78759"
+      },
+      "confidence": {
+        "name": 0.85,
+        "dob": 0.95,
+        "address": 0.9,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [
+        "Glare from plastic overlay affecting name field clarity - first name appears to be KIM but last name line shows LISA L with uncertain formatting"
+      ],
+      "usage": {
+        "input_tokens": 2013,
+        "output_tokens": 385
+      }
+    },
+    {
+      "id": "id_13",
+      "conditions": [],
+      "ok": {
+        "first_name": false,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": false,
+      "got": {
+        "first_name": "NANCY R",
+        "last_name": "SILVA",
+        "dob": "1972-01-21",
+        "expiry": "2028-08-11",
+        "dl_number": "88761033",
+        "address_line1": "4874 MENCHACA RD APT 204",
+        "zip": "78757"
+      },
+      "expected": {
+        "first_name": "NANCY",
+        "last_name": "SILVA",
+        "dob": "1972-01-21",
+        "expiry": "2028-08-11",
+        "dl_number": "88761033",
+        "address_line1": "4874 MENCHACA RD APT 204",
+        "zip": "78757"
+      },
+      "confidence": {
+        "name": 1.0,
+        "dob": 1.0,
+        "address": 1.0,
+        "dl_number": 1.0,
+        "expiry": 1.0
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2069,
+        "output_tokens": 357
+      }
+    },
+    {
+      "id": "id_14",
+      "conditions": [
+        "rotated"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "RICHARD",
+        "last_name": "SMITH",
+        "dob": "1982-06-10",
+        "expiry": "2032-03-10",
+        "dl_number": "11923620",
+        "address_line1": "9224 BLUEBONNET LN",
+        "zip": "78702"
+      },
+      "expected": {
+        "first_name": "RICHARD",
+        "last_name": "SMITH",
+        "dob": "1982-06-10",
+        "expiry": "2032-03-10",
+        "dl_number": "11923620",
+        "address_line1": "9224 BLUEBONNET LN",
+        "zip": "78702"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.9,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2212,
+        "output_tokens": 353
+      }
+    },
+    {
+      "id": "id_15",
+      "conditions": [
+        "blur",
+        "glare"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "DAVID",
+        "last_name": "JACKSON",
+        "dob": "1961-11-03",
+        "expiry": "2029-12-01",
+        "dl_number": "45077191",
+        "address_line1": "6930 BURNET RD",
+        "zip": "78748"
+      },
+      "expected": {
+        "first_name": "DAVID",
+        "last_name": "JACKSON",
+        "dob": "1961-11-03",
+        "expiry": "2029-12-01",
+        "dl_number": "45077191",
+        "address_line1": "6930 BURNET RD",
+        "zip": "78748"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2340,
+        "output_tokens": 351
+      }
+    },
+    {
+      "id": "id_16",
+      "conditions": [
+        "blur",
+        "noise"
+      ],
+      "ok": {
+        "first_name": false,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": false,
+      "got": {
+        "first_name": "KAREN MARIE",
+        "last_name": "HERNANDEZ",
+        "dob": "1989-11-17",
+        "expiry": "2028-04-07",
+        "dl_number": "68462345",
+        "address_line1": "4227 JUSTIN LN",
+        "zip": "78731"
+      },
+      "expected": {
+        "first_name": "KAREN",
+        "last_name": "HERNANDEZ",
+        "dob": "1989-11-17",
+        "expiry": "2028-04-07",
+        "dl_number": "68462345",
+        "address_line1": "4227 JUSTIN LN",
+        "zip": "78731"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2046,
+        "output_tokens": 371
+      }
+    },
+    {
+      "id": "id_17",
+      "conditions": [
+        "rotated",
+        "blur",
+        "glare"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "MICHAEL",
+        "last_name": "NGUYEN",
+        "dob": "1946-05-22",
+        "expiry": "2031-12-25",
+        "dl_number": "55527125",
+        "address_line1": "6445 MANCHACA RD UNIT B",
+        "zip": "78749"
+      },
+      "expected": {
+        "first_name": "MICHAEL",
+        "last_name": "NGUYEN",
+        "dob": "1946-05-22",
+        "expiry": "2031-12-25",
+        "dl_number": "55527125",
+        "address_line1": "6445 MANCHACA RD UNIT B",
+        "zip": "78749"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [
+        "Glare from white overlay stripe across card"
+      ],
+      "usage": {
+        "input_tokens": 2367,
+        "output_tokens": 370
+      }
+    },
+    {
+      "id": "id_18",
+      "conditions": [
+        "rotated"
+      ],
+      "ok": {
+        "first_name": false,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": false,
+      "got": {
+        "first_name": "MICHAEL JAMES",
+        "last_name": "KIM",
+        "dob": "1980-09-14",
+        "expiry": "2030-12-21",
+        "dl_number": "89740757",
+        "address_line1": "11358 BRODIE LN UNIT B",
+        "zip": "78757"
+      },
+      "expected": {
+        "first_name": "MICHAEL",
+        "last_name": "KIM",
+        "dob": "1980-09-14",
+        "expiry": "2030-12-21",
+        "dl_number": "89740757",
+        "address_line1": "11358 BRODIE LN UNIT B",
+        "zip": "78757"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.98,
+        "address": 0.95,
+        "dl_number": 0.98,
+        "expiry": 0.98
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2212,
+        "output_tokens": 354
+      }
+    },
+    {
+      "id": "id_19",
+      "conditions": [
+        "rotated",
+        "noise"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "ROBERT",
+        "last_name": "DAVIS",
+        "dob": "1949-06-03",
+        "expiry": "2031-01-12",
+        "dl_number": "36463474",
+        "address_line1": "447 BERKMAN DR #12",
+        "zip": "78758"
+      },
+      "expected": {
+        "first_name": "ROBERT",
+        "last_name": "DAVIS",
+        "dob": "1949-06-03",
+        "expiry": "2031-01-12",
+        "dl_number": "36463474",
+        "address_line1": "447 BERKMAN DR #12",
+        "zip": "78758"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2069,
+        "output_tokens": 349
+      }
+    },
+    {
+      "id": "id_20",
+      "conditions": [
+        "rotated",
+        "glare",
+        "noise"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "SUSAN",
+        "last_name": "GARCIA",
+        "dob": "1976-02-03",
+        "expiry": "2030-04-12",
+        "dl_number": "25702009",
+        "address_line1": "5519 WOODROW AVE",
+        "zip": "78757"
+      },
+      "expected": {
+        "first_name": "SUSAN",
+        "last_name": "GARCIA",
+        "dob": "1976-02-03",
+        "expiry": "2030-04-12",
+        "dl_number": "25702009",
+        "address_line1": "5519 WOODROW AVE",
+        "zip": "78757"
+      },
+      "confidence": {
+        "name": 0.99,
+        "dob": 0.99,
+        "address": 0.99,
+        "dl_number": 0.99,
+        "expiry": 0.99
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 1917,
+        "output_tokens": 371
+      }
+    },
+    {
+      "id": "id_21",
+      "conditions": [
+        "rotated",
+        "low_light",
+        "glare"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "PATRICIA",
+        "last_name": "SMITH",
+        "dob": "2000-11-04",
+        "expiry": "2026-11-02",
+        "dl_number": "99742262",
+        "address_line1": "5913 PLEASANT VALLEY RD",
+        "zip": "78749"
+      },
+      "expected": {
+        "first_name": "PATRICIA",
+        "last_name": "SMITH",
+        "dob": "2000-11-04",
+        "expiry": "2026-11-02",
+        "dl_number": "99742262",
+        "address_line1": "5913 PLEASANT VALLEY RD",
+        "zip": "78749"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.9,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [
+        "Slight glare from overhead lighting visible on portions of the card"
+      ],
+      "usage": {
+        "input_tokens": 2151,
+        "output_tokens": 385
+      }
+    },
+    {
+      "id": "id_22",
+      "conditions": [
+        "low_light",
+        "crop"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "DANIEL",
+        "last_name": "MILLER",
+        "dob": "1976-01-04",
+        "expiry": "2028-08-03",
+        "dl_number": "35202960",
+        "address_line1": "5450 WOODROW AVE APT 204",
+        "zip": "78758"
+      },
+      "expected": {
+        "first_name": "DANIEL",
+        "last_name": "MILLER",
+        "dob": "1976-01-04",
+        "expiry": "2028-08-03",
+        "dl_number": "35202960",
+        "address_line1": "5450 WOODROW AVE APT 204",
+        "zip": "78758"
+      },
+      "confidence": {
+        "name": 1.0,
+        "dob": 1.0,
+        "address": 1.0,
+        "dl_number": 1.0,
+        "expiry": 1.0
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2092,
+        "output_tokens": 341
+      }
+    },
+    {
+      "id": "id_23",
+      "conditions": [
+        "rotated",
+        "low_light"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "KAREN",
+        "last_name": "WILSON",
+        "dob": "1970-02-08",
+        "expiry": "2031-10-08",
+        "dl_number": "63582084",
+        "address_line1": "12458 DUVAL ST APT 204",
+        "zip": "78741"
+      },
+      "expected": {
+        "first_name": "KAREN",
+        "last_name": "WILSON",
+        "dob": "1970-02-08",
+        "expiry": "2031-10-08",
+        "dl_number": "63582084",
+        "address_line1": "12458 DUVAL ST APT 204",
+        "zip": "78741"
+      },
+      "confidence": {
+        "name": 0.99,
+        "dob": 0.99,
+        "address": 0.99,
+        "dl_number": 0.99,
+        "expiry": 0.99
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2212,
+        "output_tokens": 373
+      }
+    },
+    {
+      "id": "id_24",
+      "conditions": [
+        "crop"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "KAREN",
+        "last_name": "SMITH",
+        "dob": "1977-11-22",
+        "expiry": "2027-08-04",
+        "dl_number": "55552350",
+        "address_line1": "1105 WOODROW AVE",
+        "zip": "78748"
+      },
+      "expected": {
+        "first_name": "KAREN",
+        "last_name": "SMITH",
+        "dob": "1977-11-22",
+        "expiry": "2027-08-04",
+        "dl_number": "55552350",
+        "address_line1": "1105 WOODROW AVE",
+        "zip": "78748"
+      },
+      "confidence": {
+        "name": 1.0,
+        "dob": 1.0,
+        "address": 1.0,
+        "dl_number": 1.0,
+        "expiry": 1.0
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2199,
+        "output_tokens": 368
+      }
+    },
+    {
+      "id": "id_25",
+      "conditions": [
+        "rotated",
+        "blur"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "GUADALUPE",
+        "last_name": "BROWN",
+        "dob": "1942-02-19",
+        "expiry": "2027-02-28",
+        "dl_number": "37085087",
+        "address_line1": "10012 BURNET RD APT 204",
+        "zip": "78757"
+      },
+      "expected": {
+        "first_name": "GUADALUPE",
+        "last_name": "BROWN",
+        "dob": "1942-02-19",
+        "expiry": "2027-02-28",
+        "dl_number": "37085087",
+        "address_line1": "10012 BURNET RD APT 204",
+        "zip": "78757"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 1819,
+        "output_tokens": 362
+      }
+    },
+    {
+      "id": "id_26",
+      "conditions": [
+        "rotated",
+        "blur"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": false,
+        "zip": true
+      },
+      "all_ok": false,
+      "got": {
+        "first_name": "MARCUS",
+        "last_name": "OKAFOR",
+        "dob": "1963-08-24",
+        "expiry": "2031-09-30",
+        "dl_number": "41340527",
+        "address_line1": "12515 HENCHACA RD",
+        "zip": "78702"
+      },
+      "expected": {
+        "first_name": "MARCUS",
+        "last_name": "OKAFOR",
+        "dob": "1963-08-24",
+        "expiry": "2031-09-30",
+        "dl_number": "41340527",
+        "address_line1": "12515 MENCHACA RD",
+        "zip": "78702"
+      },
+      "confidence": {
+        "name": 0.98,
+        "dob": 0.98,
+        "address": 0.98,
+        "dl_number": 0.98,
+        "expiry": 0.98
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2301,
+        "output_tokens": 354
+      }
+    },
+    {
+      "id": "id_27",
+      "conditions": [
+        "rotated"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "KAREN",
+        "last_name": "LOPEZ",
+        "dob": "1976-08-20",
+        "expiry": "2028-08-29",
+        "dl_number": "88303171",
+        "address_line1": "6912 MENCHACA RD",
+        "zip": "78758"
+      },
+      "expected": {
+        "first_name": "KAREN",
+        "last_name": "LOPEZ",
+        "dob": "1976-08-20",
+        "expiry": "2028-08-29",
+        "dl_number": "88303171",
+        "address_line1": "6912 MENCHACA RD",
+        "zip": "78758"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2407,
+        "output_tokens": 370
+      }
+    },
+    {
+      "id": "id_28",
+      "conditions": [
+        "rotated",
+        "glare"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "MARIA",
+        "last_name": "RODRIGUEZ",
+        "dob": "2001-02-13",
+        "expiry": "2031-03-23",
+        "dl_number": "62755548",
+        "address_line1": "2969 BERKMAN DR",
+        "zip": "78702"
+      },
+      "expected": {
+        "first_name": "MARIA",
+        "last_name": "RODRIGUEZ",
+        "dob": "2001-02-13",
+        "expiry": "2031-03-23",
+        "dl_number": "62755548",
+        "address_line1": "2969 BERKMAN DR",
+        "zip": "78702"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2127,
+        "output_tokens": 355
+      }
+    },
+    {
+      "id": "id_29",
+      "conditions": [
+        "rotated",
+        "blur"
+      ],
+      "ok": {
+        "first_name": true,
+        "last_name": true,
+        "dob": true,
+        "expiry": true,
+        "dl_number": true,
+        "address_line1": true,
+        "zip": true
+      },
+      "all_ok": true,
+      "got": {
+        "first_name": "JOSEPH",
+        "last_name": "JOHNSON",
+        "dob": "1938-03-28",
+        "expiry": "2031-11-25",
+        "dl_number": "53668156",
+        "address_line1": "9926 PLEASANT VALLEY RD",
+        "zip": "78702"
+      },
+      "expected": {
+        "first_name": "JOSEPH",
+        "last_name": "JOHNSON",
+        "dob": "1938-03-28",
+        "expiry": "2031-11-25",
+        "dl_number": "53668156",
+        "address_line1": "9926 PLEASANT VALLEY RD",
+        "zip": "78702"
+      },
+      "confidence": {
+        "name": 0.95,
+        "dob": 0.95,
+        "address": 0.95,
+        "dl_number": 0.95,
+        "expiry": 0.95
+      },
+      "issues": [],
+      "usage": {
+        "input_tokens": 2046,
+        "output_tokens": 369
+      }
+    }
+  ]
+}

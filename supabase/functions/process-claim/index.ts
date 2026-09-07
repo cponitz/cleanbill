@@ -54,7 +54,7 @@ export async function extractId(key: string, images: Array<{ mime: string; data:
   }
   content.push({
     type: "text",
-    text: "Extract the fields from this government-issued ID exactly as printed. Dates as YYYY-MM-DD. If the card is not legible, set readable=false and explain in issues. Do not guess a field you cannot read — leave it empty and lower its confidence.",
+    text: "Extract the fields from this government-issued ID exactly as printed. Texas licenses label the fields with numbers: line 1 is the LAST name, line 2 is the FIRST name and middle name — always use the printed line numbers to decide which is which, never guess from how common a name is. Line 8 is the address. Read every digit of DOB, EXP, and the DL number carefully (US dates are MM/DD/YYYY). Dates as YYYY-MM-DD. If the card is not legible, set readable=false and explain in issues. Do not guess a field you cannot read — leave it empty and lower its confidence; report confidence honestly per field.",
   });
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

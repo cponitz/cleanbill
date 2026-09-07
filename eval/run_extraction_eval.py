@@ -45,8 +45,7 @@ ID_SCHEMA = {
 }
 SYSTEM = ("You are a careful document-extraction service for a Texas property-tax preparation company. You read one "
           "identification card and return its fields through the record_id_fields tool. You never invent values.")
-USER_TEXT = ("Extract the fields from this government-issued ID exactly as printed. Dates as YYYY-MM-DD. If the card is not "
-             "legible, set readable=false and explain in issues. Do not guess a field you cannot read — leave it empty and lower its confidence.")
+USER_TEXT = ('Extract the fields from this government-issued ID exactly as printed. Texas licenses label the fields with numbers: line 1 is the LAST name, line 2 is the FIRST name and middle name — always use the printed line numbers to decide which is which, never guess from how common a name is. Line 8 is the address. Read every digit of DOB, EXP, and the DL number carefully (US dates are MM/DD/YYYY). Dates as YYYY-MM-DD. If the card is not legible, set readable=false and explain in issues. Do not guess a field you cannot read — leave it empty and lower its confidence; report confidence honestly per field.')
 
 
 def norm(s: str) -> str:
@@ -91,13 +90,13 @@ def main() -> int:
         ok = {}
         for f in FIELDS:
             exp = rec[f]; val = got.get(f, "")
-            if f == "address_line1":
-                ok[f] = norm(val) == norm(exp)
+            if f == "first_name":  # given names: the model may fold the middle name into first_name — score them together
+                ok[f] = norm(str(val) + str(got.get("middle_name", ""))) in (norm(exp + rec.get("middle_name", "")), norm(exp)) or norm(str(val)) == norm(exp + rec.get("middle_name", ""))
             else:
                 ok[f] = norm(str(val)) == norm(str(exp))
             per_field[f] += int(ok[f])
         rows.append({"id": rec["id"], "conditions": rec["conditions"], "ok": ok, "all_ok": all(ok.values()),
-                     "got": {f: got.get(f) for f in FIELDS}, "expected": {f: rec[f] for f in FIELDS},
+                     "got": {f: got.get(f) for f in FIELDS + ["middle_name"]}, "expected": {f: rec[f] for f in FIELDS},
                      "confidence": got.get("confidence"), "issues": got.get("issues"), "usage": usage})
         print(f"{rec['id']}  {'PASS' if all(ok.values()) else 'FAIL'}  {[f for f, v in ok.items() if not v]}  {rec['conditions']}")
     n = len(rows)

@@ -102,7 +102,7 @@ class Tools:
                 content.append({"type": "document", "source": {"type": "base64", "media_type": mime, "data": b64}})
             else:
                 content.append({"type": "image", "source": {"type": "base64", "media_type": mime, "data": b64}})
-        content.append({"type": "text", "text": "Extract the fields from this government-issued ID exactly as printed. Dates as YYYY-MM-DD. If the card is not legible, set readable=false and explain in issues. Do not guess a field you cannot read — leave it empty and lower its confidence."})
+        content.append({"type": "text", "text": "Extract the fields from this government-issued ID exactly as printed. Texas licenses label the fields with numbers: line 1 is the LAST name, line 2 is the FIRST name and middle name — always use the printed line numbers to decide which is which, never guess from how common a name is. Line 8 is the address. Read every digit of DOB, EXP, and the DL number carefully (US dates are MM/DD/YYYY). Dates as YYYY-MM-DD. If the card is not legible, set readable=false and explain in issues. Do not guess a field you cannot read — leave it empty and lower its confidence; report confidence honestly per field."})
         msg = self.client.messages.create(
             model=EXTRACTION_MODEL, max_tokens=800,
             system="You are a careful document-extraction service for a Texas property-tax preparation company. You read one identification card and return its fields through the record_id_fields tool. You never invent values.",
