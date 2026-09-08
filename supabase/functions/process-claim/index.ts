@@ -5,6 +5,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { serviceClient } from "./db.ts";
 import { validate, type Extracted, type PropertyRec } from "./validate.ts";
+import { fill50114, FORM_VERSION, loadBlankForm } from "./form50114.ts";
 
 const MODEL = Deno.env.get("EXTRACTION_MODEL") ?? "claude-haiku-4-5";
 const PRICE_IN = 1.0, PRICE_OUT = 5.0; // $/Mtok, Haiku 4.5 (update if the model changes)
@@ -81,7 +82,7 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
   return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Interim packet: data sheet + signature/audit block. Replaced by the official Form 50-114 fill once the PDF is on hand. */
+/** Interim packet: data sheet + signature/audit block. Fallback only — the official Form 50-114 fill (form50114.ts) is the normal path. */
 async function buildPacket(p: {
   prop: PropertyRec; cust: Record<string, unknown>; lead: Record<string, unknown>; ex: Extracted; status: string; findings: string[];
 }): Promise<Uint8Array> {
@@ -149,12 +150,22 @@ Deno.serve(async (req: Request) => {
     const status = cust.status === "needs_review" ? "needs_review" : v.status; // eligibility answers already routed to review
     const reason = cust.status === "needs_review" ? cust.status_reason : v.findings.filter((x) => x.startsWith("!")).join("; ") || null;
 
-    const pdf = await buildPacket({ prop: prop as PropertyRec, cust, lead, ex: fields, status, findings: v.findings });
+    // Official Form 50-114, filled + e-signed + flattened, with the audit page. Falls back to the interim data sheet only if
+    // the official fill fails (e.g., blank form unreachable) so a claim is never left without a packet.
+    let pdf: Uint8Array, formVersion = FORM_VERSION;
+    try {
+      const blank = await loadBlankForm(sb);
+      pdf = await fill50114(blank, { prop: prop as PropertyRec, cust, lead, ex: fields, over65: v.over65, dlNumber: fields.dl_number || null });
+    } catch (e) {
+      console.error("official 50-114 fill failed, using interim sheet:", e);
+      pdf = await buildPacket({ prop: prop as PropertyRec, cust, lead, ex: fields, status, findings: v.findings });
+      formVersion = "50-114 (interim data sheet)";
+    }
     const packetPath = `${customer_id}/packet-${Date.now()}.pdf`;
     const { error: upErr } = await sb.storage.from("packets").upload(packetPath, pdf, { contentType: "application/pdf" });
     if (upErr) throw new Error("packet upload failed: " + upErr.message);
     await sb.from("filings").insert({
-      customer_id, form_version: "50-114 (interim data sheet)", tax_years: lead.refund_years,
+      customer_id, form_version: formVersion, tax_years: lead.refund_years,
       packet_path: packetPath, packet_sha256: await sha256Hex(pdf),
     });
 

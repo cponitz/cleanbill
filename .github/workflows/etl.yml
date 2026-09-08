@@ -1,9 +1,8 @@
 name: tcad-etl
-# Pulls TCAD's latest export, rebuilds the lead list, and loads new leads into Supabase. Monthly + on demand.
-# (TCAD publishes supplements roughly monthly; the certified roll each July.)
+# Pulls TCAD's latest export, rebuilds the lead list, and loads new leads into Supabase. On demand (not scheduled yet):
+# the full export is ~17 GB unzipped (PROP.TXT 4.9 GB, PROP_ENT.TXT 9.8 GB), more than a hosted runner's disk — run it
+# on a larger runner or pre-cut the files (see trd/etl/layouts/*.cut) until the loader streams from the zip.
 on:
-  schedule:
-    - cron: "0 9 5 * *"
   workflow_dispatch:
     inputs:
       export_url:
@@ -23,7 +22,7 @@ jobs:
           URL="${{ github.event.inputs.export_url }}"
           [ -z "$URL" ] && URL="https://traviscad.org/wp-content/largefiles/2026%20Certified%20Appraisal%20Export%20Supp%200_07182026.zip"
           mkdir -p data/raw && curl -sSL -A "Mozilla/5.0" -o data/raw/export.zip "$URL"
-      - run: python -m trd.etl.load --export data/raw/export.zip --layout trd/etl/layouts/pacs_8_0_33.json --db data/tcad.duckdb
+      - run: python -m trd.etl.load --export data/raw/export.zip --layout trd/etl/layouts/pacs_8_0_33_full.json --db data/tcad.duckdb
       - run: python -m trd.etl.leads --db data/tcad.duckdb --out data/out/leads.csv
       - name: load new leads into Supabase
         env:
