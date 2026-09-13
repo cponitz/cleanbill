@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 
 ## [Unreleased]
 
+### Fixed
+- Scheduled `claims-agent` runs failed with `ImportError: cannot import name 'create_client' from 'supabase'`:
+  the Python client `supabase` was never a declared dependency, so on a fresh runner the repo's own
+  `supabase/` folder (migrations, functions) was imported as an empty namespace package. Added `supabase>=2.0`
+  to `pyproject.toml`; the workflow installs `.[dev]`. The cron schedule is removed from `agent.yml`
+  (manual `workflow_dispatch` only, per ADR 0011) until there is test data. The agent prompt now says to
+  move `submitted → processing` before routing, matching the allowed transitions in `trd/agent/store.py`.
+
 ### Changed
 - Consolidation: the project is named `texas-refund-desk` everywhere. Replaced the last
   `homestead-refund` references (samples/system-map.html links, samples/README.md, the

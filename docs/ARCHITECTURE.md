@@ -144,7 +144,7 @@ index.ts · validate.ts · form50114.ts*</td>
 store.py · system_prompt.md<br />
 run.py · validate.py · packet.py<br />
 .github/workflows/agent.yml</td>
-<td>Every 30 minutes: lists customers in <code>submitted / needs_dl_update / needs_review</code>, and for each runs a Messages-API tool loop (max 12 turns) with a prompt-cached system prompt and 7 tools (§5.4). The store abstraction has a fixture backend (tests, no network) and a Supabase backend. Cannot send, file or charge — by construction the tools do not exist. Uploads a JSON trace as an Actions artifact. <strong>Scheduled runs are currently failing</strong> (email alerts) — disable the schedule until test data exists; diagnose in Phase 0 (G-8).</td>
+<td>On manual dispatch (the 30-minute schedule is disabled until test data exists, ADR 0011): lists customers in <code>submitted / needs_dl_update / needs_review</code>, and for each runs a Messages-API tool loop (max 12 turns) with a prompt-cached system prompt and 7 tools (§5.4). The store abstraction has a fixture backend (tests, no network) and a Supabase backend. Cannot send, file or charge — by construction the tools do not exist. Uploads a JSON trace as an Actions artifact. <strong>Scheduled runs are currently failing</strong> (email alerts) — disable the schedule until test data exists; diagnose in Phase 0 (G-8).</td>
 <td class="c">**Failing**</td>
 </tr>
 <tr class="odd">
@@ -496,7 +496,7 @@ Intended flow: select a batch (tier, value band, taxing-unit confirmed, not prev
 
 **Figure 5.2 — Validation and routing.** Six eligibility/identity checks decide review; the address check alone decides DL-update; only a clean pass is ready to submit.
 
-### 5.6 Agent cycle (GitHub Actions, every 30 minutes)
+### 5.6 Agent cycle (GitHub Actions, manual dispatch; 30-minute schedule disabled until test data exists)
 
 ![agent-loop](figures/agent-loop.svg)
 

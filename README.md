@@ -20,7 +20,7 @@ TCAD export ─▶ [1] ETL + lead engine ─▶ [2] letters ─▶ [3] claim pag
 | `copy/` | Letters (2 variants), claim page copy, service agreement, follow-up templates. |
 | `eval/` | Synthetic ID eval set + `run_extraction_eval.py` (≥ 95% field accuracy gate). |
 | `tests/` | pytest (estimator, validation, ETL, agent loop with a scripted fake model). Deno tests for the edge-function validator. |
-| `.github/workflows/` | `agent.yml` (every 30 min, shadow mode), `etl.yml` (monthly). |
+| `.github/workflows/` | `agent.yml` (claims agent, shadow mode; manual `workflow_dispatch` until there is test data), `etl.yml` (manual). |
 
 ## Run
 
