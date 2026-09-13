@@ -8,3 +8,6 @@ __pycache__/
 eval/ids/*.png
 !eval/ids/labels.json
 eval/out/
+supabase/.temp/
+.venv/
+*.egg-info/
