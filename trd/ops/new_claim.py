@@ -22,8 +22,9 @@ from pathlib import Path
 
 import duckdb
 
+from trd.estimator.rates import taxing_units, unit
 from trd.estimator.refund import conservative_display, estimate_refund
-from trd.etl.leads import new_claim_code
+from trd.etl.leads import new_claim_code, property_units
 
 DB = Path(os.environ.get("TCAD_DB", "data/tcad.duckdb"))
 SITE_BASE = os.environ.get("SITE_BASE", "https://cponitz.github.io/texas-refund-desk")
@@ -76,11 +77,13 @@ def search(con: duckdb.DuckDBPyConnection, address: str | None, prop_id: int | N
     return out
 
 
-def create_lead(prop: dict, as_of: date, owner_override: str | None = None) -> dict:
+def create_lead(prop: dict, as_of: date, owner_override: str | None = None, entities: list[dict] | None = None) -> dict:
+    """`entities` = the property's PROP_ENT rows (from property_units); None -> five Austin units, estimate flagged unconfirmed."""
     from supabase import create_client
     sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
     owned = date.fromisoformat(prop["deed_date"]) if prop.get("deed_date") else None
-    est = estimate_refund(float(prop["appraised_val"] or 0), as_of, owned_since=owned)
+    units = None if entities is None else taxing_units([e["entity_cd"] for e in entities])
+    est = estimate_refund(float(prop["appraised_val"] or 0), as_of, owned_since=owned, units=units)
     earliest, latest = min(est.refund_years) if est.refund_years else as_of.year, max(est.refund_years) if est.refund_years else as_of.year
     tier = 1 if (owned is None or owned <= date(earliest, 1, 1)) else 2 if owned <= date(latest, 1, 1) else 3
     prow = {
@@ -94,13 +97,18 @@ def create_lead(prop: dict, as_of: date, owner_override: str | None = None) -> d
         "hs_exempt": bool(prop.get("hs_exempt")), "ov65_exempt": bool(prop.get("ov65_exempt")),
     }
     sb.table("properties").upsert(prow, on_conflict="prop_id").execute()
+    if entities:
+        sb.table("property_entities").upsert([{"prop_id": int(prop["prop_id"]), "entity_cd": e["entity_cd"], "entity_name": e.get("entity_name"),
+                                               "entity_type": (unit(e["entity_cd"]) or {}).get("type", "other"), "taxable_value": e.get("taxable_val"),
+                                               "assessed_value": e.get("assessed_val"), "partial": bool(e.get("partial", False))} for e in entities],
+                                             on_conflict="prop_id,entity_cd").execute()
     existing = sb.table("leads").select("claim_code, status").eq("prop_id", int(prop["prop_id"])).execute().data
     if existing:
         return {"claim_code": existing[0]["claim_code"], "status": existing[0]["status"], "existing": True, "est": est}
     code = new_claim_code()
     lrow = {
         "prop_id": int(prop["prop_id"]), "claim_code": code, "tier": tier, "refund_years": est.refund_years,
-        "est_refund_total": est.refund_total, "est_refund_by_year": {str(y): {"total": s["total"]} for y, s in est.by_year.items()},
+        "est_refund_total": est.refund_total, "est_refund_by_year": est.units_by_year(),
         "est_forward_annual": est.forward_annual, "estimate_unconfirmed": est.unconfirmed or bool(prop.get("hs_exempt")), "status": "new",
     }
     sb.table("leads").insert(lrow).execute()
@@ -130,8 +138,10 @@ def main() -> int:
     if not a.create:
         print("\nPreview only. Re-run with --create [--pick N] to make a claim code."); return 0
     prop = hits[a.pick - 1]
-    res = create_lead(prop, date.fromisoformat(a.as_of), a.owner_override)
+    ents = property_units(con, [int(prop["prop_id"])]).get(int(prop["prop_id"]))  # None when PROP_ENT is not loaded
+    res = create_lead(prop, date.fromisoformat(a.as_of), a.owner_override, ents)
     est = res["est"]
+    print("Taxing units: " + (", ".join(est.unit_names()) if ents else "not loaded (assumed the five Austin units; estimate flagged unconfirmed)"))
     print(f"\n{'Existing' if res['existing'] else 'Created'} claim {res['claim_code']} (status {res['status']}) for #{prop['prop_id']} {prop['situs_full']}")
     print(f"Estimate: ${conservative_display(est.refund_total):,} shown (raw ${est.refund_total:,.2f}) for {est.refund_years}; forward ${est.forward_annual:,.0f}/yr"
           + ("  ** property already has a homestead exemption — test only **" if prop["hs_exempt"] else ""))

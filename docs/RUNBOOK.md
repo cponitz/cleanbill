@@ -33,7 +33,10 @@ Section 9
 ### 9.3 Commands (from the repo folder on the Mac)
 
     pip install -e . pytest && python -m pytest -q                                   # 28 tests (23 until the purge job is pushed)
-    python -m trd.etl.load --export data/raw/export.zip --layout trd/etl/layouts/pacs_8_0_33_slim.json --db data/tcad.duckdb
+    python -m trd.etl.load --export data/raw/PROP_slim.txt --layout trd/etl/layouts/pacs_8_0_33_slim.json \
+        --entities data/raw/PROP_ENT_slim.txt.gz --db data/tcad.duckdb        # roll + each property's taxing units (SPEC-01)
+    python -m trd.estimator.build_units --rates data/raw/qryJurisRateWeb2026.xls --listing data/raw/2026_listing.txt \
+        --db data/tcad.duckdb                                                  # regenerate trd/estimator/rates/units.json (rates + exemptions)
     python -m trd.etl.leads --db data/tcad.duckdb --as-of 2026-09-09 --out data/out/leads.csv   # prints summary JSON
     python -m trd.etl.publish --leads data/out/leads.csv --dry-run                    # then without --dry-run
     python -m trd.ops.new_claim --address "3675 DUVAL ST"        # preview; add --create to mint a code + link

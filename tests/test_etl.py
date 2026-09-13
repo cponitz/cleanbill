@@ -17,11 +17,25 @@ MINI = [  # name, length, type — starts computed below
 ]
 
 
+ENT = [("prop_id", 12, "int"), ("entity_cd", 10, "str"), ("entity_name", 50, "str"), ("assessed_val", 15, "num"), ("taxable_val", 15, "num"),
+       ("appraised_value", 15, "num"), ("partial_entity", 1, "bool")]
+
+AUSTIN = [("01", "AUSTIN ISD"), ("02", "CITY OF AUSTIN"), ("03", "TRAVIS COUNTY"), ("68", "AUSTIN COMM COLL DIST"), ("2J", "TRAVIS COUNTY HEALTHCARE DISTRICT"), ("0A", "TRAVIS CENTRAL APP DIST")]
+PFLUGERVILLE = [("19", "PFLUGERVILLE ISD"), ("20", "CITY OF PFLUGERVILLE"), ("03", "TRAVIS COUNTY"), ("68", "AUSTIN COMM COLL DIST"), ("2J", "TRAVIS COUNTY HEALTHCARE DISTRICT"), ("9B", "TRAVIS CO ESD NO 2")]
+
+
 def spec():
     out, pos = [], 1
     for n, l, t in MINI:
         out.append({"name": n, "start": pos, "length": l, "type": t}); pos += l
-    return {"APPRAISAL_INFO": out}
+    ent, pos = [], 1
+    for n, l, t in ENT:
+        ent.append({"name": n, "start": pos, "length": l, "type": t}); pos += l
+    return {"APPRAISAL_INFO": out, "APPRAISAL_ENTITY_INFO": ent}
+
+
+def ent_rows(prop_id: int, units, value: int) -> list[str]:
+    return ["".join(str(v).ljust(l)[:l] for (n, l, _), v in zip(ENT, (prop_id, cd, name, value, value, value, "F"))) for cd, name in units]
 
 
 def row(**kw) -> str:
@@ -58,12 +72,14 @@ ROWS = [
 
 def test_etl_pipeline(tmp_path: Path):
     z = tmp_path / "export.zip"
+    ents = ent_rows(1, AUSTIN, 600000) + ent_rows(5, PFLUGERVILLE, 520000) + ent_rows(8, AUSTIN, 350000)   # prop 9: no PROP_ENT rows
     with zipfile.ZipFile(z, "w") as zf:
         zf.writestr("APPRAISAL_INFO.TXT", "\n".join(ROWS) + "\n")
+        zf.writestr("APPRAISAL_ENTITY_INFO.TXT", "\n".join(ents) + "\n")
     layout = spec(); (tmp_path / "layout.json").write_text(json.dumps(layout))
     db = tmp_path / "t.duckdb"
     counts = load_export(z, layout, db)
-    assert counts["APPRAISAL_INFO"] == 10
+    assert counts["APPRAISAL_INFO"] == 10 and counts["APPRAISAL_ENTITY_INFO"] == 18
 
     leads = build_leads(db, date(2026, 9, 7))
     ids = set(leads["prop_id"].tolist())
@@ -74,6 +90,16 @@ def test_etl_pipeline(tmp_path: Path):
     assert r1["refund_years"] == [2024, 2025] and 4500 <= r1["est_refund_total"] <= 4700
     r5 = leads[leads["prop_id"] == 5].iloc[0]
     assert r5["refund_years"] == [2025]
+    # SPEC-01: the Pflugerville property is estimated on its own units; Austin ones on theirs; both confirmed
+    assert json.loads(r5["taxing_units"]) == ["19", "20", "03", "68", "2J", "9B"] and not r5["estimate_unconfirmed"]
+    hand_2025 = 140000 * 1.1069 / 100 + 104000 * 0.375845 / 100 + 5200 * 0.1034 / 100 + 104000 * 0.118023 / 100
+    assert abs(r5["est_refund_total"] - hand_2025) < 0.05
+    by = json.loads(r5["est_refund_by_year"]); assert by["2025"]["units"]["20"] == 0 and by["2025"]["units"]["19"] > 1500
+    assert json.loads(r5["unit_names"]) == ["PFLUGERVILLE ISD", "TRAVIS COUNTY", "AUSTIN COMM COLL DIST", "TRAVIS COUNTY HEALTHCARE DISTRICT"]
+    assert json.loads(r1["taxing_units"]) == ["01", "02", "03", "68", "2J"] and not r1["estimate_unconfirmed"]
+    r9 = leads[leads["prop_id"] == 9].iloc[0]
+    assert json.loads(r9["taxing_units"]) is None and r9["estimate_unconfirmed"]   # no PROP_ENT rows -> assumed Austin, flagged
+    assert len(json.loads(r5["entities"])) == 6 and json.loads(r5["entities"])[0]["entity_cd"] == "19"   # ISD first, then city, county...
     assert r1["situs_full"] == "3675 DUVAL ST, AUSTIN, TX 78721"
     assert leads[leads["prop_id"] == 8].iloc[0]["situs_full"] == "800 W 5TH ST UNIT 12, AUSTIN, TX 78703"
     assert all(leads["claim_code"].str.match(r"^TRD-[A-Z2-9]{4}-[A-Z2-9]{4}$"))
