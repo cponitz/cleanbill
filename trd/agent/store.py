@@ -5,6 +5,9 @@
 
 Both expose the same small set of operations the tools need. Keeping the surface tiny is deliberate: the agent should
 only be able to read a claim, record extraction/validation, write a draft, and move status along allowed transitions.
+
+Data model v2 (SPEC-04): `claims` is the engagement (the row the agent works; `claim_id` everywhere), `customers` is the
+person/account. get_claim() returns {"claim", "customer" (account, may be None), "lead", "property", "documents", "messages", "filings"}.
 """
 from __future__ import annotations
 
@@ -32,14 +35,14 @@ def now_iso() -> str:
 
 
 class Store(Protocol):
-    def get_claim(self, customer_id: str) -> dict: ...
+    def get_claim(self, claim_id: str) -> dict: ...
     def get_image(self, storage_path: str) -> tuple[str, bytes]: ...
     def record_extraction(self, document_id: str, extracted: dict, model: str, cost: float, validation: dict) -> None: ...
-    def add_filing(self, customer_id: str, form_version: str, tax_years: list[int], packet_bytes: bytes, sha256: str) -> str: ...
-    def add_message(self, customer_id: str, intent: str, subject: str, body: str) -> str: ...
-    def set_status(self, customer_id: str, status: str, reason: str | None) -> None: ...
+    def add_filing(self, claim_id: str, form_version: str, tax_years: list[int], packet_bytes: bytes, sha256: str) -> str: ...
+    def add_message(self, claim_id: str, intent: str, subject: str, body: str) -> str: ...
+    def set_status(self, claim_id: str, status: str, reason: str | None, findings: list[dict] | None = None) -> None: ...
     def audit(self, action: str, entity_id: str, detail: dict) -> None: ...
-    def list_customers(self, statuses: list[str]) -> list[dict]: ...
+    def list_claims(self, statuses: list[str]) -> list[dict]: ...
 
 
 class FixtureStore:
@@ -49,20 +52,21 @@ class FixtureStore:
         self.data = json.loads(Path(path).read_text())
         self.writes: list[dict] = []
 
-    def _cust(self, cid: str) -> dict:
-        for c in self.data["customers"]:
+    def _claim(self, cid: str) -> dict:
+        for c in self.data["claims"]:
             if c["id"] == cid:
                 return c
         raise KeyError(cid)
 
-    def get_claim(self, customer_id: str) -> dict:
-        c = self._cust(customer_id)
+    def get_claim(self, claim_id: str) -> dict:
+        c = self._claim(claim_id)
+        account = next((a for a in self.data.get("customers", []) if a["id"] == c.get("customer_id")), None)
         lead = next(l for l in self.data["leads"] if l["id"] == c["lead_id"])
         prop = next(p for p in self.data["properties"] if p["prop_id"] == lead["prop_id"])
-        docs = [d for d in self.data["documents"] if d["customer_id"] == customer_id]
-        msgs = [m for m in self.data.get("messages", []) if m["customer_id"] == customer_id]
-        filings = [f for f in self.data.get("filings", []) if f["customer_id"] == customer_id]
-        return copy.deepcopy({"customer": c, "lead": lead, "property": prop, "documents": docs, "messages": msgs, "filings": filings})
+        docs = [d for d in self.data["documents"] if d["claim_id"] == claim_id]
+        msgs = [m for m in self.data.get("messages", []) if m["claim_id"] == claim_id]
+        filings = [f for f in self.data.get("filings", []) if f["claim_id"] == claim_id]
+        return copy.deepcopy({"claim": c, "customer": account, "lead": lead, "property": prop, "documents": docs, "messages": msgs, "filings": filings})
 
     def get_image(self, storage_path: str) -> tuple[str, bytes]:
         p = Path(self.data.get("image_root", ".")) / storage_path
@@ -74,32 +78,33 @@ class FixtureStore:
                 d.update({"extracted": extracted, "extraction_model": model, "extraction_cost_usd": cost, "validation": validation})
         self.writes.append({"op": "record_extraction", "document_id": document_id})
 
-    def add_filing(self, customer_id, form_version, tax_years, packet_bytes, sha256) -> str:
+    def add_filing(self, claim_id, form_version, tax_years, packet_bytes, sha256) -> str:
         fid = f"filing-{len(self.data.setdefault('filings', [])) + 1}"
-        self.data["filings"].append({"id": fid, "customer_id": customer_id, "form_version": form_version, "tax_years": tax_years,
+        self.data["filings"].append({"id": fid, "claim_id": claim_id, "form_version": form_version, "tax_years": tax_years,
                                      "packet_sha256": sha256, "generated_at": now_iso(), "bytes": len(packet_bytes)})
         self.writes.append({"op": "add_filing", "id": fid})
         return fid
 
-    def add_message(self, customer_id, intent, subject, body) -> str:
+    def add_message(self, claim_id, intent, subject, body) -> str:
         mid = f"msg-{len(self.data.setdefault('messages', [])) + 1}"
-        self.data["messages"].append({"id": mid, "customer_id": customer_id, "direction": "outbound", "channel": "email",
+        self.data["messages"].append({"id": mid, "claim_id": claim_id, "direction": "outbound", "channel": "email",
                                       "intent": intent, "subject": subject, "body": body, "agent_draft": True, "created_at": now_iso()})
         self.writes.append({"op": "add_message", "id": mid, "intent": intent})
         return mid
 
-    def set_status(self, customer_id, status, reason) -> None:
-        c = self._cust(customer_id)
+    def set_status(self, claim_id, status, reason, findings=None) -> None:
+        c = self._claim(claim_id)
         if status not in ALLOWED_TRANSITIONS.get(c["status"], set()) and status != c["status"]:
             raise ValueError(f"transition {c['status']} -> {status} not allowed")
         c["status"], c["status_reason"] = status, reason
-        self.writes.append({"op": "set_status", "customer_id": customer_id, "status": status})
+        if findings is not None: c["findings"] = findings
+        self.writes.append({"op": "set_status", "claim_id": claim_id, "status": status})
 
     def audit(self, action, entity_id, detail) -> None:
         self.writes.append({"op": "audit", "action": action, "entity_id": entity_id, "detail": detail})
 
-    def list_customers(self, statuses) -> list[dict]:
-        return [copy.deepcopy(c) for c in self.data["customers"] if c["status"] in statuses]
+    def list_claims(self, statuses) -> list[dict]:
+        return [copy.deepcopy(c) for c in self.data["claims"] if c["status"] in statuses]
 
 
 class SupabaseStore:
@@ -107,14 +112,15 @@ class SupabaseStore:
         from supabase import create_client
         self.sb = create_client(url or os.environ["SUPABASE_URL"], key or os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
-    def get_claim(self, customer_id: str) -> dict:
-        c = self.sb.table("customers").select("*").eq("id", customer_id).single().execute().data
+    def get_claim(self, claim_id: str) -> dict:
+        c = self.sb.table("claims").select("*").eq("id", claim_id).single().execute().data
+        account = self.sb.table("customers").select("*").eq("id", c["customer_id"]).maybe_single().execute() if c.get("customer_id") else None
         lead = self.sb.table("leads").select("*").eq("id", c["lead_id"]).single().execute().data
         prop = self.sb.table("properties").select("*").eq("prop_id", lead["prop_id"]).single().execute().data
-        docs = self.sb.table("documents").select("*").eq("customer_id", customer_id).execute().data
-        msgs = self.sb.table("messages").select("*").eq("customer_id", customer_id).order("created_at").execute().data
-        filings = self.sb.table("filings").select("*").eq("customer_id", customer_id).order("generated_at").execute().data
-        return {"customer": c, "lead": lead, "property": prop, "documents": docs, "messages": msgs, "filings": filings}
+        docs = self.sb.table("documents").select("*").eq("claim_id", claim_id).order("created_at", desc=True).execute().data
+        msgs = self.sb.table("messages").select("*").eq("claim_id", claim_id).order("created_at").execute().data
+        filings = self.sb.table("filings").select("*").eq("claim_id", claim_id).order("generated_at").execute().data
+        return {"claim": c, "customer": getattr(account, "data", None), "lead": lead, "property": prop, "documents": docs, "messages": msgs, "filings": filings}
 
     def get_image(self, storage_path: str) -> tuple[str, bytes]:
         data = self.sb.storage.from_("ids").download(storage_path)
@@ -124,26 +130,28 @@ class SupabaseStore:
     def record_extraction(self, document_id, extracted, model, cost, validation) -> None:
         self.sb.table("documents").update({"extracted": extracted, "extraction_model": model, "extraction_cost_usd": cost, "validation": validation}).eq("id", document_id).execute()
 
-    def add_filing(self, customer_id, form_version, tax_years, packet_bytes, sha256) -> str:
-        path = f"{customer_id}/packet-{int(datetime.now().timestamp())}.pdf"
+    def add_filing(self, claim_id, form_version, tax_years, packet_bytes, sha256) -> str:
+        path = f"{claim_id}/packet-{int(datetime.now().timestamp())}.pdf"
         self.sb.storage.from_("packets").upload(path, packet_bytes, {"content-type": "application/pdf"})
-        row = self.sb.table("filings").insert({"customer_id": customer_id, "form_version": form_version, "tax_years": tax_years,
+        row = self.sb.table("filings").insert({"claim_id": claim_id, "form_version": form_version, "tax_years": tax_years,
                                                "packet_path": path, "packet_sha256": sha256}).execute().data[0]
         return row["id"]
 
-    def add_message(self, customer_id, intent, subject, body) -> str:
-        row = self.sb.table("messages").insert({"customer_id": customer_id, "direction": "outbound", "channel": "email", "intent": intent,
+    def add_message(self, claim_id, intent, subject, body) -> str:
+        row = self.sb.table("messages").insert({"claim_id": claim_id, "direction": "outbound", "channel": "email", "intent": intent,
                                                 "subject": subject, "body": body, "agent_draft": True}).execute().data[0]
         return row["id"]
 
-    def set_status(self, customer_id, status, reason) -> None:
-        cur = self.sb.table("customers").select("status").eq("id", customer_id).single().execute().data["status"]
+    def set_status(self, claim_id, status, reason, findings=None) -> None:
+        cur = self.sb.table("claims").select("status").eq("id", claim_id).single().execute().data["status"]
         if status not in ALLOWED_TRANSITIONS.get(cur, set()) and status != cur:
             raise ValueError(f"transition {cur} -> {status} not allowed")
-        self.sb.table("customers").update({"status": status, "status_reason": reason}).eq("id", customer_id).execute()
+        patch = {"status": status, "status_reason": reason}
+        if findings is not None: patch["findings"] = findings
+        self.sb.table("claims").update(patch).eq("id", claim_id).execute()
 
     def audit(self, action, entity_id, detail) -> None:
-        self.sb.table("audit_log").insert({"actor": "agent", "action": action, "entity": "customers", "entity_id": entity_id, "detail": detail}).execute()
+        self.sb.table("audit_log").insert({"actor": "agent", "action": action, "entity": "claims", "entity_id": entity_id, "detail": detail}).execute()
 
-    def list_customers(self, statuses) -> list[dict]:
-        return self.sb.table("customers").select("*").in_("status", statuses).order("created_at").execute().data
+    def list_claims(self, statuses) -> list[dict]:
+        return self.sb.table("claims").select("*").in_("status", statuses).order("created_at").execute().data

@@ -1,0 +1,48 @@
+name: ci
+# Every push and PR: Python tests, Deno tests for the edge-function validator, and the migration chain applied in order
+# to a scratch Postgres (fails if a migration does not apply cleanly or the resulting schema is not what the code expects).
+# Parity with the hosted database is checked by deploy.yml after a merge to main (SPEC-04 §8).
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .[dev]
+      - run: python -m pytest -q
+  deno:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - run: deno test --no-check supabase/functions/process-claim/validate_test.ts
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: trd }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PGPASSWORD: postgres
+      PSQL: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d trd
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -q && sudo apt-get install -y -q postgresql-client
+      - name: shim the hosted-project roles and storage schema
+        run: $PSQL -f supabase/ci/shim.sql
+      - name: apply every migration in version order
+        run: |
+          for f in $(ls supabase/migrations/*.sql | sort); do echo "== $f"; $PSQL -f "$f"; done
+      - name: schema check
+        run: $PSQL -f supabase/ci/check_schema.sql
+      - name: backfill check (one account per e-mail; claims linked)
+        run: |
+          $PSQL -c "select count(*) as customers from customers; select count(*) filter (where customer_id is null) as unlinked_claims from claims;"

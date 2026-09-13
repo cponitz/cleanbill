@@ -79,6 +79,22 @@ def age_on(dob: str, on: date | None = None) -> int | None:
     return a
 
 
+def finding(code: str, severity: str, field_: str, message: str, detail: dict | None = None) -> dict:
+    """A structured finding (ADR 0013 / SPEC-06): {code, severity: blocking|warning|info, field, message, detail}."""
+    f = {"code": code, "severity": severity, "field": field_, "message": message}
+    if detail: f["detail"] = detail
+    return f
+
+
+def blocking(findings: list[dict]) -> list[dict]:
+    return [f for f in findings if f.get("severity") == "blocking"]
+
+
+def reason_text(findings: list[dict]) -> str | None:
+    """The legacy one-line display string (claims.status_reason) — generated from the findings, never the source of truth."""
+    return "; ".join(f["message"] for f in blocking(findings)) or None
+
+
 @dataclass
 class Validation:
     status: str
@@ -88,7 +104,7 @@ class Validation:
     expired: bool
     age: int | None
     over65: bool
-    findings: list[str] = field(default_factory=list)
+    findings: list[dict] = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return self.__dict__.copy()
@@ -96,7 +112,6 @@ class Validation:
 
 def validate(ex: dict, prop: dict, typed_name: str, today: date | None = None) -> Validation:
     today = today or date.today()
-    findings: list[str] = []
     texas = (ex.get("issuing_state") or "").upper() == "TX" and ex.get("id_type") != "other"
     addr = address_matches(ex.get("address_line1", ""), ex.get("zip", ""), prop)
     nm = name_matches(ex.get("first_name", ""), ex.get("last_name", ""), prop["owner_name"])
@@ -106,17 +121,18 @@ def validate(ex: dict, prop: dict, typed_name: str, today: date | None = None) -
     conf = ex.get("confidence") or {}
     low_conf = min(conf.get("name", 0), conf.get("address", 0), conf.get("dob", 0)) < 0.6
 
-    if not ex.get("readable", True): findings.append("! ID image not legible — ask for a clearer photo")
-    if not texas: findings.append("! Not a Texas DL/ID — Tax Code §11.43(j) requires a Texas driver's license or DPS ID")
-    if not addr: findings.append(f"! ID address ({ex.get('address_line1')}, {ex.get('zip')}) does not match situs ({prop['situs_full']}) — DPS address update required")
-    else: findings.append("ID address matches the property")
-    if not nm: findings.append(f"! Name on ID ({ex.get('first_name')} {ex.get('last_name')}) not found in owner of record ({prop['owner_name']}) — confirm ownership/deed")
-    else: findings.append("Name matches owner of record")
-    if not signer_ok: findings.append(f"! Name on ID ({ex.get('first_name')} {ex.get('last_name')}) differs from the typed signature ({typed_name}) — confirm identity")
-    if expired: findings.append("ID is expired — TCAD may accept; flag for reviewer")
-    if low_conf: findings.append("! Low extraction confidence on a key field — reviewer to confirm against the image")
-    if age is not None and age >= 65: findings.append(f"Applicant is {age} — eligible for the over-65 exemption (add to 50-114)")
-    if age is not None and age < 18: findings.append("! Applicant under 18 — review")
+    findings: list[dict] = []
+    if not ex.get("readable", True): findings.append(finding("not_readable", "blocking", "image", "ID image not legible — ask for a clearer photo"))
+    if not texas: findings.append(finding("not_texas_id", "blocking", "issuing_state", "Not a Texas DL/ID — Tax Code §11.43(j) requires a Texas driver's license or DPS ID", {"issuing_state": ex.get("issuing_state"), "id_type": ex.get("id_type")}))
+    if not addr: findings.append(finding("address_mismatch", "blocking", "address", f"ID address ({ex.get('address_line1')}, {ex.get('zip')}) does not match situs ({prop['situs_full']}) — DPS address update required", {"id": f"{ex.get('address_line1')}, {ex.get('city')} {ex.get('zip')}", "situs": prop["situs_full"]}))
+    else: findings.append(finding("address_match", "info", "address", "ID address matches the property"))
+    if not nm: findings.append(finding("name_mismatch", "blocking", "name", f"Name on ID ({ex.get('first_name')} {ex.get('last_name')}) not found in owner of record ({prop['owner_name']}) — confirm ownership/deed", {"id": f"{ex.get('first_name')} {ex.get('last_name')}", "owner": prop["owner_name"]}))
+    else: findings.append(finding("name_match", "info", "name", "Name matches owner of record"))
+    if not signer_ok: findings.append(finding("signer_mismatch", "blocking", "signature", f"Name on ID ({ex.get('first_name')} {ex.get('last_name')}) differs from the typed signature ({typed_name}) — confirm identity", {"id": f"{ex.get('first_name')} {ex.get('last_name')}", "typed": typed_name}))
+    if expired: findings.append(finding("expired", "warning", "expiry", "ID is expired — TCAD may accept; flag for reviewer", {"expiry": ex.get("expiry")}))
+    if low_conf: findings.append(finding("low_confidence", "blocking", "confidence", "Low extraction confidence on a key field — reviewer to confirm against the image", {"confidence": conf}))
+    if age is not None and age >= 65: findings.append(finding("over_65", "info", "dob", f"Applicant is {age} — eligible for the over-65 exemption (add to 50-114)", {"age": age}))
+    if age is not None and age < 18: findings.append(finding("under_18", "blocking", "dob", "Applicant under 18 — review", {"age": age}))
 
     status = "ready_to_submit"
     if not ex.get("readable", True) or not texas or not nm or not signer_ok or low_conf or (age is not None and age < 18):

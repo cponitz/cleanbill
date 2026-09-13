@@ -29,7 +29,7 @@ def _mdy(d) -> str:
 
 def form_values(claim: dict, ex: dict, over65: bool, signed_on: date, dl_number: str | None = None) -> tuple[dict, dict]:
     """Return (text_fields, button_fields) for the official form from a claim record + extracted ID."""
-    cust, lead, prop = claim["customer"], claim["lead"], claim["property"]
+    cust, lead, prop = claim["claim"], claim["lead"], claim["property"]   # v2: the signed claim row
     years = sorted(set((lead.get("refund_years") or []) + [signed_on.year]))
     name = " ".join(x for x in (ex.get("first_name"), ex.get("middle_name"), ex.get("last_name")) if x).title()
     physical = f"{prop['situs_full'].split(',')[0]}, {prop.get('situs_city') or 'Austin'}, {COUNTY} County, {prop.get('situs_zip') or ''}".replace(" ,", ",")
@@ -85,7 +85,7 @@ def fill_50114(claim: dict, ex: dict, over65: bool = False, signed_on: date | No
     writer.set_need_appearances_writer(True)
 
     # typed e-signature overlay on the signature line (page 2) + audit page
-    cust = claim["customer"]
+    cust = claim["claim"]
     overlay = BytesIO(); c = canvas.Canvas(overlay, pagesize=LETTER)
     c.setFont("Times-Italic", 13); c.drawString(SIG_RECT[0] + 6, SIG_RECT[1] + 3, f"/s/ {cust.get('signature_name', '')}")
     c.setFont("Helvetica", 5.5); c.drawString(SIG_RECT[0] + 6, SIG_RECT[1] - 11, f"Electronically signed {cust.get('agreement_signed_at', '')} · IP {cust.get('signature_ip', '')}")

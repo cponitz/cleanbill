@@ -51,7 +51,8 @@ a{color:var(--navy)}.small{font-size:12px;color:var(--grey)}input[type=password]
             <span class="small">${esc(c.full_name)} · ${esc(c.email)} · ${esc(c.phone ?? "")}</span><br><span class="small">signed ${esc(c.signed_at ? new Date(c.signed_at).toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " CT" : "")} from ${esc(c.signature_ip)}</span></td>
         <td>${pill(c.status)}<br><span class="small">${esc(c.status_reason ?? "")}</span></td>
         <td>${ex ? `<span class="small">${esc(ex.first_name)} ${esc(ex.last_name)} · DOB ${esc(ex.dob)} · ${esc(ex.address_line1)}, ${esc(ex.city)} ${esc(ex.zip)} · exp ${esc(ex.expiry)} · $${Number(c.extraction_cost_usd ?? 0).toFixed(4)}</span>` : `<span class="small">not extracted</span>`}
-            ${c.findings.map((f) => `<div class="find ${f.startsWith("!") ? "bad" : ""}">${esc(f)}</div>`).join("")}
+            ${c.findings.map((f) => typeof f === "string" ? `<div class="find ${f.startsWith("!") ? "bad" : ""}">${esc(f)}</div>`
+              : `<div class="find ${f.severity === "blocking" ? "bad" : ""}" title="${esc(f.code)}">${f.severity === "blocking" ? "! " : ""}${esc(f.message)} <span class="small">[${esc(f.code)}]</span></div>`).join("")}
             ${c.packet?.url ? `<a href="${esc(c.packet.url)}" target="_blank">packet PDF</a> <span class="small">(${esc(c.packet.form_version)})</span>` : ""}</td>
         <td>${drafts || `<span class="small">—</span>`}</td></tr>`;
     }).join("") || `<tr><td colspan="4" class="small">No claims yet.</td></tr>`;

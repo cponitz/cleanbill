@@ -74,8 +74,8 @@ def run_agent(task: str, tools: Tools, client: anthropic.Anthropic | None = None
     return result
 
 
-def task_for_claim(customer_id: str, status: str) -> str:
+def task_for_claim(claim_id: str, status: str) -> str:
     """The per-claim instruction. Short, because the rules live in the system prompt."""
-    return (f"Process claim customer_id={customer_id}. Its current status is '{status}'. Load it, do whatever the status "
+    return (f"Process claim claim_id={claim_id}. Its current status is '{status}'. Load it, do whatever the status "
             f"requires per your rules, leave a draft for the human if one is needed, and finish with a two-line summary: "
             f"what you did, and what the human should do next.")

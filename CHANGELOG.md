@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 ## [Unreleased]
 
 ### Added
+- **SPEC-04 Part A: data model v2** (migration `20260913220000_data_model_v2.sql`). The prototype's `customers`
+  table (the engagement) is renamed `claims`; `customer_id` becomes `claim_id` on documents, filings and messages;
+  audit rows say `claims`. A new `customers` table is the person/account, matched by e-mail (case-insensitive,
+  `citext`), backfilled one per e-mail and linked from `claims.customer_id`; the card fields move to the account.
+  `claims.service_type`, `claims.findings` (structured `{code, severity, field, message, detail}`, ADR 0013). SPEC-05's
+  schema lands now: `property_values`, `record_checks`, `refunds` v2 columns. The hand-dropped `bulk_load_leads`
+  function is declared dropped. The claim API attaches a claim to the account for its e-mail (or creates one);
+  `process-claim`, `ops`, `selftest`, the agent store/tools (`claim_id` everywhere, `--claim`, workflow input
+  `claim`), the purge job, fixtures and tests follow. Both validators emit structured findings with codes; the ops
+  page renders them by severity with the code shown.
+- **Migration history matches the hosted project.** Files are named by Supabase's timestamp versions
+  (`20260907145033_init_schema.sql` …) and the three migrations that existed only on the server
+  (`bulk_load_rpc`, `site_bucket`, `customers_household_prev_homestead`) are in the repo, so `supabase db push` and
+  `supabase db diff --linked` work (ADR 0015).
+- **CI.** `ci.yml` runs pytest, the Deno validator tests, and applies the whole migration chain in order to a scratch
+  Postgres (with `supabase/ci/shim.sql` standing in for the hosted roles and storage schema) followed by a schema
+  check. `deploy.yml` runs on merges to `main`: `supabase db push`, `supabase functions deploy`, then
+  `supabase db diff --linked` must be empty (fails on drift); optional selftest. Needs repository secrets
+  `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` (and `OPS_PASSWORD` for the selftest).
 - **SPEC-01 taxing-unit-aware estimates.** Every property is estimated on its own taxing units from TCAD's
   `PROP_ENT` file instead of the five Austin units. New table `property_entities` (migration
   `0004_property_entities.sql`; one row per property × unit, upserted by `trd/etl/publish.py`). The rate table is

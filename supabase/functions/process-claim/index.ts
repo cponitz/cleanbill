@@ -1,10 +1,10 @@
 // process-claim: after a homeowner submits, extract the ID fields with Claude (vision + forced JSON schema),
 // validate them against the appraisal record, decide the next status, build the packet PDF, and draft the follow-up.
-// Called by the claim page with the service-role key (verify_jwt = true). Body: { "customer_id": "<uuid>" }.
+// Called by the claim API with the service-role key (verify_jwt = true). Body: { "claim_id": "<uuid>" } (v2; "customer_id" still accepted).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { serviceClient } from "./db.ts";
-import { validate, type Extracted, type PropertyRec } from "./validate.ts";
+import { blocking, reasonText, validate, type Extracted, type Finding, type PropertyRec } from "./validate.ts";
 import { fill50114, FORM_VERSION, loadBlankForm } from "./form50114.ts";
 
 const MODEL = Deno.env.get("EXTRACTION_MODEL") ?? "claude-haiku-4-5";
@@ -84,7 +84,7 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 
 /** Interim packet: data sheet + signature/audit block. Fallback only — the official Form 50-114 fill (form50114.ts) is the normal path. */
 async function buildPacket(p: {
-  prop: PropertyRec; cust: Record<string, unknown>; lead: Record<string, unknown>; ex: Extracted; status: string; findings: string[];
+  prop: PropertyRec; cust: Record<string, unknown>; lead: Record<string, unknown>; ex: Extracted; status: string; findings: Finding[];
 }): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   const page = doc.addPage([612, 792]);
@@ -106,7 +106,7 @@ async function buildPacket(p: {
   y -= 8;
   line("VALIDATION", true);
   line(`Routing: ${p.status}`);
-  for (const s of p.findings) line(`• ${s}`, false, 10);
+  for (const s of p.findings) line(`• ${s.message}`, false, 10);
   y -= 8;
   line("ELECTRONIC SIGNATURE RECORD", true);
   line(`Signed by: ${p.cust.signature_name}    At: ${p.cust.agreement_signed_at}    IP: ${p.cust.signature_ip}`);
@@ -118,17 +118,18 @@ async function buildPacket(p: {
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return new Response("POST only", { status: 405 });
   const sb = serviceClient();
-  const { customer_id } = await req.json().catch(() => ({}));
-  if (!customer_id) return Response.json({ error: "customer_id required" }, { status: 400 });
+  const body = await req.json().catch(() => ({}));
+  const customer_id: string | undefined = body.claim_id ?? body.customer_id;   // the claim id (v2 name); legacy key accepted
+  if (!customer_id) return Response.json({ error: "claim_id required" }, { status: 400 });
 
-  const { data: cust } = await sb.from("customers").select("*").eq("id", customer_id).single();
-  if (!cust) return Response.json({ error: "customer not found" }, { status: 404 });
+  const { data: cust } = await sb.from("claims").select("*").eq("id", customer_id).single();
+  if (!cust) return Response.json({ error: "claim not found" }, { status: 404 });
   const { data: lead } = await sb.from("leads").select("*").eq("id", cust.lead_id).single();
   const { data: prop } = await sb.from("properties").select("*").eq("prop_id", lead.prop_id).single();
-  const { data: docs } = await sb.from("documents").select("*").eq("customer_id", customer_id).in("kind", ["dl_front", "dl_back"]);
+  const { data: docs } = await sb.from("documents").select("*").eq("claim_id", customer_id).in("kind", ["dl_front", "dl_back"]);
   if (!docs?.length) return Response.json({ error: "no documents" }, { status: 400 });
 
-  await sb.from("customers").update({ status: "processing" }).eq("id", customer_id);
+  await sb.from("claims").update({ status: "processing" }).eq("id", customer_id);
   try {
     const images: Array<{ mime: string; data: Uint8Array }> = [];
     for (const d of docs) {
@@ -147,8 +148,11 @@ Deno.serve(async (req: Request) => {
       extraction_model: MODEL, extraction_cost_usd: cost, validation: v,
     }).eq("id", front.id);
 
-    const status = cust.status === "needs_review" ? "needs_review" : v.status; // eligibility answers already routed to review
-    const reason = cust.status === "needs_review" ? cust.status_reason : v.findings.filter((x) => x.startsWith("!")).join("; ") || null;
+    // Eligibility answers already routed to review keep their (blocking) findings in front of the validator's.
+    const prior: Finding[] = Array.isArray(cust.findings) ? (cust.findings as Finding[]).filter((f) => ["not_primary", "other_homestead"].includes(f.code)) : [];
+    const findings: Finding[] = [...prior, ...v.findings];
+    const status = prior.length ? "needs_review" : v.status;
+    const reason = reasonText(findings);   // display string; claims.findings is the source of truth (ADR 0013)
 
     // Official Form 50-114, filled + e-signed + flattened, with the audit page. Falls back to the interim data sheet only if
     // the official fill fails (e.g., blank form unreachable) so a claim is never left without a packet.
@@ -158,18 +162,18 @@ Deno.serve(async (req: Request) => {
       pdf = await fill50114(blank, { prop: prop as PropertyRec, cust, lead, ex: fields, over65: v.over65, dlNumber: fields.dl_number || null });
     } catch (e) {
       console.error("official 50-114 fill failed, using interim sheet:", e);
-      pdf = await buildPacket({ prop: prop as PropertyRec, cust, lead, ex: fields, status, findings: v.findings });
+      pdf = await buildPacket({ prop: prop as PropertyRec, cust, lead, ex: fields, status, findings: blocking(findings) });
       formVersion = "50-114 (interim data sheet)";
     }
     const packetPath = `${customer_id}/packet-${Date.now()}.pdf`;
     const { error: upErr } = await sb.storage.from("packets").upload(packetPath, pdf, { contentType: "application/pdf" });
     if (upErr) throw new Error("packet upload failed: " + upErr.message);
     await sb.from("filings").insert({
-      customer_id, form_version: formVersion, tax_years: lead.refund_years,
+      claim_id: customer_id, form_version: formVersion, tax_years: lead.refund_years,
       packet_path: packetPath, packet_sha256: await sha256Hex(pdf),
     });
 
-    await sb.from("customers").update({ status, status_reason: reason }).eq("id", customer_id);
+    await sb.from("claims").update({ status, status_reason: reason, findings }).eq("id", customer_id);
 
     // Draft the follow-up for human approval (shadow mode). The Python agent can later replace these with richer drafts.
     const first = String(cust.full_name).split(" ")[0];
@@ -188,13 +192,14 @@ Deno.serve(async (req: Request) => {
       },
     };
     const d = drafts[status] ?? drafts.needs_review;
-    await sb.from("messages").insert({ customer_id, direction: "outbound", channel: "email", subject: d.subject, body: d.body, intent: d.intent, agent_draft: true });
-    await sb.from("audit_log").insert({ actor: "process-claim", action: "processed", entity: "customers", entity_id: customer_id, detail: { status, reason, usage, cost, model: MODEL, findings: v.findings } });
-    return Response.json({ ok: true, status, reason, findings: v.findings, cost, usage });
+    await sb.from("messages").insert({ claim_id: customer_id, direction: "outbound", channel: "email", subject: d.subject, body: d.body, intent: d.intent, agent_draft: true });
+    await sb.from("audit_log").insert({ actor: "process-claim", action: "processed", entity: "claims", entity_id: customer_id, detail: { status, reason, usage, cost, model: MODEL, findings: findings.map((f) => f.code) } });
+    return Response.json({ ok: true, status, reason, findings, cost, usage });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    await sb.from("customers").update({ status: "needs_review", status_reason: "processing error: " + msg.slice(0, 200) }).eq("id", customer_id);
-    await sb.from("audit_log").insert({ actor: "process-claim", action: "error", entity: "customers", entity_id: customer_id, detail: { error: msg } });
+    const err: Finding = { code: "processing_error", severity: "blocking", field: "processing", message: "processing error: " + msg.slice(0, 200) };
+    await sb.from("claims").update({ status: "needs_review", status_reason: err.message, findings: [err] }).eq("id", customer_id);
+    await sb.from("audit_log").insert({ actor: "process-claim", action: "error", entity: "claims", entity_id: customer_id, detail: { error: msg } });
     return Response.json({ ok: false, error: msg }, { status: 500 });
   }
 });

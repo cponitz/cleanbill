@@ -1,5 +1,5 @@
 function assertEquals(a: unknown, b: unknown, msg?: string) { const A = JSON.stringify(a), B = JSON.stringify(b); if (A !== B) throw new Error(msg ?? `assertEquals failed: ${A} !== ${B}`); }
-import { addressMatches, ageOn, nameMatches, validate, type Extracted, type PropertyRec } from "./validate.ts";
+import { addressMatches, ageOn, nameMatches, reasonText, validate, type Extracted, type PropertyRec } from "./validate.ts";
 
 const prop: PropertyRec = {
   prop_id: 1, owner_name: "GARCIA RICHARD L", situs_num: "3675", situs_street: "DUVAL ST", situs_city: "AUSTIN",
@@ -58,7 +58,7 @@ Deno.test("validate: name not on deed -> needs_review even if address matches", 
 Deno.test("validate: over-65 flagged", () => {
   const v = validate({ ...base, dob: "1955-01-01" }, prop, "Richard Garcia");
   assertEquals(v.over65, true);
-  assertEquals(v.findings.some((f) => f.includes("over-65")), true);
+  assertEquals(v.findings.some((f) => f.code === "over_65" && f.severity === "info"), true);
 });
 Deno.test("validate: low confidence -> needs_review", () => {
   const v = validate({ ...base, confidence: { ...base.confidence, address: 0.3 } }, prop, "Richard Garcia");
@@ -67,4 +67,12 @@ Deno.test("validate: low confidence -> needs_review", () => {
 Deno.test("validate: ID name differs from typed signature -> needs_review", () => {
   const v = validate(base, prop, "Maria Lopez");
   assertEquals(v.status, "needs_review");
+});
+Deno.test("validate: findings are structured objects with codes (ADR 0013)", () => {
+  const v = validate({ ...base, address_line1: "900 CONGRESS AVE", zip: "78701" }, prop, "Richard Garcia");
+  assertEquals(v.findings.map((f) => f.code), ["address_mismatch", "name_match"]);
+  assertEquals(v.findings[0].severity, "blocking");
+  assertEquals(v.findings[0].detail?.situs, prop.situs_full);
+  assertEquals(reasonText(v.findings)?.startsWith("ID address (900 CONGRESS AVE, 78701) does not match"), true);
+  assertEquals(reasonText(validate(base, prop, "Richard L Garcia").findings), null);
 });

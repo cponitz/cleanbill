@@ -53,16 +53,17 @@ Deno.serve(async (req: Request) => {
   // 1. reset the synthetic lead + property for the scenario
   const { data: lead } = await sb.from("leads").select("id").eq("claim_code", TEST_CODE).single();
   if (!lead) return Response.json({ error: "test lead missing" }, { status: 500 });
-  const { data: custs } = await sb.from("customers").select("id").eq("lead_id", lead.id);
+  const { data: custs } = await sb.from("claims").select("id").eq("lead_id", lead.id);
   for (const c of custs ?? []) {
-    const { data: fil } = await sb.from("filings").select("id").eq("customer_id", c.id);
-    if (fil?.length) await sb.from("refunds").delete().in("filing_id", fil.map((x) => x.id));
-    await sb.from("messages").delete().eq("customer_id", c.id);
-    await sb.from("filings").delete().eq("customer_id", c.id);
-    await sb.from("documents").delete().eq("customer_id", c.id);
+    const { data: fil } = await sb.from("filings").select("id").eq("claim_id", c.id);
+    if (fil?.length) { await sb.from("refunds").delete().in("filing_id", fil.map((x) => x.id)); await sb.from("record_checks").delete().in("filing_id", fil.map((x) => x.id)); }
+    await sb.from("messages").delete().eq("claim_id", c.id);
+    await sb.from("filings").delete().eq("claim_id", c.id);
+    await sb.from("documents").delete().eq("claim_id", c.id);
     await sb.storage.from("ids").remove([`${c.id}/dl_front.pdf`, `${c.id}/dl_front.jpg`, `${c.id}/dl_back.jpg`]);
   }
-  await sb.from("customers").delete().eq("lead_id", lead.id);
+  await sb.from("customers").update({ created_from_claim_id: null }).in("created_from_claim_id", (custs ?? []).map((c) => c.id));
+  await sb.from("claims").delete().eq("lead_id", lead.id);   // the synthetic account (selftest@example.com) is kept and re-attached
   await sb.from("leads").update({ status: "new" }).eq("id", lead.id);
   const situs = scenario === "mismatch"
     ? { situs_num: "1200", situs_street: "BRODIE LN", situs_zip: "78745", situs_full: "1200 BRODIE LN, AUSTIN, TX 78745" }
@@ -82,21 +83,25 @@ Deno.serve(async (req: Request) => {
   // 3. wait for process-claim (kicked in the background by the claim page) — poll up to ~45 s
   let cust: Record<string, unknown> | null = null;
   for (let i = 0; i < 45; i++) {
-    const { data } = await sb.from("customers").select("*").eq("lead_id", lead.id).maybeSingle();
+    const { data } = await sb.from("claims").select("*").eq("lead_id", lead.id).maybeSingle();
     cust = data;
     if (cust && !["submitted", "processing"].includes(String(cust.status))) break;
     await new Promise((r) => setTimeout(r, 1000));
   }
   const cid = cust?.id as string | undefined;
-  const { data: docs } = cid ? await sb.from("documents").select("kind, mime, extracted, validation, extraction_cost_usd").eq("customer_id", cid) : { data: null };
-  const { data: filings } = cid ? await sb.from("filings").select("packet_path, packet_sha256, form_version").eq("customer_id", cid) : { data: null };
-  const { data: msgs } = cid ? await sb.from("messages").select("intent, subject").eq("customer_id", cid) : { data: null };
+  const { data: docs } = cid ? await sb.from("documents").select("kind, mime, extracted, validation, extraction_cost_usd").eq("claim_id", cid) : { data: null };
+  const { data: filings } = cid ? await sb.from("filings").select("packet_path, packet_sha256, form_version").eq("claim_id", cid) : { data: null };
+  const { data: msgs } = cid ? await sb.from("messages").select("intent, subject").eq("claim_id", cid) : { data: null };
+  const { data: account } = cust?.customer_id ? await sb.from("customers").select("id, email, created_from_claim_id").eq("id", String(cust.customer_id)).maybeSingle() : { data: null };
+  const { count: claimsOnAccount } = cust?.customer_id ? await sb.from("claims").select("id", { count: "exact", head: true }).eq("customer_id", String(cust.customer_id)) : { count: null };
   const { data: audit } = cid ? await sb.from("audit_log").select("action, detail").eq("entity_id", cid).order("id", { ascending: false }).limit(3) : { data: null };
   const expected = scenario === "mismatch" ? "needs_dl_update" : "ready_to_submit";
   return Response.json({
     scenario, expected_status: expected, pass: cust?.status === expected,
     claim_http: res.status, claim_api_ok: claimJson.ok === true, claim_errors: claimJson.errors ?? null, elapsed_ms: Date.now() - t0,
-    customer: cust && { status: cust.status, status_reason: cust.status_reason, signature_ip: cust.signature_ip },
+    claim: cust && { id: cid, status: cust.status, status_reason: cust.status_reason, signature_ip: cust.signature_ip, customer_id: cust.customer_id,
+                     findings: cust.findings, findings_structured: Array.isArray(cust.findings) && (cust.findings as unknown[]).every((f) => typeof f === "object" && f !== null && "code" in (f as object)) },
+    account: account && { ...account, claims_on_account: claimsOnAccount },
     documents: docs, filings, messages: msgs, audit,
   }, { headers: { "cache-control": "no-store" } });
 });

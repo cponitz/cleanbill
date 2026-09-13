@@ -6,20 +6,20 @@ NOW = datetime(2026, 9, 8, tzinfo=timezone.utc)
 
 
 def _doc(cid, days_old, kind="dl_front", purged=None):
-    return {"id": f"d-{cid}", "customer_id": cid, "kind": kind, "storage_path": f"{cid}/{kind}.jpg",
+    return {"id": f"d-{cid}", "claim_id": cid, "kind": kind, "storage_path": f"{cid}/{kind}.jpg",
             "created_at": (NOW - timedelta(days=days_old)).isoformat(), "purged_at": purged}
 
 
 def test_filed_30_days_ago_is_purged():
     docs = [_doc("a", 40)]
-    filings = {"a": [{"customer_id": "a", "submitted_at": (NOW - timedelta(days=31)).isoformat()}]}
+    filings = {"a": [{"claim_id": "a", "submitted_at": (NOW - timedelta(days=31)).isoformat()}]}
     out = select_purgeable(docs, {"a": {"status": "filed"}}, filings, NOW)
     assert [(d["id"], r) for d, r in out] == [("d-a", "filed 30+ days ago")]
 
 
 def test_filed_recently_is_kept():
     docs = [_doc("a", 40)]
-    filings = {"a": [{"customer_id": "a", "submitted_at": (NOW - timedelta(days=10)).isoformat()}]}
+    filings = {"a": [{"claim_id": "a", "submitted_at": (NOW - timedelta(days=10)).isoformat()}]}
     assert select_purgeable(docs, {"a": {"status": "filed"}}, filings, NOW) == []
 
 
@@ -37,5 +37,5 @@ def test_withdrawn_after_a_week():
 
 def test_already_purged_and_other_kinds_skipped():
     docs = [_doc("a", 400, purged="2026-01-01T00:00:00+00:00"), _doc("a", 400, kind="other")]
-    filings = {"a": [{"customer_id": "a", "submitted_at": (NOW - timedelta(days=300)).isoformat()}]}
+    filings = {"a": [{"claim_id": "a", "submitted_at": (NOW - timedelta(days=300)).isoformat()}]}
     assert select_purgeable(docs, {"a": {"status": "filed"}}, filings, NOW) == []
