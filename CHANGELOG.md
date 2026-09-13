@@ -13,7 +13,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 - Redeployed all four Supabase edge functions (`claim`, `process-claim`, `ops`, `selftest`) from this tree.
 
 ### Added
-- `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/adr/` (architecture decision records), this changelog.
+- `CLAUDE.md` (working rules for Claude Code), `docs/ARCHITECTURE.md` (handbook v2.1 sections 3 to 5: modules,
+  data model v2, process flows), `docs/RUNBOOK.md` (handbook section 9), `docs/adr/0001..0013` (the T-01..T-13
+  technical decisions), `docs/specs/SPEC-01..06` (feature handoffs), `docs/figures/*.svg` (the eight diagrams),
+  `docs/README.md`, this changelog.
 
 ## [v0.1-prototype] - 2026-09-08
 

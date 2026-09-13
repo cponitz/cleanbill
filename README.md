@@ -38,7 +38,7 @@ The public pages are served by GitHub Pages from `docs/` at `https://cponitz.git
 
 ## Working on this repo
 
-Start with `CLAUDE.md` (working rules), then `docs/ARCHITECTURE.md` (system, data model, decisions) and `docs/adr/` (one file per decision). `CHANGELOG.md` tracks releases; versions are git tags (`v0.1-prototype` is the first working end-to-end prototype).
+Start with `CLAUDE.md` (working rules), then `docs/ARCHITECTURE.md` (system, data model, flows), `docs/adr/` (one file per technical decision), `docs/specs/` (feature handoffs), and `docs/RUNBOOK.md` (operating the prototype). `CHANGELOG.md` tracks releases; versions are git tags (`v0.1-prototype` is the first working end-to-end prototype).
 
 ## Compliance guardrails baked into the code
 
