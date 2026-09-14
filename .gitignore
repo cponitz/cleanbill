@@ -11,3 +11,5 @@ eval/out/
 supabase/.temp/
 .venv/
 *.egg-info/
+
+.DS_Store

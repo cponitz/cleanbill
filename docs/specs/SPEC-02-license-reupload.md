@@ -23,3 +23,7 @@ None beyond `documents` rows; `events.kind` values added.
 
 ## Out of scope
 Any other status; email-attachment intake (G-17); performing the DPS change for the customer (O-10 decided against).
+
+## Amendment 2026-09-14
+- Delivery split: the API path (§2–§5), the newest-first store check and the selftest scenario `mismatch_then_fix` ship in branch `spec-02-06-backend` (Task 1 of the Phase 1 plan). The "fix" screen (§1, §6) ships only in `apps/web` (Task 2); `docs/claim.html` is not extended. The acceptance line "browser smoke test covers the fix screen" applies to the smoke test ported to the Vercel app.
+- Events `dl_fix_started`, `dl_fix_uploaded` are posted by the page to `POST /claim/events`.

@@ -24,3 +24,8 @@ Today the page says "thanks" and the outcome arrives later by email. The custome
 
 ## Out of scope
 Replacing the photo with typed data for filing; OCR quality improvements beyond the fallback (G-28).
+
+## Amendment 2026-09-14
+- Split into **06a (API, Task 1)** and **06b (UI in `apps/web`, Task 2)**. API contract for 06a: `GET /claim?c&claim` → `{status, findings[], packet_url?}`; `GET /claim/precheck?c&address&zip` → `{match: bool, id_address, situs}`; `POST /claim` typed-confirmation fields; `POST /claim/events {c, kind, detail}`; all rate-limited like the existing GET.
+- Rule table: `trd/findings.py` is the source; `supabase/functions/_shared/findings.ts` is generated (`python -m trd.findings --emit-ts`) and CI fails if it is stale. G-9 closes here: both validator suites read `tests/fixtures/cases.json` and a snapshot test asserts identical rendered sentences.
+- Funnel events add `dl_fix_uploaded` (SPEC-02).
