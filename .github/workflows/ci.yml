@@ -15,13 +15,23 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install -e .[dev]
       - run: python -m pytest -q
+      - name: generated findings.ts and G-9 snapshot must be current (SPEC-06, ADR 0016)
+        run: python -m trd.findings --emit-ts --emit-snapshot --check
   deno:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with: { deno-version: v2.x }
-      - run: deno test --no-check supabase/functions/process-claim/validate_test.ts
+      - run: deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts
+      - name: edge functions type-check
+        # The jsr edge-runtime type shim references npm packages that are not installed here, so each entrypoint is
+        # checked from a copy with that one import line removed (the runtime provides those globals in production).
+        run: |
+          set -e
+          for f in claim process-claim ops selftest; do sed '/edge-runtime.d.ts/d' supabase/functions/$f/index.ts > supabase/functions/$f/index.check.ts; done
+          deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/claim/logic.ts supabase/functions/*/index.check.ts
+          rm supabase/functions/*/index.check.ts
   migrations:
     runs-on: ubuntu-latest
     services:

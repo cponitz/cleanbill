@@ -6,6 +6,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 ## [Unreleased]
 
 ### Added
+- **SPEC-06a + SPEC-02 API + G-9: findings rule table, inline-validation API, typed pre-check, license re-upload**
+  (branch `spec-02-06-backend`; ADR 0016). One rule table `trd/findings.py` maps each finding code to severity, field, the
+  ops sentence, the customer sentence and a next action; `supabase/functions/_shared/findings.ts` is generated from it
+  (`python -m trd.findings --emit-ts`) and CI fails when it is stale. Both validators (`_shared/validate.ts`, `trd/agent/validate.py`)
+  now emit codes + facts only; the shared fixture gains 16 `validation_cases` and `tests/fixtures/findings_snapshot.json`
+  pins both validators' fully rendered output (G-9 closed). Claim API: `GET /claim?c&claim=<id>` poll → `{status, findings[]
+  (with customer_message, next_action), packet_url}` (10-minute signed URL when ready); `GET /claim/precheck?c&address&zip`
+  (`addressMatches` only, event `typed_precheck`); `POST /claim/events` for the SPEC-06 funnel events; `GET /claim?c` for a
+  claimed lead returns the claim summary so the page can render the fix screen. `POST /claim` on a claimed code is now the
+  SPEC-02 re-upload (`needs_dl_update` + `dl_front` → new timestamped document, status `processing`, event `dl_fix_uploaded`,
+  re-kick) or the SPEC-06 §4 typed confirmation (`needs_review` for `not_readable`/`low_confidence` + `typed_*` fields →
+  `typed_id` document, re-kick with `typed_confirmation`); any other status → 409. `process-claim` uses the newest `dl_front`
+  (and a back from the same upload), merges typed confirmations over the model's reading, writes `claims.findings` and
+  `status_reason` from the table, and quotes the customer sentences in the `needs_review` draft. Selftest gains
+  `mismatch_then_fix` (mismatch → re-upload a matching ID → `ready_to_submit` with a second packet → a further re-upload
+  gets 409) and every scenario probes the pre-check and the poll. Agent: `FixtureStore` returns documents newest-first like
+  `SupabaseStore`; the system prompt lists the codes and what to do with each. **Data model:** migration
+  `20260914181236_typed_id_documents.sql` — `documents.kind` allows `typed_id` and `storage_path` is nullable for that kind
+  only; `events.kind` gains `typed_precheck, dl_fix_uploaded, validation_shown, dl_fix_started, card_saved, card_skipped,
+  packet_viewed`. CI: generated-file check, three Deno test files, edge-function type-check. Tests: 49 Python (+6), 31 Deno (+8).
+  Docs: spec amendments 2026-09-14 appended to SPEC-02/03/04/06; runbook refreshed (`gh`, `supabase db diff`, Vercel, `--claim`).
 - **SPEC-04 Part A: data model v2** (migration `20260913220000_data_model_v2.sql`). The prototype's `customers`
   table (the engagement) is renamed `claims`; `customer_id` becomes `claim_id` on documents, filings and messages;
   audit rows say `claims`. A new `customers` table is the person/account, matched by e-mail (case-insensitive,

@@ -1,10 +1,16 @@
 // process-claim: after a homeowner submits, extract the ID fields with Claude (vision + forced JSON schema),
 // validate them against the appraisal record, decide the next status, build the packet PDF, and draft the follow-up.
-// Called by the claim API with the service-role key (verify_jwt = true). Body: { "claim_id": "<uuid>" } (v2; "customer_id" still accepted).
+// Called by the claim API with the service-role key (verify_jwt = true).
+// Body: { "claim_id": "<uuid>", "typed_confirmation"?: true } ("customer_id" still accepted for the claim id).
+//   * Uses the NEWEST dl_front (and a dl_back from the same upload) so a re-upload (SPEC-02) replaces the old photo.
+//   * typed_confirmation (SPEC-06 §4): the newest typed_id document's fields override what the model read; the photo is
+//     still extracted (the form needs the real DL number) and still required for filing (§11.43(j)).
+//   * Findings are structured; every sentence comes from the generated rule table (_shared/findings.ts, ADR 0016).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { serviceClient } from "./db.ts";
 import { blocking, reasonText, validate, type Extracted, type Finding, type PropertyRec } from "./validate.ts";
+import { customerMessage, makeFinding } from "../_shared/findings.ts";
 import { fill50114, FORM_VERSION, loadBlankForm } from "./form50114.ts";
 
 const MODEL = Deno.env.get("EXTRACTION_MODEL") ?? "claude-haiku-4-5";
@@ -115,6 +121,24 @@ async function buildPacket(p: {
   return await doc.save();
 }
 
+/** SPEC-06 §4: the customer's confirmed values override the model's reading of those fields; confidence 1.0 on what they typed. */
+export function mergeTyped(read: Extracted, typed: Extracted): Extracted {
+  const pick = (k: keyof Extracted) => (typed[k] != null && String(typed[k]) !== "" ? typed[k] : read[k]);
+  const conf = typed.confidence ?? read.confidence;
+  const out: Extracted = {
+    ...read,
+    first_name: pick("first_name") as string, last_name: pick("last_name") as string, dob: pick("dob") as string,
+    address_line1: pick("address_line1") as string, city: pick("city") as string, zip: pick("zip") as string,
+    confidence: {
+      name: Math.max(read.confidence?.name ?? 0, conf.name >= 1 ? 1 : 0), dob: Math.max(read.confidence?.dob ?? 0, conf.dob >= 1 ? 1 : 0),
+      address: Math.max(read.confidence?.address ?? 0, conf.address >= 1 ? 1 : 0), dl_number: read.confidence?.dl_number ?? 0, expiry: read.confidence?.expiry ?? 0,
+    },
+    source: "typed",
+  };
+  out.readable = read.readable || (!!out.first_name && !!out.last_name && !!out.address_line1);
+  return out;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return new Response("POST only", { status: 405 });
   const sb = serviceClient();
@@ -126,8 +150,12 @@ Deno.serve(async (req: Request) => {
   if (!cust) return Response.json({ error: "claim not found" }, { status: 404 });
   const { data: lead } = await sb.from("leads").select("*").eq("id", cust.lead_id).single();
   const { data: prop } = await sb.from("properties").select("*").eq("prop_id", lead.prop_id).single();
-  const { data: docs } = await sb.from("documents").select("*").eq("claim_id", customer_id).in("kind", ["dl_front", "dl_back"]);
-  if (!docs?.length) return Response.json({ error: "no documents" }, { status: 400 });
+  const { data: allDocs } = await sb.from("documents").select("*").eq("claim_id", customer_id).order("created_at", { ascending: false });
+  const front = (allDocs ?? []).find((d) => d.kind === "dl_front");                                          // newest upload wins (SPEC-02 §3)
+  if (!front) return Response.json({ error: "no documents" }, { status: 400 });
+  const back = (allDocs ?? []).find((d) => d.kind === "dl_back" && d.created_at >= front.created_at);          // only a back from the same upload
+  const docs = back ? [front, back] : [front];
+  const typedDoc = body.typed_confirmation ? (allDocs ?? []).find((d) => d.kind === "typed_id") : null;
 
   await sb.from("claims").update({ status: "processing" }).eq("id", customer_id);
   try {
@@ -138,15 +166,14 @@ Deno.serve(async (req: Request) => {
       images.push({ mime: d.mime, data: new Uint8Array(await blob.arrayBuffer()) });
     }
     const key = await anthropicKey(sb);
-    const { fields, usage, cost } = await extractId(key, images);
+    const { fields: read, usage, cost } = await extractId(key, images);
+    const fields = typedDoc?.extracted ? mergeTyped(read, typedDoc.extracted as Extracted) : read;
     const v = validate(fields, prop as PropertyRec, cust.full_name);
 
     // Persist extraction (front doc carries it) — never store the raw DL number in plain text beyond what the form needs.
-    const front = docs.find((d) => d.kind === "dl_front") ?? docs[0];
-    await sb.from("documents").update({
-      extracted: { ...fields, dl_number: fields.dl_number ? "***" + String(fields.dl_number).slice(-4) : "" },
-      extraction_model: MODEL, extraction_cost_usd: cost, validation: v,
-    }).eq("id", front.id);
+    const masked = { ...read, dl_number: read.dl_number ? "***" + String(read.dl_number).slice(-4) : "" };
+    await sb.from("documents").update({ extracted: masked, extraction_model: MODEL, extraction_cost_usd: cost, validation: typedDoc ? null : v }).eq("id", front.id);
+    if (typedDoc) await sb.from("documents").update({ validation: v }).eq("id", typedDoc.id);   // the confirmed values are what was validated
 
     // Eligibility answers already routed to review keep their (blocking) findings in front of the validator's.
     const prior: Finding[] = Array.isArray(cust.findings) ? (cust.findings as Finding[]).filter((f) => ["not_primary", "other_homestead"].includes(f.code)) : [];
@@ -188,16 +215,16 @@ Deno.serve(async (req: Request) => {
       },
       needs_review: {
         intent: "needs_review", subject: "Quick question about your homestead claim",
-        body: `Hi ${first}, before we prepare anything we need to check one thing: ${reason ?? "a detail on your ID didn't line up with the appraisal record"}. Could you reply with a note (or a clearer photo of your ID)? Nothing has been filed, and you owe nothing.`,
+        body: `Hi ${first}, before we prepare anything we need to check one thing.\n\n${blocking(findings).map(customerMessage).join("\n\n") || "A detail on your ID didn't line up with the appraisal record."}\n\nCould you reply with a note (or a clearer photo of your ID)? Nothing has been filed, and you owe nothing.`,
       },
     };
     const d = drafts[status] ?? drafts.needs_review;
     await sb.from("messages").insert({ claim_id: customer_id, direction: "outbound", channel: "email", subject: d.subject, body: d.body, intent: d.intent, agent_draft: true });
-    await sb.from("audit_log").insert({ actor: "process-claim", action: "processed", entity: "claims", entity_id: customer_id, detail: { status, reason, usage, cost, model: MODEL, findings: findings.map((f) => f.code) } });
+    await sb.from("audit_log").insert({ actor: "process-claim", action: "processed", entity: "claims", entity_id: customer_id, detail: { status, reason, usage, cost, model: MODEL, findings: findings.map((f) => f.code), document_id: front.id, typed_confirmation: !!typedDoc } });
     return Response.json({ ok: true, status, reason, findings, cost, usage });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    const err: Finding = { code: "processing_error", severity: "blocking", field: "processing", message: "processing error: " + msg.slice(0, 200) };
+    const err: Finding = makeFinding("processing_error", { error: msg.slice(0, 200) });
     await sb.from("claims").update({ status: "needs_review", status_reason: err.message, findings: [err] }).eq("id", customer_id);
     await sb.from("audit_log").insert({ actor: "process-claim", action: "error", entity: "claims", entity_id: customer_id, detail: { error: msg } });
     return Response.json({ ok: false, error: msg }, { status: 500 });

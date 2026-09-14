@@ -1,5 +1,6 @@
 function assertEquals(a: unknown, b: unknown, msg?: string) { const A = JSON.stringify(a), B = JSON.stringify(b); if (A !== B) throw new Error(msg ?? `assertEquals failed: ${A} !== ${B}`); }
 import { addressMatches, ageOn, nameMatches, reasonText, validate, type Extracted, type PropertyRec } from "./validate.ts";
+const TODAY = new Date(Date.UTC(2026, 8, 7));
 
 const prop: PropertyRec = {
   prop_id: 1, owner_name: "GARCIA RICHARD L", situs_num: "3675", situs_street: "DUVAL ST", situs_city: "AUSTIN",
@@ -38,41 +39,41 @@ Deno.test("age on a fixed date", () => assertEquals(ageOn("1960-09-10", new Date
 Deno.test("age before birthday", () => assertEquals(ageOn("1961-09-10", new Date(Date.UTC(2026, 8, 7))), 64));
 
 Deno.test("validate: happy path -> ready_to_submit", () => {
-  const v = validate(base, prop, "Richard L Garcia");
+  const v = validate(base, prop, "Richard L Garcia", TODAY);
   assertEquals(v.status, "ready_to_submit");
   assertEquals(v.address_match, true);
   assertEquals(v.name_match, true);
 });
 Deno.test("validate: address mismatch -> needs_dl_update", () => {
-  const v = validate({ ...base, address_line1: "900 CONGRESS AVE", zip: "78701" }, prop, "Richard Garcia");
+  const v = validate({ ...base, address_line1: "900 CONGRESS AVE", zip: "78701" }, prop, "Richard Garcia", TODAY);
   assertEquals(v.status, "needs_dl_update");
 });
 Deno.test("validate: non-Texas ID -> needs_review", () => {
-  const v = validate({ ...base, issuing_state: "CA" }, prop, "Richard Garcia");
+  const v = validate({ ...base, issuing_state: "CA" }, prop, "Richard Garcia", TODAY);
   assertEquals(v.status, "needs_review");
 });
 Deno.test("validate: name not on deed -> needs_review even if address matches", () => {
-  const v = validate({ ...base, first_name: "MARIA", last_name: "LOPEZ" }, prop, "Maria Lopez");
+  const v = validate({ ...base, first_name: "MARIA", last_name: "LOPEZ" }, prop, "Maria Lopez", TODAY);
   assertEquals(v.status, "needs_review");
 });
 Deno.test("validate: over-65 flagged", () => {
-  const v = validate({ ...base, dob: "1955-01-01" }, prop, "Richard Garcia");
+  const v = validate({ ...base, dob: "1955-01-01" }, prop, "Richard Garcia", TODAY);
   assertEquals(v.over65, true);
   assertEquals(v.findings.some((f) => f.code === "over_65" && f.severity === "info"), true);
 });
 Deno.test("validate: low confidence -> needs_review", () => {
-  const v = validate({ ...base, confidence: { ...base.confidence, address: 0.3 } }, prop, "Richard Garcia");
+  const v = validate({ ...base, confidence: { ...base.confidence, address: 0.3 } }, prop, "Richard Garcia", TODAY);
   assertEquals(v.status, "needs_review");
 });
 Deno.test("validate: ID name differs from typed signature -> needs_review", () => {
-  const v = validate(base, prop, "Maria Lopez");
+  const v = validate(base, prop, "Maria Lopez", TODAY);
   assertEquals(v.status, "needs_review");
 });
 Deno.test("validate: findings are structured objects with codes (ADR 0013)", () => {
-  const v = validate({ ...base, address_line1: "900 CONGRESS AVE", zip: "78701" }, prop, "Richard Garcia");
+  const v = validate({ ...base, address_line1: "900 CONGRESS AVE", zip: "78701" }, prop, "Richard Garcia", TODAY);
   assertEquals(v.findings.map((f) => f.code), ["address_mismatch", "name_match"]);
   assertEquals(v.findings[0].severity, "blocking");
   assertEquals(v.findings[0].detail?.situs, prop.situs_full);
-  assertEquals(reasonText(v.findings)?.startsWith("ID address (900 CONGRESS AVE, 78701) does not match"), true);
-  assertEquals(reasonText(validate(base, prop, "Richard L Garcia").findings), null);
+  assertEquals(reasonText(v.findings)?.startsWith("ID address (900 CONGRESS AVE, AUSTIN 78701) does not match"), true);
+  assertEquals(reasonText(validate(base, prop, "Richard L Garcia", TODAY).findings), null);
 });

@@ -1,4 +1,5 @@
-"""Mirrors supabase/functions/process-claim/validate_test.ts case for case — if one of these changes, change both."""
+"""Mirrors supabase/functions/process-claim/validate_test.ts case for case — if one of these changes, change both.
+The shared fixture cases (tests/fixtures/cases.json) are pinned by tests/test_findings.py and _shared/findings_test.ts."""
 from datetime import date
 
 from trd.agent.validate import address_matches, age_on, name_matches, validate
@@ -54,5 +55,5 @@ def test_findings_are_structured_and_mirror_the_deno_case():
     v = validate({**BASE, "address_line1": "900 CONGRESS AVE", "zip": "78701"}, PROP, "Richard Garcia", TODAY)
     assert [f["code"] for f in v.findings] == ["address_mismatch", "name_match"]
     assert v.findings[0]["severity"] == "blocking" and v.findings[0]["detail"]["situs"] == PROP["situs_full"]
-    assert reason_text(v.findings).startswith("ID address (900 CONGRESS AVE, 78701) does not match")
+    assert reason_text(v.findings).startswith("ID address (900 CONGRESS AVE, AUSTIN 78701) does not match")
     assert reason_text(validate(BASE, PROP, "Richard L Garcia", TODAY).findings) is None

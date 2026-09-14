@@ -31,8 +31,11 @@ jobs:
           supabase db diff --linked --schema public > diff.sql
           if grep -v -E '^\s*(--.*)?$' diff.sql | grep -q .; then echo "::error::schema drift between migrations and the hosted database"; cat diff.sql; exit 1; fi
           echo "no drift"
-      - name: end-to-end selftest (match scenario)
+      - name: end-to-end selftest (match, mismatch, mismatch_then_fix)
         if: env.OPS_PASSWORD != ''   # the secrets context is not allowed in step conditions; env is
         run: |
-          curl -sf "https://$PROJECT_REF.supabase.co/functions/v1/selftest?key=$OPS_PASSWORD&scenario=match" > selftest.json
-          grep -q '"pass":true' selftest.json && echo "selftest passed" || { echo "::error::selftest did not pass"; sed 's/"signature_ip":"[^"]*"/"signature_ip":"…"/' selftest.json; exit 1; }
+          set -e
+          for s in match mismatch mismatch_then_fix; do
+            curl -sf -m 120 "https://$PROJECT_REF.supabase.co/functions/v1/selftest?key=$OPS_PASSWORD&scenario=$s" > selftest.json
+            if grep -q '"pass":true' selftest.json; then echo "selftest $s passed"; else echo "::error::selftest $s did not pass"; sed 's/"signature_ip":"[^"]*"/"signature_ip":"…"/' selftest.json; exit 1; fi
+          done

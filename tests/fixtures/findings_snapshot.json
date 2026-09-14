@@ -1,0 +1,500 @@
+{
+ "happy_path": {
+  "status": "ready_to_submit",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   }
+  ],
+  "reason": null
+ },
+ "address_mismatch": {
+  "status": "needs_dl_update",
+  "findings": [
+   {
+    "code": "address_mismatch",
+    "severity": "blocking",
+    "field": "address",
+    "message": "ID address (900 CONGRESS AVE, AUSTIN 78701) does not match situs (3675 DUVAL ST, AUSTIN, TX 78721) — DPS address update required",
+    "detail": {
+     "id": "900 CONGRESS AVE, AUSTIN 78701",
+     "situs": "3675 DUVAL ST, AUSTIN, TX 78721"
+    },
+    "customer_message": "The address on your license (900 CONGRESS AVE, AUSTIN 78701) doesn't match the property (3675 DUVAL ST, AUSTIN, TX 78721). TCAD requires them to match before it will approve a homestead exemption. Update your address with the Texas DPS online, then upload your updated license here.",
+    "next_action": "dps_update"
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   }
+  ],
+  "reason": "ID address (900 CONGRESS AVE, AUSTIN 78701) does not match situs (3675 DUVAL ST, AUSTIN, TX 78721) — DPS address update required"
+ },
+ "address_suffix_and_case": {
+  "status": "ready_to_submit",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   }
+  ],
+  "reason": null
+ },
+ "non_texas_id": {
+  "status": "needs_review",
+  "findings": [
+   {
+    "code": "not_texas_id",
+    "severity": "blocking",
+    "field": "issuing_state",
+    "message": "Not a Texas DL/ID (state CA) — Tax Code §11.43(j) requires a Texas driver's license or DPS ID",
+    "detail": {
+     "issuing_state": "CA",
+     "id_type": "driver_license"
+    },
+    "customer_message": "Texas law requires a Texas driver's license or DPS ID with the application, and the card we read is from CA. If you have a Texas ID, please upload that instead.",
+    "next_action": "upload_texas_id"
+   },
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   }
+  ],
+  "reason": "Not a Texas DL/ID (state CA) — Tax Code §11.43(j) requires a Texas driver's license or DPS ID"
+ },
+ "name_not_on_deed": {
+  "status": "needs_review",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_mismatch",
+    "severity": "blocking",
+    "field": "name",
+    "message": "Name on ID (MARIA LOPEZ) not found in owner of record (GARCIA RICHARD L) — confirm ownership/deed",
+    "detail": {
+     "id": "MARIA LOPEZ",
+     "owner": "GARCIA RICHARD L"
+    },
+    "customer_message": "The name on the license is MARIA LOPEZ; the appraisal roll lists the owner as GARCIA RICHARD L. Are you on the deed? Reply below and we'll sort it out.",
+    "next_action": "reply"
+   }
+  ],
+  "reason": "Name on ID (MARIA LOPEZ) not found in owner of record (GARCIA RICHARD L) — confirm ownership/deed"
+ },
+ "nickname_not_enough": {
+  "status": "needs_review",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_mismatch",
+    "severity": "blocking",
+    "field": "name",
+    "message": "Name on ID (RICK GARCIA) not found in owner of record (GARCIA RICHARD L) — confirm ownership/deed",
+    "detail": {
+     "id": "RICK GARCIA",
+     "owner": "GARCIA RICHARD L"
+    },
+    "customer_message": "The name on the license is RICK GARCIA; the appraisal roll lists the owner as GARCIA RICHARD L. Are you on the deed? Reply below and we'll sort it out.",
+    "next_action": "reply"
+   }
+  ],
+  "reason": "Name on ID (RICK GARCIA) not found in owner of record (GARCIA RICHARD L) — confirm ownership/deed"
+ },
+ "signer_differs_from_id": {
+  "status": "needs_review",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   },
+   {
+    "code": "signer_mismatch",
+    "severity": "blocking",
+    "field": "signature",
+    "message": "Name on ID (RICHARD GARCIA) differs from the typed signature (Maria Lopez) — confirm identity",
+    "detail": {
+     "id": "RICHARD GARCIA",
+     "typed": "Maria Lopez"
+    },
+    "customer_message": "The name on the license is RICHARD GARCIA, but you signed as Maria Lopez. The application has to be signed by the person on the license. Reply below if this is you — for example a nickname or a married name.",
+    "next_action": "reply"
+   }
+  ],
+  "reason": "Name on ID (RICHARD GARCIA) differs from the typed signature (Maria Lopez) — confirm identity"
+ },
+ "over_65": {
+  "status": "ready_to_submit",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   },
+   {
+    "code": "over_65",
+    "severity": "info",
+    "field": "dob",
+    "message": "Applicant is 71 — eligible for the over-65 exemption (add to 50-114)",
+    "detail": {
+     "age": 71
+    },
+    "customer_message": "You're 71, so you also qualify for the over-65 exemption. We'll include it on your application.",
+    "next_action": null
+   }
+  ],
+  "reason": null
+ },
+ "under_18": {
+  "status": "needs_review",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   },
+   {
+    "code": "under_18",
+    "severity": "blocking",
+    "field": "dob",
+    "message": "Applicant under 18 (16) — review",
+    "detail": {
+     "age": 16
+    },
+    "customer_message": "The date of birth on the license makes you under 18. The homestead exemption is claimed by the adult owner of the home, so we'll review this by hand.",
+    "next_action": "review"
+   }
+  ],
+  "reason": "Applicant under 18 (16) — review"
+ },
+ "expired_id": {
+  "status": "ready_to_submit",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   },
+   {
+    "code": "expired",
+    "severity": "warning",
+    "field": "expiry",
+    "message": "ID is expired (2024-01-01) — TCAD may accept; flag for reviewer",
+    "detail": {
+     "expiry": "2024-01-01"
+    },
+    "customer_message": "Your license expired on 2024-01-01. TCAD usually still accepts it; we'll flag it for review.",
+    "next_action": null
+   }
+  ],
+  "reason": null
+ },
+ "low_confidence": {
+  "status": "needs_review",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   },
+   {
+    "code": "low_confidence",
+    "severity": "blocking",
+    "field": "confidence",
+    "message": "Low extraction confidence on a key field — reviewer to confirm against the image",
+    "detail": {
+     "confidence": {
+      "name": 0.98,
+      "dob": 0.97,
+      "address": 0.3,
+      "dl_number": 0.9,
+      "expiry": 0.95
+     }
+    },
+    "customer_message": "We couldn't read part of your license clearly. Please confirm the details below so we can check them against the appraisal record.",
+    "next_action": "confirm_typed"
+   }
+  ],
+  "reason": "Low extraction confidence on a key field — reviewer to confirm against the image"
+ },
+ "not_readable": {
+  "status": "needs_review",
+  "findings": [
+   {
+    "code": "not_readable",
+    "severity": "blocking",
+    "field": "image",
+    "message": "ID image not legible — ask for a clearer photo",
+    "customer_message": "We couldn't read your license photo. Please take a new photo in good light with the whole card in the frame.",
+    "next_action": "retake_photo"
+   },
+   {
+    "code": "address_mismatch",
+    "severity": "blocking",
+    "field": "address",
+    "message": "ID address (, AUSTIN ) does not match situs (3675 DUVAL ST, AUSTIN, TX 78721) — DPS address update required",
+    "detail": {
+     "id": ", AUSTIN ",
+     "situs": "3675 DUVAL ST, AUSTIN, TX 78721"
+    },
+    "customer_message": "The address on your license (, AUSTIN ) doesn't match the property (3675 DUVAL ST, AUSTIN, TX 78721). TCAD requires them to match before it will approve a homestead exemption. Update your address with the Texas DPS online, then upload your updated license here.",
+    "next_action": "dps_update"
+   },
+   {
+    "code": "name_mismatch",
+    "severity": "blocking",
+    "field": "name",
+    "message": "Name on ID ( ) not found in owner of record (GARCIA RICHARD L) — confirm ownership/deed",
+    "detail": {
+     "id": " ",
+     "owner": "GARCIA RICHARD L"
+    },
+    "customer_message": "The name on the license is  ; the appraisal roll lists the owner as GARCIA RICHARD L. Are you on the deed? Reply below and we'll sort it out.",
+    "next_action": "reply"
+   },
+   {
+    "code": "signer_mismatch",
+    "severity": "blocking",
+    "field": "signature",
+    "message": "Name on ID ( ) differs from the typed signature (Richard L Garcia) — confirm identity",
+    "detail": {
+     "id": " ",
+     "typed": "Richard L Garcia"
+    },
+    "customer_message": "The name on the license is  , but you signed as Richard L Garcia. The application has to be signed by the person on the license. Reply below if this is you — for example a nickname or a married name.",
+    "next_action": "reply"
+   },
+   {
+    "code": "low_confidence",
+    "severity": "blocking",
+    "field": "confidence",
+    "message": "Low extraction confidence on a key field — reviewer to confirm against the image",
+    "detail": {
+     "confidence": {
+      "name": 0.1,
+      "dob": 0.1,
+      "address": 0.1,
+      "dl_number": 0.1,
+      "expiry": 0.1
+     }
+    },
+    "customer_message": "We couldn't read part of your license clearly. Please confirm the details below so we can check them against the appraisal record.",
+    "next_action": "confirm_typed"
+   }
+  ],
+  "reason": "ID image not legible — ask for a clearer photo; ID address (, AUSTIN ) does not match situs (3675 DUVAL ST, AUSTIN, TX 78721) — DPS address update required; Name on ID ( ) not found in owner of record (GARCIA RICHARD L) — confirm ownership/deed; Name on ID ( ) differs from the typed signature (Richard L Garcia) — confirm identity; Low extraction confidence on a key field — reviewer to confirm against the image"
+ },
+ "unit_mismatch": {
+  "status": "needs_dl_update",
+  "findings": [
+   {
+    "code": "address_mismatch",
+    "severity": "blocking",
+    "field": "address",
+    "message": "ID address (3675 DUVAL ST APT A, AUSTIN 78721) does not match situs (3675 DUVAL ST UNIT B, AUSTIN, TX 78721) — DPS address update required",
+    "detail": {
+     "id": "3675 DUVAL ST APT A, AUSTIN 78721",
+     "situs": "3675 DUVAL ST UNIT B, AUSTIN, TX 78721"
+    },
+    "customer_message": "The address on your license (3675 DUVAL ST APT A, AUSTIN 78721) doesn't match the property (3675 DUVAL ST UNIT B, AUSTIN, TX 78721). TCAD requires them to match before it will approve a homestead exemption. Update your address with the Texas DPS online, then upload your updated license here.",
+    "next_action": "dps_update"
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   }
+  ],
+  "reason": "ID address (3675 DUVAL ST APT A, AUSTIN 78721) does not match situs (3675 DUVAL ST UNIT B, AUSTIN, TX 78721) — DPS address update required"
+ },
+ "unit_omitted_on_id_ok": {
+  "status": "ready_to_submit",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   }
+  ],
+  "reason": null
+ },
+ "couple_on_deed": {
+  "status": "ready_to_submit",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   },
+   {
+    "code": "over_65",
+    "severity": "info",
+    "field": "dob",
+    "message": "Applicant is 68 — eligible for the over-65 exemption (add to 50-114)",
+    "detail": {
+     "age": 68
+    },
+    "customer_message": "You're 68, so you also qualify for the over-65 exemption. We'll include it on your application.",
+    "next_action": null
+   }
+  ],
+  "reason": null
+ },
+ "typed_confirmation_source": {
+  "status": "ready_to_submit",
+  "findings": [
+   {
+    "code": "address_match",
+    "severity": "info",
+    "field": "address",
+    "message": "ID address matches the property",
+    "customer_message": "The address on your license matches the property.",
+    "next_action": null
+   },
+   {
+    "code": "name_match",
+    "severity": "info",
+    "field": "name",
+    "message": "Name matches owner of record",
+    "customer_message": "The name on your license matches the owner of record.",
+    "next_action": null
+   }
+  ],
+  "reason": null
+ }
+}

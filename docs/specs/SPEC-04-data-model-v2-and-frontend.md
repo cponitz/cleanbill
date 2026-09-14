@@ -48,3 +48,10 @@ The static prototype pages work but are not a product. The mail test must measur
 
 ### Out of scope
 Customer accounts/login, Spanish (G-23), the prospect portal (G-27), SEO beyond basics.
+
+## Amendment 2026-09-14 (Part B)
+- Provisioned: Vercel project `texas-refund-desk` (Hobby), Root Directory `apps/web`, preset Next.js, production branch `main`, preview per branch push, env `NEXT_PUBLIC_API_BASE`, `NEXT_PUBLIC_STRIPE_ENABLED`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Domain `texasrefunddesk.com` purchased; attached at cut-over (Task 6) if not already.
+- The app reads only `NEXT_PUBLIC_*` variables. The seven variables Vercel "detected" from `.env.example` must never be set in Vercel (service-role key, ops password).
+- Inline validation (SPEC-06 §2) and the fix screen (SPEC-02 §1) are part of this app's `/claim/[code]` page — SPEC-06b.
+- Acceptance adds: `apps/web/README.md`; Lighthouse scores recorded in the PR; the ported smoke test runs against the Vercel preview URL.
+- `docs/` static pages are frozen (bug fixes only) until cut-over, then retired per ADR 0012.

@@ -24,3 +24,9 @@ Fees are collected 2–5 months after signature; without a stored payment method
 
 ## Out of scope
 Charging (SPEC-05), refunds of fees, Apple/Google Pay (Payment Element gives them for free — fine if they appear).
+
+## Amendment 2026-09-14
+- Environment ready: Stripe account in test mode; `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` in the Mac `.env`; Vercel has `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_STRIPE_ENABLED=false`. Claude Code sets the function secret with `supabase secrets set`; Charlie flips the Vercel flag to test.
+- Flag names: function env `STRIPE_ENABLED` (default off); app `NEXT_PUBLIC_STRIPE_ENABLED`. The card step is rendered in `apps/web` only (never in `docs/`).
+- O-04 placement: implemented as §1/§3 (after the inline match, skip allowed) pending Charlie's entry in `claude/decisions.md`; the skip rate is measured via `card_skipped`.
+- The agreement's fee-timing wording (§6) is taken from `copy/service_agreement.md` after the copy review; until then the existing agreement text stands and the gap is noted in the PR.
