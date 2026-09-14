@@ -13,6 +13,7 @@ dependencies = [
   "pypdf>=3.17",
   "rapidfuzz>=3.0",
   "python-dotenv>=1.0",
+  "supabase>=2.0",   # Python client used by trd.agent.store.SupabaseStore, trd.etl.publish, trd.jobs.purge_ids
 ]
 
 [project.optional-dependencies]

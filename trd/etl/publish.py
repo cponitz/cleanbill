@@ -1,6 +1,8 @@
-"""Publish a leads CSV into Supabase (properties + leads). Idempotent on prop_id: existing leads are left alone.
+"""Publish a leads CSV into Supabase (properties + leads + property_entities). Idempotent on prop_id: existing leads are left alone.
 
     python -m trd.etl.publish --leads data/out/leads.csv [--limit 500] [--dry-run]
+    python -m trd.etl.publish --leads data/out/leads.csv --update-estimates   # also refresh the estimate columns of EXISTING leads
+                                                                             # (SPEC-01 re-estimate); never touches claim_code or status
 
 Also used from the sandbox via `--sql-out` to emit batched INSERT statements when direct network access isn't available.
 """
@@ -13,11 +15,14 @@ from pathlib import Path
 
 import pandas as pd
 
+from trd.estimator.rates import unit
 
-def rows_from_csv(path: Path, limit: int | None = None, tax_year: int = 2026) -> tuple[list[dict], list[dict]]:
+
+def rows_from_csv(path: Path, limit: int | None = None, tax_year: int = 2026) -> tuple[list[dict], list[dict], list[dict]]:
+    """-> (properties, leads, property_entities) rows for the CSV written by trd.etl.leads."""
     df = pd.read_csv(path, dtype={"situs_zip": str, "owner_zip": str, "situs_num": str, "situs_unit": str})
     if limit: df = df.head(limit)
-    props, leads = [], []
+    props, leads, ents = [], [], []
     for r in df.itertuples(index=False):
         d = r._asdict()
         props.append({
@@ -37,9 +42,14 @@ def rows_from_csv(path: Path, limit: int | None = None, tax_year: int = 2026) ->
             "est_refund_total": float(d["est_refund_total"]), "est_refund_by_year": json.loads(d["est_refund_by_year"]) if isinstance(d["est_refund_by_year"], str) else d["est_refund_by_year"],
             "est_forward_annual": float(d["est_forward_annual"]), "estimate_unconfirmed": bool(d.get("estimate_unconfirmed", False)), "status": "new",
         })
+        ej = d.get("entities")
+        for e in (json.loads(ej) if isinstance(ej, str) and ej else []):
+            ents.append({"prop_id": int(d["prop_id"]), "entity_cd": e["entity_cd"], "entity_name": e.get("entity_name"),
+                         "entity_type": (unit(e["entity_cd"]) or {}).get("type", "other"),
+                         "taxable_value": e.get("taxable_val"), "assessed_value": e.get("assessed_val"), "partial": bool(e.get("partial", False))})
     def clean(d: dict) -> dict:
         return {k: (None if isinstance(v, float) and pd.isna(v) else v) for k, v in d.items()}
-    return [clean(p) for p in props], [clean(l) for l in leads]
+    return [clean(p) for p in props], [clean(l) for l in leads], [clean(e) for e in ents]
 
 
 def sql_literal(v) -> str:
@@ -51,7 +61,10 @@ def sql_literal(v) -> str:
     return "'" + str(v).replace("'", "''") + "'"
 
 
-def to_sql(props: list[dict], leads: list[dict], batch: int = 300) -> list[str]:
+ESTIMATE_COLS = ("refund_years", "est_refund_total", "est_refund_by_year", "est_forward_annual", "estimate_unconfirmed")
+
+
+def to_sql(props: list[dict], leads: list[dict], ents: list[dict] | None = None, batch: int = 300, update_estimates: bool = False) -> list[str]:
     stmts = []
     pcols = list(props[0].keys()); lcols = list(leads[0].keys())
     for i in range(0, len(props), batch):
@@ -59,6 +72,15 @@ def to_sql(props: list[dict], leads: list[dict], batch: int = 300) -> list[str]:
         stmts.append(f"insert into properties ({','.join(pcols)}) values\n{vals}\non conflict (prop_id) do nothing;")
         vals = ",\n".join("(" + ",".join(sql_literal(l[c]) for c in lcols) + ")" for l in leads[i:i + batch])
         stmts.append(f"insert into leads ({','.join(lcols)}) values\n{vals}\non conflict (claim_code) do nothing;")
+    if update_estimates:
+        for l in leads:
+            sets = ", ".join(f"{c} = {sql_literal(l[c])}" for c in ESTIMATE_COLS)
+            stmts.append(f"update leads set {sets} where prop_id = {int(l['prop_id'])};")
+    ecols = list(ents[0].keys()) if ents else []
+    for i in range(0, len(ents or []), batch * 5):
+        vals = ",\n".join("(" + ",".join(sql_literal(e[c]) for c in ecols) + ")" for e in ents[i:i + batch * 5])
+        stmts.append(f"insert into property_entities ({','.join(ecols)}) values\n{vals}\non conflict (prop_id, entity_cd) do update set "
+                     + ", ".join(f"{c} = excluded.{c}" for c in ecols if c not in ("prop_id", "entity_cd")) + ";")
     return stmts
 
 
@@ -68,11 +90,12 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--sql-out", default=None, help="write batched SQL to this file instead of using the network")
+    ap.add_argument("--update-estimates", action="store_true", help="refresh refund_years/est_* /estimate_unconfirmed on leads that already exist")
     a = ap.parse_args()
-    props, leads = rows_from_csv(Path(a.leads), a.limit)
-    print(f"{len(props)} properties, {len(leads)} leads")
+    props, leads, ents = rows_from_csv(Path(a.leads), a.limit)
+    print(f"{len(props)} properties, {len(leads)} leads, {len(ents)} property-unit rows")
     if a.sql_out:
-        Path(a.sql_out).write_text("\n\n".join(to_sql(props, leads)))
+        Path(a.sql_out).write_text("\n\n".join(to_sql(props, leads, ents, update_estimates=a.update_estimates)))
         print(f"wrote {a.sql_out}"); return
     if a.dry_run: return
     from supabase import create_client
@@ -82,7 +105,15 @@ def main() -> None:
         existing = {r["prop_id"] for r in sb.table("leads").select("prop_id").in_("prop_id", [l["prop_id"] for l in leads[i:i + 500]]).execute().data}
         new = [l for l in leads[i:i + 500] if l["prop_id"] not in existing]
         if new: sb.table("leads").insert(new).execute()
-        print(f"batch {i // 500 + 1}: {len(new)} new leads")
+        if a.update_estimates:  # SPEC-01 re-estimate of leads already published (claim_code, status, tier untouched)
+            for l in leads[i:i + 500]:
+                if l["prop_id"] in existing:
+                    sb.table("leads").update({c: l[c] for c in ESTIMATE_COLS}).eq("prop_id", l["prop_id"]).execute()
+        print(f"batch {i // 500 + 1}: {len(new)} new leads" + (f", {len(existing)} estimates refreshed" if a.update_estimates else ""))
+    # property_entities: upsert for every published property (SPEC-01) — units can change between roll supplements
+    for i in range(0, len(ents), 1000):
+        sb.table("property_entities").upsert(ents[i:i + 1000], on_conflict="prop_id,entity_cd").execute()
+    print(f"{len(ents)} property_entities rows upserted")
 
 
 if __name__ == "__main__":

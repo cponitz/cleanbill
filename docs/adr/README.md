@@ -15,3 +15,4 @@ One file per technical decision (T-nn in the handbook). Business decisions (B-nn
 - [0011](./0011-github-actions-as-batch-runtime.md) — github actions as batch runtime (2026-09-07)
 - [0012](./0012-customer-front-end-nextjs-on-vercel.md) — customer front end nextjs on vercel (2026-09-12)
 - [0013](./0013-structured-findings.md) — structured findings (2026-09-12)
+- [0014](./0014-rate-table-as-data-with-confirmation-rule.md) — rate table as data with a confirmation rule (2026-09-13)

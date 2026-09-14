@@ -24,6 +24,9 @@ import duckdb
 import pandas as pd
 
 from trd.estimator import estimate_refund, refundable_tax_years
+from trd.estimator.rates import taxing_units, unit
+
+TYPE_ORDER = {"isd": 0, "city": 1, "county": 2, "college": 3, "hospital": 4, "esd": 5}   # the order units are listed on the letter
 
 ENTITY_RE = re.compile(r"\b(LLC|L\.L\.C|INC|CORP|CORPORATION|LP|LLP|LTD|TRUST|TRUSTEE|TR|ESTATE OF|PARTNERS|PARTNERSHIP|HOLDINGS|PROPERTIES|"
                        r"INVESTMENTS|INVESTMENT|CHURCH|CITY OF|COUNTY|STATE OF|BANK|HOMES|BUILDERS|DEVELOPMENT|ASSOC|ASSOCIATION|FOUNDATION|"
@@ -46,6 +49,24 @@ def norm_addr(s: str) -> str:
     s = re.sub(r"\b(COURT)\b", "CT", s); s = re.sub(r"\b(CIRCLE)\b", "CIR", s); s = re.sub(r"\b(PLACE)\b", "PL", s)
     s = re.sub(r"\b(TRAIL)\b", "TRL", s); s = re.sub(r"\b(COVE)\b", "CV", s); s = re.sub(r"\b(APT|UNIT|STE|#)\b", "UNIT", s)
     return re.sub(r"\s+", " ", s).strip()
+
+
+def property_units(con, prop_ids: list[int]) -> dict[int, list[dict]]:
+    """{prop_id: [{entity_cd, entity_name, taxable_val, assessed_val, partial}, ...]} from APPRAISAL_ENTITY_INFO (PROP_ENT).
+    Empty dict when the table is not loaded (then every estimate falls back to the five Austin units, flagged unconfirmed)."""
+    tables = {r[0].lower() for r in con.execute("show tables").fetchall()}
+    if "appraisal_entity_info" not in tables or not prop_ids:
+        return {}
+    con.register("lead_ids", pd.DataFrame({"prop_id": prop_ids}))
+    rows = con.execute("""select e.prop_id, e.entity_cd, any_value(e.entity_name), max(e.taxable_val), max(e.assessed_val), bool_or(coalesce(e.partial_entity, false))
+                          from appraisal_entity_info e join lead_ids using (prop_id) group by 1, 2 order by 1, 2""").fetchall()
+    con.unregister("lead_ids")
+    out: dict[int, list[dict]] = {}
+    for pid, cd, name, taxable, assessed, partial in rows:
+        out.setdefault(int(pid), []).append({"entity_cd": cd, "entity_name": name, "taxable_val": taxable, "assessed_val": assessed, "partial": bool(partial)})
+    for ents in out.values():
+        ents.sort(key=lambda e: (TYPE_ORDER.get((unit(e["entity_cd"]) or {}).get("type"), 9), e["entity_cd"]))
+    return out
 
 
 def build_leads(db_path: Path, as_of: date, min_value: float = 100_000) -> pd.DataFrame:
@@ -71,7 +92,6 @@ def build_leads(db_path: Path, as_of: date, min_value: float = 100_000) -> pd.Da
         and coalesce(py_addr_state, '') = 'TX'
     """
     df = con.execute(sql).df()
-    con.close()
     df["situs_line"] = df["situs_line"].str.replace(r"\s+", " ", regex=True).str.strip()
     # mailing == situs (line 1, or line 2 when line 1 is a c/o) and zip5 match
     m1 = df["owner_addr1"].map(norm_addr); m2 = df["owner_addr2"].map(norm_addr)
@@ -95,12 +115,21 @@ def build_leads(db_path: Path, as_of: date, min_value: float = 100_000) -> pd.Da
         if d <= date(latest, 1, 1): return 2
         return 3
     leads["tier"] = leads["deed_date"].map(tier)
-    ests = leads.apply(lambda r: estimate_refund(float(r["appraised_val"] or 0), as_of, owned_since=r["deed_date"]), axis=1)
+    # SPEC-01: each property's own taxing units (PROP_ENT). Missing table -> units=None -> five Austin units, unconfirmed.
+    units_map = property_units(con, [int(x) for x in leads["prop_id"].tolist()])
+    con.close()
+    def units_for(pid: int):
+        ents = units_map.get(int(pid))
+        return None if ents is None else taxing_units([e["entity_cd"] for e in ents])
+    ests = leads.apply(lambda r: estimate_refund(float(r["appraised_val"] or 0), as_of, owned_since=r["deed_date"], units=units_for(r["prop_id"])), axis=1)
     leads["refund_years"] = ests.map(lambda e: e.refund_years)
     leads["est_refund_total"] = ests.map(lambda e: e.refund_total)
-    leads["est_refund_by_year"] = ests.map(lambda e: json.dumps({str(y): {"total": s["total"]} for y, s in e.by_year.items()}))
+    leads["est_refund_by_year"] = ests.map(lambda e: json.dumps(e.units_by_year()))
     leads["est_forward_annual"] = ests.map(lambda e: e.forward_annual)
     leads["estimate_unconfirmed"] = ests.map(lambda e: e.unconfirmed)
+    leads["taxing_units"] = ests.map(lambda e: json.dumps(e.units))                       # TCAD entity codes that levy a rate
+    leads["unit_names"] = ests.map(lambda e: json.dumps(e.unit_names()))                # units that owe the refund (letter block)
+    leads["entities"] = leads["prop_id"].map(lambda pid: json.dumps(units_map.get(int(pid), []), default=str))  # for property_entities
     leads["claim_code"] = [new_claim_code() for _ in range(len(leads))]
     leads["situs_full"] = (leads["situs_line"] + leads["situs_unit"].map(lambda u: f" UNIT {u}" if u else "") + ", " + leads["situs_city"].replace("", None).fillna(leads["owner_city"]).fillna("AUSTIN") + ", TX " + leads["situs_zip"].fillna("").str[:5]).str.replace(r"\s+", " ", regex=True)
     return leads.sort_values(["tier", "est_refund_total"], ascending=[True, False]).reset_index(drop=True)
@@ -108,6 +137,21 @@ def build_leads(db_path: Path, as_of: date, min_value: float = 100_000) -> pd.Da
 
 def summary(leads: pd.DataFrame) -> dict:
     out = {"n": int(len(leads)), "by_tier": leads["tier"].value_counts().sort_index().to_dict()}
+    if "estimate_unconfirmed" in leads:
+        t12 = leads[leads["tier"].isin([1, 2])]
+        out["unconfirmed"] = {"count": int(t12["estimate_unconfirmed"].sum()), "share": round(float(t12["estimate_unconfirmed"].mean()), 4) if len(t12) else None}
+    if "entities" in leads:  # leads by school district and by city (Tier 1+2), median estimate per group
+        def group(kind):
+            rows = []
+            for _, r in leads[leads["tier"].isin([1, 2])].iterrows():
+                for e in json.loads(r["entities"]):
+                    n = e["entity_name"]
+                    if (kind == "isd" and n.endswith(" ISD")) or (kind == "city" and (n.startswith("CITY OF") or n.startswith("VILLAGE OF"))):
+                        rows.append((n, r["est_refund_total"], r["estimate_unconfirmed"]))
+            g = pd.DataFrame(rows, columns=["unit", "est", "unconf"])
+            return {} if g.empty else {u: {"leads": int(len(d)), "median_est": round(float(d["est"].median())), "unconfirmed": int(d["unconf"].sum())}
+                                       for u, d in sorted(g.groupby("unit"), key=lambda kv: -len(kv[1]))}
+        out["by_isd"], out["by_city"] = group("isd"), group("city")
     bands = pd.cut(leads["appraised_val"], [0, 300e3, 500e3, 750e3, 1e6, 1e9], labels=["<300K", "300-500K", "500-750K", "750K-1M", ">1M"])
     out["by_value_band"] = leads.groupby(bands, observed=True)["est_refund_total"].agg(["count", "median"]).round(0).to_dict("index")
     t1 = leads[leads["tier"] == 1]["est_refund_total"]

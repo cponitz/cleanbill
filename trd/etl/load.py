@@ -6,6 +6,8 @@ the 8.0.33 zip is on hand; until then a spec can be hand-written from the docume
 
 Usage:
     python -m trd.etl.load --export data/raw/2026_Certified_Appraisal_Export.zip --layout trd/etl/layouts/pacs_8_0_33.json --db data/tcad.duckdb
+    python -m trd.etl.load --export data/raw/PROP_slim.txt --layout trd/etl/layouts/pacs_8_0_33_slim.json \
+        --entities data/raw/PROP_ENT_slim.txt.gz --db data/tcad.duckdb      # slim cuts (see layouts/*.cut) + taxing units
 """
 from __future__ import annotations
 
@@ -81,9 +83,14 @@ def main() -> None:
     ap.add_argument("--layout", required=True)
     ap.add_argument("--db", default="data/tcad.duckdb")
     ap.add_argument("--tables", default="APPRAISAL_INFO,APPRAISAL_ENTITY_INFO")
+    ap.add_argument("--entities", default=None, help="PROP_ENT cut to the slim layout (.txt/.gz) -> APPRAISAL_ENTITY_INFO (SPEC-01)")
+    ap.add_argument("--entities-layout", default=str(Path(__file__).parent / "layouts" / "pacs_8_0_33_prop_ent_slim.json"))
     a = ap.parse_args()
     layout = json.loads(Path(a.layout).read_text())
     load_export(Path(a.export), layout, Path(a.db), a.tables.split(","))
+    if a.entities:
+        ent_layout = json.loads(Path(a.entities_layout).read_text())
+        load_export(Path(a.entities), ent_layout, Path(a.db), ["APPRAISAL_ENTITY_INFO"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,11 @@
+{
+ "APPRAISAL_ENTITY_INFO": [
+  {"name": "prop_id",         "start": 1,   "length": 12, "type": "int", "orig_start": 1},
+  {"name": "entity_cd",       "start": 13,  "length": 10, "type": "str", "orig_start": 54},
+  {"name": "entity_name",     "start": 23,  "length": 50, "type": "str", "orig_start": 64},
+  {"name": "assessed_val",    "start": 73,  "length": 15, "type": "num", "orig_start": 149},
+  {"name": "taxable_val",     "start": 88,  "length": 15, "type": "num", "orig_start": 164},
+  {"name": "appraised_value", "start": 103, "length": 15, "type": "num", "orig_start": 404},
+  {"name": "partial_entity",  "start": 118, "length": 1,  "type": "bool", "orig_start": 614}
+ ]
+}

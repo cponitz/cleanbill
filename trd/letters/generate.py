@@ -8,6 +8,7 @@ Dollar figures shown to homeowners are rounded DOWN to the nearest $100 (estimat
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date
 from io import BytesIO
@@ -43,6 +44,28 @@ class LetterData:
     claim_url: str
     variant: str = "A"
     mail_date: date | None = None
+    taxing_units: list[str] | None = None   # display names of the units that owe the refund (SPEC-01); None = the five Austin units
+
+
+AUSTIN_UNITS = ["Austin ISD", "the City of Austin", "Travis County", "Austin Community College", "Central Health"]
+
+
+def unit_display(name: str) -> str:
+    """TCAD's upper-case unit name -> letter-friendly form ("CITY OF AUSTIN" -> "the City of Austin", "AUSTIN ISD" -> "Austin ISD")."""
+    n = " ".join(name.split()).upper()
+    fixed = {"AUSTIN COMM COLL DIST": "Austin Community College", "TRAVIS COUNTY HEALTHCARE DISTRICT": "Central Health",
+             "TRAVIS COUNTY HEALTHCARE": "Central Health", "TRAVIS COUNTY": "Travis County"}
+    if n in fixed: return fixed[n]
+    small = {"OF", "AT", "THE", "AND"}
+    words = [w if w in ("ISD", "MUD", "WCID", "ESD", "PID") else (w.lower() if w in small else w.capitalize()) for w in n.split()]
+    out = " ".join(words).replace("Travis Co ", "Travis County ")
+    out = re.sub(r"\bNo (\d+)", r"No. \1", out)
+    return ("the " + out) if out.startswith(("City of", "Village of")) else out
+
+
+def units_text(units: list[str] | None) -> str:
+    names = [unit_display(u) for u in units] if units else AUSTIN_UNITS
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + (", and " if len(names) > 2 else " and ") + names[-1]
 
 
 def years_text(years: list[int]) -> str:
@@ -87,6 +110,7 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
     earliest = min(d.refund_years)
     deadline = late_filing_deadline(earliest).strftime("%B %-d, %Y")
     yt = years_text(d.refund_years)
+    ut = units_text(d.taxing_units)
 
     if d.variant == "B":
         headline = f"Your home is missing the exemption most of your neighbors have — and it's costing about ${forward:,} a year."
@@ -97,8 +121,8 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
     else:
         headline = f"Our review of public records shows {d.situs_address} may be owed an estimated ${refund:,} property-tax refund."
         opening = (f"The Travis Central Appraisal District's public appraisal roll lists no homestead exemption on your home. Most "
-                   f"owner-occupied homes in Austin have one — it lowers the taxable value for Austin ISD, the City of Austin, Travis County, "
-                   f"Austin Community College, and Central Health. Texas law lets you claim the exemption <b>retroactively</b> for {yt}. "
+                   f"owner-occupied homes in Travis County have one — it lowers the taxable value for {ut}. "
+                   f"Texas law lets you claim the exemption <b>retroactively</b> for {yt}. "
                    f"If the appraisal district approves it, the Travis County Tax Office refunds the tax you already overpaid for those years — "
                    f"our estimate for your home is <b>${refund:,}</b> — and your bill drops by roughly <b>${forward:,} every year</b> from here on.")
 
@@ -135,8 +159,8 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
 
     # footer disclosures (§41.0051(b) + not-affiliated + opt-out)
     foot = (f"{BRAND} is a private company. We are not affiliated with the Travis Central Appraisal District, the Travis County Tax Office, "
-            f"or any government agency. The refund described here would be paid by the Travis County Tax Office on behalf of Austin ISD, the City of Austin, "
-            f"Travis County, Austin Community College District, and Central Health, after approval by the Travis Central Appraisal District. Estimates are based "
+            f"or any government agency. The refund described here would be paid by the Travis County Tax Office on behalf of {ut}, "
+            f"after approval by the Travis Central Appraisal District. Estimates are based "
             f"on public appraisal data and current tax rates; the appraisal district makes all eligibility decisions. Refunds are issued to the person who paid the tax. "
             f"This is not legal or tax advice. To stop receiving mail from us, email {SUPPORT} with \"remove\" and your address.")
     style = ParagraphStyle("f", fontName="Helvetica", fontSize=7.5, leading=9.5, textColor=GREY)
