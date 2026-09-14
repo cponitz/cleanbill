@@ -26,7 +26,7 @@ from trd.estimator.refund import conservative_display, estimate_refund
 from trd.etl.leads import new_claim_code
 
 DB = Path(os.environ.get("TCAD_DB", "data/tcad.duckdb"))
-SITE_BASE = os.environ.get("SITE_BASE", "https://cponitz.github.io/homestead-refund/docs")
+SITE_BASE = os.environ.get("SITE_BASE", "https://cponitz.github.io/texas-refund-desk")
 
 
 def _norm(s: str) -> str:

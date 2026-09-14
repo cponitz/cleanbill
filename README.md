@@ -25,14 +25,20 @@ TCAD export ─▶ [1] ETL + lead engine ─▶ [2] letters ─▶ [3] claim pag
 ## Run
 
 ```
-pip install -e . pytest && python -m pytest -q                 # 23 tests
+pip install -e . pytest && python -m pytest -q                 # 28 tests
 python eval/make_ids.py && ANTHROPIC_API_KEY=... python eval/run_extraction_eval.py
 python -m trd.etl.load --export data/raw/export.zip --layout trd/etl/layouts/pacs_8_0_33.json
 python -m trd.etl.leads --as-of 2026-09-07
 ANTHROPIC_API_KEY=... python -m trd.agent.run --store fixtures   # dry run over 5 fixture claims
 ```
 
-Edge functions are deployed with the Supabase CLI (`supabase functions deploy <name>`) or the Supabase MCP connector; secrets `ANTHROPIC_API_KEY` and `OPS_PASSWORD` live in the function environment (fallback: `app_settings` table).
+Edge functions are deployed from the repo root with the Supabase CLI: `supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv` (per-function `verify_jwt` settings are in `supabase/config.toml`). Secrets `ANTHROPIC_API_KEY` and `OPS_PASSWORD` live in the function environment (fallback: `app_settings` table).
+
+The public pages are served by GitHub Pages from `docs/` at `https://cponitz.github.io/texas-refund-desk/` (custom domain: texasrefunddesk.com, not yet pointed). Hosted Supabase project: `letrfpwskjbgnyacesgv`.
+
+## Working on this repo
+
+Start with `CLAUDE.md` (working rules), then `docs/ARCHITECTURE.md` (system, data model, flows), `docs/adr/` (one file per technical decision), `docs/specs/` (feature handoffs), and `docs/RUNBOOK.md` (operating the prototype). `CHANGELOG.md` tracks releases; versions are git tags (`v0.1-prototype` is the first working end-to-end prototype).
 
 ## Compliance guardrails baked into the code
 

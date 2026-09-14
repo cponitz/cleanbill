@@ -91,7 +91,7 @@ footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-si
   <p class="lede">One diagram of what runs where, then a walk-through in the order a claim actually moves — with a link for every component you can open yourself.</p>
 
   <div class="facts">
-    <div class="fact"><b>Public site</b><span>cponitz.github.io/homestead-refund/docs/</span></div>
+    <div class="fact"><b>Public site</b><span>cponitz.github.io/texas-refund-desk/</span></div>
     <div class="fact"><b>Test claim code</b><span>TRD-TEST-0001</span></div>
     <div class="fact"><b>Test property</b><span>3675 DUVAL ST, AUSTIN 78721 · account 999000001</span></div>
     <div class="fact"><b>Synthetic license that matches it</b><span>eval/ids/id_03.jpg · Richard L Garcia</span></div>
@@ -240,7 +240,7 @@ footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-si
     <li><div class="num"></div><div class="step">
       <h4>Open the public site and enter the test code</h4>
       <p>The landing page is what a homeowner sees if they type the address from the letter instead of scanning the QR.</p>
-      <div class="links"><a class="chip" href="https://cponitz.github.io/homestead-refund/docs/index.html" target="_blank" rel="noopener">index.html</a></div>
+      <div class="links"><a class="chip" href="https://cponitz.github.io/texas-refund-desk/index.html" target="_blank" rel="noopener">index.html</a></div>
       <div class="expect"><b>Expect:</b> typing <code>trd-test-0001</code> (any case) lands on the claim page for 3675 DUVAL ST with a <b>$4,500</b> estimate ($2,000 for 2024, $2,500 for 2025, about $2,500/yr going forward) and the February 1, 2027 deadline.</div>
     </div></li>
 
@@ -248,9 +248,9 @@ footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-si
       <h4>Read the claim page and the service agreement as a homeowner would</h4>
       <p>This is the copy that needs your review (task C5): the fee disclosure, the "you can file free yourself" line, the §41.0051 refund disclosure, and the agreement's twelve clauses. The agreement pulls the property and tax years from the same API.</p>
       <div class="links">
-        <a class="chip" href="https://cponitz.github.io/homestead-refund/docs/claim.html?c=TRD-TEST-0001" target="_blank" rel="noopener">claim.html?c=TRD-TEST-0001</a>
-        <a class="chip" href="https://cponitz.github.io/homestead-refund/docs/agreement.html?c=TRD-TEST-0001" target="_blank" rel="noopener">agreement.html?c=TRD-TEST-0001</a>
-        <a class="chip" href="https://github.com/cponitz/homestead-refund/tree/main/copy" target="_blank" rel="noopener">copy/ (letters, agreement, follow-ups)</a>
+        <a class="chip" href="https://cponitz.github.io/texas-refund-desk/claim.html?c=TRD-TEST-0001" target="_blank" rel="noopener">claim.html?c=TRD-TEST-0001</a>
+        <a class="chip" href="https://cponitz.github.io/texas-refund-desk/agreement.html?c=TRD-TEST-0001" target="_blank" rel="noopener">agreement.html?c=TRD-TEST-0001</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk/tree/main/copy" target="_blank" rel="noopener">copy/ (letters, agreement, follow-ups)</a>
       </div>
     </div></li>
 
@@ -260,8 +260,8 @@ footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-si
       <p><b>Happy path</b> — download the synthetic license below (Richard L Garcia, 3675 Duval St — it matches the test property), fill the name as <code>Richard L Garcia</code>. Result: <code>ready_to_submit</code> with a filled Form 50-114.</p>
       <p><b>Mismatch path</b> — use a photo of your own license. Result: <code>needs_dl_update</code> with a draft asking the homeowner to update their DPS address. (Your license image is stored encrypted in a private bucket, the number is masked in the database, and the purge job deletes images 30 days after filing.)</p>
       <div class="links">
-        <a class="chip" href="https://cponitz.github.io/homestead-refund/docs/claim.html?c=TRD-TEST-0001" target="_blank" rel="noopener">claim.html?c=TRD-TEST-0001</a>
-        <a class="chip" href="https://github.com/cponitz/homestead-refund/blob/main/eval/ids/id_03.jpg" target="_blank" rel="noopener">synthetic license id_03.jpg</a>
+        <a class="chip" href="https://cponitz.github.io/texas-refund-desk/claim.html?c=TRD-TEST-0001" target="_blank" rel="noopener">claim.html?c=TRD-TEST-0001</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk/blob/main/eval/ids/id_03.jpg" target="_blank" rel="noopener">synthetic license id_03.jpg</a>
       </div>
       <div class="expect"><b>Expect:</b> "Done — we have everything, Richard." A second visit to the same link shows "This claim is already in progress" — one code, one claim. Reset it in step 9.</div>
     </div></li>
@@ -269,7 +269,7 @@ footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-si
     <li><div class="num"></div><div class="step">
       <h4>Watch it process on the ops page <span class="who you">You</span></h4>
       <p>Password is <code>OPS_PASSWORD</code> from our chat (it's not on this page on purpose). Refresh once or twice; processing takes 6–10 seconds.</p>
-      <div class="links"><a class="chip" href="https://cponitz.github.io/homestead-refund/docs/ops.html" target="_blank" rel="noopener">ops.html</a></div>
+      <div class="links"><a class="chip" href="https://cponitz.github.io/texas-refund-desk/ops.html" target="_blank" rel="noopener">ops.html</a></div>
       <div class="expect"><b>Expect:</b> KPIs across the top (16,776 leads loaded); the claim row with a status pill, the fields Claude read from the license, the validation findings ("ID address matches the property", "Name matches owner of record"), a <b>packet PDF</b> link, and the agent's draft email with <b>Approve</b> / <b>Discard</b>. Approving marks the draft approved and logs it — it still doesn't send.</div>
     </div></li>
 
@@ -277,7 +277,7 @@ footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-si
       <h4>Open the packet PDF</h4>
       <p>Five pages: the official Comptroller Form 50-114 (Rev. 02-26/39) with every field filled from the license and the claim answers, the typed <code>/s/ Name</code> on the signature line with the date, the two instruction pages, and an attachment recording the electronic signature (time, IP, device) and the preparer. Compare against the blank form.</p>
       <div class="links">
-        <a class="chip" href="https://cponitz.github.io/homestead-refund/docs/ops.html" target="_blank" rel="noopener">packet link is on ops.html (expires after 10 min)</a>
+        <a class="chip" href="https://cponitz.github.io/texas-refund-desk/ops.html" target="_blank" rel="noopener">packet link is on ops.html (expires after 10 min)</a>
         <a class="chip" href="https://comptroller.texas.gov/forms/50-114.pdf" target="_blank" rel="noopener">blank 50-114 (Comptroller)</a>
       </div>
     </div></li>
@@ -320,7 +320,7 @@ footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-si
       <p>Paste the reset script into the SQL editor and run it. It deletes the synthetic customer's rows and puts <code>TRD-TEST-0001</code> back to <code>new</code>. Or ask me — I can run it from here.</p>
       <div class="links">
         <a class="chip" href="https://supabase.com/dashboard/project/letrfpwskjbgnyacesgv/sql/new" target="_blank" rel="noopener">SQL editor</a>
-        <a class="chip" href="https://github.com/cponitz/homestead-refund/blob/main/eval/reset_test_lead.sql" target="_blank" rel="noopener">eval/reset_test_lead.sql</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk/blob/main/eval/reset_test_lead.sql" target="_blank" rel="noopener">eval/reset_test_lead.sql</a>
       </div>
     </div></li>
 
@@ -336,14 +336,14 @@ python -m trd.ops.new_claim --address "1234 Example Ln" --create   # make the co
       <h4>Check the automation: code, scheduled agent runs, hosting</h4>
       <p>The agent workflow runs every 30 minutes against open claims (statuses <code>submitted</code>, <code>needs_dl_update</code>, <code>needs_review</code>), writes drafts, then runs the license-image purge. Each run uploads its trace as an artifact.</p>
       <div class="links">
-        <a class="chip" href="https://github.com/cponitz/homestead-refund" target="_blank" rel="noopener">repository</a>
-        <a class="chip" href="https://github.com/cponitz/homestead-refund/actions" target="_blank" rel="noopener">Actions (agent runs)</a>
-        <a class="chip" href="https://github.com/cponitz/homestead-refund/tree/main/docs" target="_blank" rel="noopener">docs/ (the four pages)</a>
-        <a class="chip" href="https://github.com/cponitz/homestead-refund/settings/pages" target="_blank" rel="noopener">Pages settings</a>
-        <a class="chip" href="https://github.com/cponitz/homestead-refund/settings/secrets/actions" target="_blank" rel="noopener">Actions secrets</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk" target="_blank" rel="noopener">repository</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk/actions" target="_blank" rel="noopener">Actions (agent runs)</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk/tree/main/docs" target="_blank" rel="noopener">docs/ (the four pages)</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk/settings/pages" target="_blank" rel="noopener">Pages settings</a>
+        <a class="chip" href="https://github.com/cponitz/texas-refund-desk/settings/secrets/actions" target="_blank" rel="noopener">Actions secrets</a>
         <a class="chip" href="https://console.anthropic.com/" target="_blank" rel="noopener">Anthropic console (usage &amp; cost)</a>
       </div>
-      <div class="expect"><b>Expect:</b> green runs named "claims-agent (shadow mode)"; when a claim is open, a new draft appears on ops.html after the next run. New commits from me land in your folder — push them with <code>git push</code> from <code>~/Desktop/ClaudeCowork/homestead-refund/texas-refund-desk</code>.</div>
+      <div class="expect"><b>Expect:</b> green runs named "claims-agent (shadow mode)"; when a claim is open, a new draft appears on ops.html after the next run. New commits from me land in your folder — push them with <code>git push</code> from <code>~/Desktop/ClaudeCowork/texas-refund-desk/texas-refund-desk</code>.</div>
     </div></li>
 
     <li><div class="num"></div><div class="step">
@@ -359,16 +359,16 @@ python -m trd.agent.run --store fixtures                        # the agent over
   <h2>What each component is, in one line</h2>
   <div class="tblwrap"><table>
     <tr><th>Component</th><th>Runs on</th><th>Job</th><th>Source</th></tr>
-    <tr><td>ETL + lead engine</td><td>Python (your Mac now; Actions later)</td><td>Parse TCAD's fixed-width export into DuckDB; pick owner-occupied homes with no homestead flag whose mailing address equals the property; tier by deed date; estimate the refund</td><td><a href="https://github.com/cponitz/homestead-refund/tree/main/trd/etl" target="_blank" rel="noopener">trd/etl</a>, <a href="https://github.com/cponitz/homestead-refund/tree/main/trd/estimator" target="_blank" rel="noopener">trd/estimator</a></td></tr>
-    <tr><td>Letter generator</td><td>Python</td><td>Personalized letter PDF with refund math, QR to the claim link, and the required advertisement disclaimer</td><td><a href="https://github.com/cponitz/homestead-refund/tree/main/trd/letters" target="_blank" rel="noopener">trd/letters</a></td></tr>
-    <tr><td>Four pages</td><td>GitHub Pages</td><td>index (enter code), claim (the flow), agreement, ops (dashboard); plain HTML talking to the APIs</td><td><a href="https://github.com/cponitz/homestead-refund/tree/main/docs" target="_blank" rel="noopener">docs/</a></td></tr>
-    <tr><td>claim API</td><td>Supabase edge function</td><td>GET returns the lead and property for a code; POST accepts the answers, license image, consent and signature, then kicks processing</td><td><a href="https://github.com/cponitz/homestead-refund/blob/main/supabase/functions/claim/index.ts" target="_blank" rel="noopener">functions/claim</a></td></tr>
-    <tr><td>process-claim</td><td>Supabase edge function</td><td>Claude Haiku reads the license; rules compare it to the appraisal record; fills and e-signs the official 50-114; sets status; drafts the follow-up</td><td><a href="https://github.com/cponitz/homestead-refund/tree/main/supabase/functions/process-claim" target="_blank" rel="noopener">functions/process-claim</a></td></tr>
-    <tr><td>ops API</td><td>Supabase edge function</td><td>Password-gated JSON for the dashboard; approve/discard drafts</td><td><a href="https://github.com/cponitz/homestead-refund/blob/main/supabase/functions/ops/index.ts" target="_blank" rel="noopener">functions/ops</a></td></tr>
-    <tr><td>selftest</td><td>Supabase edge function</td><td>Synthetic claim through the real path; returns pass/fail JSON</td><td><a href="https://github.com/cponitz/homestead-refund/blob/main/supabase/functions/selftest/index.ts" target="_blank" rel="noopener">functions/selftest</a></td></tr>
-    <tr><td>Claims agent</td><td>GitHub Actions (Python)</td><td>Claude Sonnet 5 in a tool loop — get claim, extract, validate, generate form, look up TCAD status (stub), draft message, set status — over open claims; drafts only</td><td><a href="https://github.com/cponitz/homestead-refund/tree/main/trd/agent" target="_blank" rel="noopener">trd/agent</a> (start with loop.py)</td></tr>
-    <tr><td>Purge job</td><td>GitHub Actions (Python)</td><td>Deletes license images 30 days after filing, 7 days after withdrawal, or 180 days stale; audit-logged</td><td><a href="https://github.com/cponitz/homestead-refund/blob/main/trd/jobs/purge_ids.py" target="_blank" rel="noopener">trd/jobs/purge_ids.py</a></td></tr>
-    <tr><td>New-claim tool</td><td>Python (Claude runs it)</td><td>Claim code for any property in the roll, for walkthroughs and inbound requests</td><td><a href="https://github.com/cponitz/homestead-refund/blob/main/trd/ops/new_claim.py" target="_blank" rel="noopener">trd/ops/new_claim.py</a></td></tr>
+    <tr><td>ETL + lead engine</td><td>Python (your Mac now; Actions later)</td><td>Parse TCAD's fixed-width export into DuckDB; pick owner-occupied homes with no homestead flag whose mailing address equals the property; tier by deed date; estimate the refund</td><td><a href="https://github.com/cponitz/texas-refund-desk/tree/main/trd/etl" target="_blank" rel="noopener">trd/etl</a>, <a href="https://github.com/cponitz/texas-refund-desk/tree/main/trd/estimator" target="_blank" rel="noopener">trd/estimator</a></td></tr>
+    <tr><td>Letter generator</td><td>Python</td><td>Personalized letter PDF with refund math, QR to the claim link, and the required advertisement disclaimer</td><td><a href="https://github.com/cponitz/texas-refund-desk/tree/main/trd/letters" target="_blank" rel="noopener">trd/letters</a></td></tr>
+    <tr><td>Four pages</td><td>GitHub Pages</td><td>index (enter code), claim (the flow), agreement, ops (dashboard); plain HTML talking to the APIs</td><td><a href="https://github.com/cponitz/texas-refund-desk/tree/main/docs" target="_blank" rel="noopener">docs/</a></td></tr>
+    <tr><td>claim API</td><td>Supabase edge function</td><td>GET returns the lead and property for a code; POST accepts the answers, license image, consent and signature, then kicks processing</td><td><a href="https://github.com/cponitz/texas-refund-desk/blob/main/supabase/functions/claim/index.ts" target="_blank" rel="noopener">functions/claim</a></td></tr>
+    <tr><td>process-claim</td><td>Supabase edge function</td><td>Claude Haiku reads the license; rules compare it to the appraisal record; fills and e-signs the official 50-114; sets status; drafts the follow-up</td><td><a href="https://github.com/cponitz/texas-refund-desk/tree/main/supabase/functions/process-claim" target="_blank" rel="noopener">functions/process-claim</a></td></tr>
+    <tr><td>ops API</td><td>Supabase edge function</td><td>Password-gated JSON for the dashboard; approve/discard drafts</td><td><a href="https://github.com/cponitz/texas-refund-desk/blob/main/supabase/functions/ops/index.ts" target="_blank" rel="noopener">functions/ops</a></td></tr>
+    <tr><td>selftest</td><td>Supabase edge function</td><td>Synthetic claim through the real path; returns pass/fail JSON</td><td><a href="https://github.com/cponitz/texas-refund-desk/blob/main/supabase/functions/selftest/index.ts" target="_blank" rel="noopener">functions/selftest</a></td></tr>
+    <tr><td>Claims agent</td><td>GitHub Actions (Python)</td><td>Claude Sonnet 5 in a tool loop — get claim, extract, validate, generate form, look up TCAD status (stub), draft message, set status — over open claims; drafts only</td><td><a href="https://github.com/cponitz/texas-refund-desk/tree/main/trd/agent" target="_blank" rel="noopener">trd/agent</a> (start with loop.py)</td></tr>
+    <tr><td>Purge job</td><td>GitHub Actions (Python)</td><td>Deletes license images 30 days after filing, 7 days after withdrawal, or 180 days stale; audit-logged</td><td><a href="https://github.com/cponitz/texas-refund-desk/blob/main/trd/jobs/purge_ids.py" target="_blank" rel="noopener">trd/jobs/purge_ids.py</a></td></tr>
+    <tr><td>New-claim tool</td><td>Python (Claude runs it)</td><td>Claim code for any property in the roll, for walkthroughs and inbound requests</td><td><a href="https://github.com/cponitz/texas-refund-desk/blob/main/trd/ops/new_claim.py" target="_blank" rel="noopener">trd/ops/new_claim.py</a></td></tr>
   </table></div>
 
   <h3>Glossary</h3>

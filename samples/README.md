@@ -11,4 +11,4 @@ Finished outputs of the prototype, checked in so they stay addressable. All synt
 | `screenshot-claim-page.png` | The claim page as rendered on a phone. |
 | `screenshot-ops-dashboard.png` | The ops dashboard showing a processed claim: extraction, validation findings, packet link, and the agent's draft awaiting approval. |
 
-The 25-lead verification pack is **not** here: it contains real owner names and addresses. It lives in `~/Desktop/ClaudeCowork/homestead-refund/artifacts/`.
+The 25-lead verification pack is **not** here: it contains real owner names and addresses. It lives in `~/Desktop/ClaudeCowork/texas-refund-desk/artifacts/`.
