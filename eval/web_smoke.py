@@ -13,6 +13,9 @@ eval/reset_test_lead.sql). Screenshots land in eval/out/web/.
 Run:  python eval/web_smoke.py --base http://localhost:3000            (after `npm run build && npm start` in apps/web)
       python eval/web_smoke.py --base https://texas-refund-desk-<hash>-ponitz-development.vercel.app
 Needs .env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Exit 0 = PASS.
+Vercel previews with Deployment Protection (Vercel Authentication) redirect to a Vercel login; either turn it off for
+previews (Vercel → Settings → Deployment Protection) or set VERCEL_AUTOMATION_BYPASS_SECRET in .env — it is sent as the
+x-vercel-protection-bypass header on every request.
 """
 from __future__ import annotations
 
@@ -132,7 +135,9 @@ def run(base: str, stripe_on: bool) -> int:
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        ctx = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
+        bypass = os.environ.get("VERCEL_AUTOMATION_BYPASS_SECRET")
+        headers = {"x-vercel-protection-bypass": bypass, "x-vercel-set-bypass-cookie": "true"} if bypass else {}
+        ctx = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, extra_http_headers=headers)
         page = ctx.new_page()
         console: list[str] = []
         page.on("console", lambda m: console.append(f"{m.type}: {m.text}") if m.type in ("error", "warning") else None)
