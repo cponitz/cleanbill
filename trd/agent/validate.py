@@ -1,11 +1,14 @@
-"""Python mirror of supabase/functions/process-claim/validate.ts — same rules, same outputs.
-Keep the two in sync; tests/test_validate.py pins the shared cases.
+"""Python mirror of supabase/functions/_shared/validate.ts — same rules, same outputs.
+Keep the two in sync: both read tests/fixtures/cases.json and tests/fixtures/findings_snapshot.json pins identical rendered
+findings (G-9). Validators emit CODES + facts; every sentence comes from the rule table in trd/findings.py (ADR 0016).
 """
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
 from datetime import date
+
+from trd.findings import blocking, make_finding, reason_text  # noqa: F401  (re-exported for callers)
 
 SUFFIX = {
     "STREET": "ST", "ST": "ST", "AVENUE": "AVE", "AV": "AVE", "AVE": "AVE", "BOULEVARD": "BLVD", "BLVD": "BLVD", "DRIVE": "DR", "DR": "DR",
@@ -79,22 +82,6 @@ def age_on(dob: str, on: date | None = None) -> int | None:
     return a
 
 
-def finding(code: str, severity: str, field_: str, message: str, detail: dict | None = None) -> dict:
-    """A structured finding (ADR 0013 / SPEC-06): {code, severity: blocking|warning|info, field, message, detail}."""
-    f = {"code": code, "severity": severity, "field": field_, "message": message}
-    if detail: f["detail"] = detail
-    return f
-
-
-def blocking(findings: list[dict]) -> list[dict]:
-    return [f for f in findings if f.get("severity") == "blocking"]
-
-
-def reason_text(findings: list[dict]) -> str | None:
-    """The legacy one-line display string (claims.status_reason) — generated from the findings, never the source of truth."""
-    return "; ".join(f["message"] for f in blocking(findings)) or None
-
-
 @dataclass
 class Validation:
     status: str
@@ -121,18 +108,22 @@ def validate(ex: dict, prop: dict, typed_name: str, today: date | None = None) -
     conf = ex.get("confidence") or {}
     low_conf = min(conf.get("name", 0), conf.get("address", 0), conf.get("dob", 0)) < 0.6
 
+    id_name = f"{ex.get('first_name') or ''} {ex.get('last_name') or ''}"
+    id_address = f"{ex.get('address_line1') or ''}, {ex.get('city') or ''} {ex.get('zip') or ''}"
+
     findings: list[dict] = []
-    if not ex.get("readable", True): findings.append(finding("not_readable", "blocking", "image", "ID image not legible — ask for a clearer photo"))
-    if not texas: findings.append(finding("not_texas_id", "blocking", "issuing_state", "Not a Texas DL/ID — Tax Code §11.43(j) requires a Texas driver's license or DPS ID", {"issuing_state": ex.get("issuing_state"), "id_type": ex.get("id_type")}))
-    if not addr: findings.append(finding("address_mismatch", "blocking", "address", f"ID address ({ex.get('address_line1')}, {ex.get('zip')}) does not match situs ({prop['situs_full']}) — DPS address update required", {"id": f"{ex.get('address_line1')}, {ex.get('city')} {ex.get('zip')}", "situs": prop["situs_full"]}))
-    else: findings.append(finding("address_match", "info", "address", "ID address matches the property"))
-    if not nm: findings.append(finding("name_mismatch", "blocking", "name", f"Name on ID ({ex.get('first_name')} {ex.get('last_name')}) not found in owner of record ({prop['owner_name']}) — confirm ownership/deed", {"id": f"{ex.get('first_name')} {ex.get('last_name')}", "owner": prop["owner_name"]}))
-    else: findings.append(finding("name_match", "info", "name", "Name matches owner of record"))
-    if not signer_ok: findings.append(finding("signer_mismatch", "blocking", "signature", f"Name on ID ({ex.get('first_name')} {ex.get('last_name')}) differs from the typed signature ({typed_name}) — confirm identity", {"id": f"{ex.get('first_name')} {ex.get('last_name')}", "typed": typed_name}))
-    if expired: findings.append(finding("expired", "warning", "expiry", "ID is expired — TCAD may accept; flag for reviewer", {"expiry": ex.get("expiry")}))
-    if low_conf: findings.append(finding("low_confidence", "blocking", "confidence", "Low extraction confidence on a key field — reviewer to confirm against the image", {"confidence": conf}))
-    if age is not None and age >= 65: findings.append(finding("over_65", "info", "dob", f"Applicant is {age} — eligible for the over-65 exemption (add to 50-114)", {"age": age}))
-    if age is not None and age < 18: findings.append(finding("under_18", "blocking", "dob", "Applicant under 18 — review", {"age": age}))
+    add = lambda code, detail=None: findings.append(make_finding(code, detail))  # noqa: E731
+    if not ex.get("readable", True): add("not_readable")
+    if not texas: add("not_texas_id", {"issuing_state": ex.get("issuing_state"), "id_type": ex.get("id_type")})
+    if not addr: add("address_mismatch", {"id": id_address, "situs": prop["situs_full"]})
+    else: add("address_match")
+    if not nm: add("name_mismatch", {"id": id_name, "owner": prop["owner_name"]})
+    else: add("name_match")
+    if not signer_ok: add("signer_mismatch", {"id": id_name, "typed": typed_name})
+    if expired: add("expired", {"expiry": ex.get("expiry")})
+    if low_conf: add("low_confidence", {"confidence": conf})
+    if age is not None and age >= 65: add("over_65", {"age": age})
+    if age is not None and age < 18: add("under_18", {"age": age})
 
     status = "ready_to_submit"
     if not ex.get("readable", True) or not texas or not nm or not signer_ok or low_conf or (age is not None and age < 18):

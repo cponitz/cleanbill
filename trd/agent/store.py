@@ -63,7 +63,7 @@ class FixtureStore:
         account = next((a for a in self.data.get("customers", []) if a["id"] == c.get("customer_id")), None)
         lead = next(l for l in self.data["leads"] if l["id"] == c["lead_id"])
         prop = next(p for p in self.data["properties"] if p["prop_id"] == lead["prop_id"])
-        docs = [d for d in self.data["documents"] if d["claim_id"] == claim_id]
+        docs = sorted((d for d in self.data["documents"] if d["claim_id"] == claim_id), key=lambda d: d.get("created_at") or "", reverse=True)  # newest first, like SupabaseStore
         msgs = [m for m in self.data.get("messages", []) if m["claim_id"] == claim_id]
         filings = [f for f in self.data.get("filings", []) if f["claim_id"] == claim_id]
         return copy.deepcopy({"claim": c, "customer": account, "lead": lead, "property": prop, "documents": docs, "messages": msgs, "filings": filings})

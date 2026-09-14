@@ -14,6 +14,12 @@ begin
   if exists (select 1 from information_schema.columns where table_schema='public' and column_name='customer_id' and table_name in ('documents','filings','messages')) then
     raise exception 'customer_id still present on a child table';
   end if;
+  if not exists (select 1 from pg_constraint where conname = 'documents_kind_check' and pg_get_constraintdef(oid) like '%typed_id%') then
+    raise exception 'documents.kind must allow typed_id (SPEC-06)';
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='documents' and column_name='storage_path' and is_nullable='NO') then
+    raise exception 'documents.storage_path must be nullable for typed_id rows';
+  end if;
   if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname='public' and p.proname='bulk_load_leads') then
     raise exception 'bulk_load_leads should be dropped';
   end if;

@@ -17,3 +17,4 @@ One file per technical decision (T-nn in the handbook). Business decisions (B-nn
 - [0013](./0013-structured-findings.md) — structured findings (2026-09-12)
 - [0014](./0014-rate-table-as-data-with-confirmation-rule.md) — rate table as data with a confirmation rule (2026-09-13)
 - [0015](./0015-migrations-named-by-hosted-version-deploy-from-main-in-ci.md) — migrations named by the hosted version; deploy from main in CI (2026-09-13)
+- [0016](./0016-findings-rule-table-generated-ts-and-parity-snapshot.md) — one findings rule table in Python, TypeScript generated from it, parity proven by a snapshot (2026-09-14)
