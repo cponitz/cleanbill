@@ -11,6 +11,7 @@ on:
 env:
   SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
   SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  OPS_PASSWORD: ${{ secrets.OPS_PASSWORD }}
   PROJECT_REF: letrfpwskjbgnyacesgv
 jobs:
   deploy:
@@ -31,6 +32,7 @@ jobs:
           if grep -v -E '^\s*(--.*)?$' diff.sql | grep -q .; then echo "::error::schema drift between migrations and the hosted database"; cat diff.sql; exit 1; fi
           echo "no drift"
       - name: end-to-end selftest (match scenario)
-        if: ${{ secrets.OPS_PASSWORD != '' }}
+        if: env.OPS_PASSWORD != ''   # the secrets context is not allowed in step conditions; env is
         run: |
-          curl -sf "https://$PROJECT_REF.supabase.co/functions/v1/selftest?key=${{ secrets.OPS_PASSWORD }}&scenario=match" | tee selftest.json | grep -q '"pass":true'
+          curl -sf "https://$PROJECT_REF.supabase.co/functions/v1/selftest?key=$OPS_PASSWORD&scenario=match" > selftest.json
+          grep -q '"pass":true' selftest.json && echo "selftest passed" || { echo "::error::selftest did not pass"; sed 's/"signature_ip":"[^"]*"/"signature_ip":"…"/' selftest.json; exit 1; }
