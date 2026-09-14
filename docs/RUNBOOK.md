@@ -27,7 +27,7 @@ Section 9
 | 2   | For each claim in **ready_to_submit**: open the packet (signed link, 10 min), check name/address/years, approve the "ready to review" draft. *Until G-5 ships, copy the approved text into your mail client.* | ops.html → packet |
 | 3   | For each claim in **needs_dl_update**: approve the DPS-instructions draft. *Until G-6 ships, ask them to reply with a photo and attach it yourself via Supabase storage (or re-run `new_claim`).*             | ops.html          |
 | 4   | For each claim in **needs_review**: read `status_reason`. Name-order or nickname → the agent may already have moved it; otherwise decide, and either approve its question draft or fix the record.            | ops.html          |
-| 5   | When a customer replies "go": forward the packet to TCAD (channel per O-01), then *until G-10 ships* set `filings.submitted_at`, `channel`, and `customers.status = 'filed'` in SQL.                          | email + SQL       |
+| 5   | When a customer replies "go": forward the packet to TCAD (channel per O-01), then *until G-10 ships* set `filings.submitted_at`, `channel`, and `claims.status = 'filed'` in SQL.                          | email + SQL       |
 | 6   | While the schedule is disabled, run `claims-agent` by hand (Actions → claims-agent → Run workflow) after any new claim; check it is green and the trace artifact shows the claims you expected.               | GitHub Actions    |
 
 ### 9.3 Commands (from the repo folder on the Mac)
@@ -40,12 +40,13 @@ Section 9
     python -m trd.etl.leads --db data/tcad.duckdb --as-of 2026-09-09 --out data/out/leads.csv   # prints summary JSON
     python -m trd.etl.publish --leads data/out/leads.csv --dry-run                    # then without --dry-run
     python -m trd.ops.new_claim --address "3675 DUVAL ST"        # preview; add --create to mint a code + link
-    python -m trd.agent.run --store supabase --customer <uuid>   # run the agent on one claim, see the trace
+    python -m trd.agent.run --store supabase --claim <uuid>      # run the agent on one claim, see the trace
     python -m trd.agent.run --store fixtures                      # dry run over 5 fixture claims (needs API key)
     ANTHROPIC_API_KEY=… python eval/run_extraction_eval.py        # 30-image eval, ≥ 95% gate
     python eval/browser_smoke.py                                  # Playwright end-to-end against the live pages
     psql/SQL: eval/reset_test_lead.sql                            # reset TRD-TEST-0001 to a clean state
     supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv   # all four; per-function verify_jwt in supabase/config.toml
+    # schema + functions normally deploy from main via .github/workflows/deploy.yml (db push, functions deploy, db diff must be empty)
 
 ### 9.4 What each status means and what to do
 

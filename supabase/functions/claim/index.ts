@@ -1,7 +1,9 @@
 // Claim API (JSON). The page itself is static (docs/claim.html, served by GitHub Pages / texasrefunddesk.com) because
 // Supabase forces text/plain + a sandbox CSP on anything served from *.supabase.co.
 //   GET  /claim?c=CODE           -> lead + property JSON (logs a view, marks the lead opened)
-//   POST /claim (multipart)      -> accepts the claim: eligibility answers, ID upload(s), contact, consent, typed signature
+//   POST /claim (multipart)      -> accepts the claim: eligibility answers, ID upload(s), contact, consent, typed signature.
+//                                   Data model v2 (SPEC-04): the person is a `customers` account matched by e-mail
+//                                   (case-insensitive, citext); the engagement is a `claims` row with customer_id.
 // Auth is the unguessable claim code; CORS is open (the code is the secret). verify_jwt is off.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { clientIp, serviceClient } from "./db.ts";
@@ -108,20 +110,36 @@ Deno.serve(async (req: Request) => {
     }
     if (errors.length) return json({ ok: false, errors }, 400);
 
-    let status = "submitted", reason: string | null = null;
-    if (primary === "no") { status = "needs_review"; reason = "Not primary residence per applicant"; }
-    else if (otherHs === "yes") { status = "needs_review"; reason = "Applicant reports another homestead exemption"; }
+    // Eligibility answers that block before any extraction run: structured findings (ADR 0013) + the display string.
+    const findings: Array<{ code: string; severity: string; field: string; message: string }> = [];
+    if (primary === "no") findings.push({ code: "not_primary", severity: "blocking", field: "primary", message: "Not primary residence per applicant" });
+    if (otherHs === "yes") findings.push({ code: "other_homestead", severity: "blocking", field: "other_hs", message: "Applicant reports another homestead exemption" });
+    const status = findings.length ? "needs_review" : "submitted";
+    const reason = findings.map((f) => f.message).join("; ") || null;
     let occupiedSince: string | null = null;
     if (ownedJan1 === "no" && /^\d{4}-\d{2}$/.test(movedIn)) occupiedSince = movedIn + "-01";
 
-    const { data: cust, error: cErr } = await sb.from("customers").insert({
-      lead_id: lead.id, full_name: fullName, email, phone: phone || null,
+    // The account: look the e-mail up (citext = case-insensitive); attach, or create it from this claim.
+    let account = (await sb.from("customers").select("id").eq("email", email).maybeSingle()).data;
+    let created = false;
+    if (!account) {
+      const ins = await sb.from("customers").insert({ email, full_name: fullName, phone: phone || null }).select("id").single();
+      if (ins.error) account = (await sb.from("customers").select("id").eq("email", email).maybeSingle()).data; // lost a race: someone inserted it
+      else { account = ins.data; created = true; }
+    } else {
+      await sb.from("customers").update({ full_name: fullName, phone: phone || null }).eq("id", account.id); // latest values as typed
+    }
+    if (!account) return json({ ok: false, errors: ["Something went wrong saving your claim. Please try again."] }, 500);
+
+    const { data: cust, error: cErr } = await sb.from("claims").insert({
+      lead_id: lead.id, customer_id: account.id, service_type: "homestead_refund", full_name: fullName, email, phone: phone || null,
       occupied_since: occupiedSince, owns_other_homestead: otherHs === "yes",
       household, prev_homestead: prevHs, prev_homestead_address: prevHs ? prevAddr || null : null,
       agreement_version: "v0.1", agreement_signed_at: new Date().toISOString(),
-      signature_name: sig, signature_ip: ip, signature_ua: ua, status, status_reason: reason,
+      signature_name: sig, signature_ip: ip, signature_ua: ua, status, status_reason: reason, findings,
     }).select("id").single();
     if (cErr || !cust) return json({ ok: false, errors: ["Something went wrong saving your claim. Please try again."] }, 500);
+    if (created) await sb.from("customers").update({ created_from_claim_id: cust.id }).eq("id", account.id);
 
     const uploads: Array<{ kind: string; file: File }> = [{ kind: "dl_front", file: front as File }];
     if (back instanceof File && back.size > 0 && back.size <= MAX_BYTES && MIMES.has(back.type)) uploads.push({ kind: "dl_back", file: back });
@@ -130,23 +148,23 @@ Deno.serve(async (req: Request) => {
       const path = `${cust.id}/${u.kind}.${ext}`;
       const { error: upErr } = await sb.storage.from("ids").upload(path, u.file, { contentType: u.file.type, upsert: true });
       if (upErr) return json({ ok: false, errors: ["Upload failed: " + upErr.message] }, 500);
-      await sb.from("documents").insert({ customer_id: cust.id, kind: u.kind, storage_path: path, mime: u.file.type, bytes: u.file.size });
+      await sb.from("documents").insert({ claim_id: cust.id, kind: u.kind, storage_path: path, mime: u.file.type, bytes: u.file.size });
     }
 
     await sb.from("leads").update({ status: "claimed" }).eq("id", lead.id);
-    await sb.from("events").insert({ claim_code: code, kind: "claim_submitted", detail: { ip, ua, customer_id: cust.id, status } });
-    await sb.from("audit_log").insert({ actor: "claim-api", action: "claim_submitted", entity: "customers", entity_id: cust.id, detail: { code, status, reason } });
+    await sb.from("events").insert({ claim_code: code, kind: "claim_submitted", detail: { ip, ua, claim_id: cust.id, customer_id: account.id, status } });
+    await sb.from("audit_log").insert({ actor: "claim-api", action: "claim_submitted", entity: "claims", entity_id: cust.id, detail: { code, status, reason, customer_id: account.id, account_created: created } });
 
     const kick = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-claim`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
-      body: JSON.stringify({ customer_id: cust.id }),
+      body: JSON.stringify({ claim_id: cust.id }),
     }).catch((e) => console.error("process-claim kick failed", e));
     // deno-lint-ignore no-explicit-any
     const rt = (globalThis as any).EdgeRuntime;
     if (rt?.waitUntil) rt.waitUntil(kick);
 
-    return json({ ok: true, first_name: fullName.split(" ")[0], customer_id: cust.id });
+    return json({ ok: true, first_name: fullName.split(" ")[0], claim_id: cust.id, customer_id: account.id });
   }
 
   return json({ ok: false, error: "method_not_allowed" }, 405);

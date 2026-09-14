@@ -12,7 +12,7 @@ from reportlab.pdfgen import canvas
 
 
 def build_packet(claim: dict, extracted: dict, over65: bool = False, today: date | None = None) -> bytes:
-    c, cust, lead, prop = claim, claim["customer"], claim["lead"], claim["property"]
+    c, cust, lead, prop = claim, claim["claim"], claim["lead"], claim["property"]   # v2: the signed claim row
     buf = BytesIO()
     pdf = canvas.Canvas(buf, pagesize=LETTER)
     W, H = LETTER

@@ -5,8 +5,8 @@ name: claims-agent (shadow mode)
 on:
   workflow_dispatch:
     inputs:
-      customer:
-        description: "Run for one customer id (optional)"
+      claim:
+        description: "Run for one claim id (optional)"
         required: false
 jobs:
   run:
@@ -24,8 +24,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          if [ -n "${{ github.event.inputs.customer }}" ]; then
-            python -m trd.agent.run --store supabase --customer "${{ github.event.inputs.customer }}"
+          if [ -n "${{ github.event.inputs.claim }}" ]; then
+            python -m trd.agent.run --store supabase --claim "${{ github.event.inputs.claim }}"
           else
             python -m trd.agent.run --store supabase --statuses submitted,needs_dl_update,needs_review
           fi

@@ -45,5 +45,14 @@ def test_validate_routing():
     assert validate({**BASE, "first_name": "MARIA", "last_name": "LOPEZ"}, PROP, "Maria Lopez", TODAY).status == "needs_review"
     assert validate(BASE, PROP, "Maria Lopez", TODAY).status == "needs_review"
     v = validate({**BASE, "dob": "1955-01-01"}, PROP, "Richard Garcia", TODAY)
-    assert v.over65 and any("over-65" in f for f in v.findings)
+    assert v.over65 and any(f["code"] == "over_65" and f["severity"] == "info" for f in v.findings)
     assert validate({**BASE, "confidence": {**BASE["confidence"], "address": 0.3}}, PROP, "Richard Garcia", TODAY).status == "needs_review"
+
+
+def test_findings_are_structured_and_mirror_the_deno_case():
+    from trd.agent.validate import reason_text
+    v = validate({**BASE, "address_line1": "900 CONGRESS AVE", "zip": "78701"}, PROP, "Richard Garcia", TODAY)
+    assert [f["code"] for f in v.findings] == ["address_mismatch", "name_match"]
+    assert v.findings[0]["severity"] == "blocking" and v.findings[0]["detail"]["situs"] == PROP["situs_full"]
+    assert reason_text(v.findings).startswith("ID address (900 CONGRESS AVE, 78701) does not match")
+    assert reason_text(validate(BASE, PROP, "Richard L Garcia", TODAY).findings) is None

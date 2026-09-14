@@ -36,8 +36,9 @@ before touching anything; it defines every module, table, column and flow.
 1. Start from a spec in claude/specs/ (copy it to docs/specs/ in the branch). One branch per spec.
 2. Tests: `python -m pytest -q` (Python), `deno test supabase/functions/` (TS), `python eval/browser_smoke.py`
    (end-to-end, needs network). CI must be green before merge.
-3. Deploy: `supabase functions deploy <name> --use-api --project-ref letrfpwskjbgnyacesgv` for each changed function
-   (per-function `verify_jwt` is in supabase/config.toml; `--use-api` bundles server-side, no Docker); `supabase db push` for migrations.
+3. Deploy: merging to main runs .github/workflows/deploy.yml (`supabase db push`, `supabase functions deploy --use-api`,
+   then `supabase db diff --linked` must be empty). Migration files are named by the hosted version (ADR 0015); never
+   apply a migration from a branch. Manual fallback: `supabase functions deploy <name> --use-api --project-ref letrfpwskjbgnyacesgv`.
 4. Every PR: entry in CHANGELOG.md (what shipped; data-model changes called out); ADR in docs/adr/ for any
    technical decision; ARCHITECTURE.md updated if a module, table, flow or status changed.
 5. The ETL (trd/etl) runs on Charlie's Mac only (17 GB export). Do not schedule it on hosted runners.

@@ -14,11 +14,25 @@ export type PropertyRec = {
   situs_city?: string; situs_zip?: string; situs_full: string; deed_date?: string;
 };
 
+/** A structured finding (ADR 0013 / SPEC-06): code is the contract; message is display text generated from the facts. */
+export type Finding = {
+  code: "not_readable" | "not_texas_id" | "address_mismatch" | "address_match" | "name_mismatch" | "name_match" | "signer_mismatch"
+      | "expired" | "low_confidence" | "over_65" | "under_18" | "not_primary" | "other_homestead" | "processing_error";
+  severity: "blocking" | "warning" | "info";
+  field: string;
+  message: string;
+  detail?: Record<string, unknown>;
+};
+
 export type Validation = {
   status: "ready_to_submit" | "needs_dl_update" | "needs_review";
   address_match: boolean; name_match: boolean; texas_id: boolean; expired: boolean; age: number | null; over65: boolean;
-  findings: string[]; // lines starting with "!" are blocking problems
+  findings: Finding[];
 };
+
+export const blocking = (fs: Finding[]): Finding[] => fs.filter((f) => f.severity === "blocking");
+/** The legacy one-line display string (claims.status_reason) — generated, never stored as the source of truth. */
+export const reasonText = (fs: Finding[]): string | null => blocking(fs).map((f) => f.message).join("; ") || null;
 
 const SUFFIX: Record<string, string> = {
   STREET: "ST", ST: "ST", AVENUE: "AVE", AV: "AVE", AVE: "AVE", BOULEVARD: "BLVD", BLVD: "BLVD", DRIVE: "DR", DR: "DR",
@@ -84,7 +98,9 @@ export function ageOn(dob: string, on = new Date()): number | null {
 }
 
 export function validate(ex: Extracted, prop: PropertyRec, typedName: string): Validation {
-  const findings: string[] = [];
+  const findings: Finding[] = [];
+  const add = (code: Finding["code"], severity: Finding["severity"], field: string, message: string, detail?: Record<string, unknown>) =>
+    findings.push({ code, severity, field, message, ...(detail ? { detail } : {}) });
   const texas = (ex.issuing_state ?? "").toUpperCase() === "TX" && ex.id_type !== "other";
   const addr = addressMatches(ex.address_line1, ex.zip, prop);
   const nm = nameMatches(ex.first_name, ex.last_name, prop.owner_name);            // ID vs. owner of record (the eligibility test)
@@ -93,17 +109,17 @@ export function validate(ex: Extracted, prop: PropertyRec, typedName: string): V
   const expired = !!ex.expiry && ex.expiry < new Date().toISOString().slice(0, 10);
   const lowConf = Math.min(ex.confidence?.name ?? 0, ex.confidence?.address ?? 0, ex.confidence?.dob ?? 0) < 0.6;
 
-  if (!ex.readable) findings.push("! ID image not legible — ask for a clearer photo");
-  if (!texas) findings.push("! Not a Texas DL/ID — Tax Code §11.43(j) requires a Texas driver's license or DPS ID");
-  if (!addr) findings.push(`! ID address (${ex.address_line1}, ${ex.zip}) does not match situs (${prop.situs_full}) — DPS address update required`);
-  else findings.push("ID address matches the property");
-  if (!nm) findings.push(`! Name on ID (${ex.first_name} ${ex.last_name}) not found in owner of record (${prop.owner_name}) — confirm ownership/deed`);
-  else findings.push("Name matches owner of record");
-  if (!signerOk) findings.push(`! Name on ID (${ex.first_name} ${ex.last_name}) differs from the typed signature (${typedName}) — confirm identity`);
-  if (expired) findings.push("ID is expired — TCAD may accept; flag for reviewer");
-  if (lowConf) findings.push("! Low extraction confidence on a key field — reviewer to confirm against the image");
-  if (age != null && age >= 65) findings.push(`Applicant is ${age} — eligible for the over-65 exemption (add to 50-114)`);
-  if (age != null && age < 18) findings.push("! Applicant under 18 — review");
+  if (!ex.readable) add("not_readable", "blocking", "image", "ID image not legible — ask for a clearer photo");
+  if (!texas) add("not_texas_id", "blocking", "issuing_state", "Not a Texas DL/ID — Tax Code §11.43(j) requires a Texas driver's license or DPS ID", { issuing_state: ex.issuing_state, id_type: ex.id_type });
+  if (!addr) add("address_mismatch", "blocking", "address", `ID address (${ex.address_line1}, ${ex.zip}) does not match situs (${prop.situs_full}) — DPS address update required`, { id: `${ex.address_line1}, ${ex.city} ${ex.zip}`, situs: prop.situs_full });
+  else add("address_match", "info", "address", "ID address matches the property");
+  if (!nm) add("name_mismatch", "blocking", "name", `Name on ID (${ex.first_name} ${ex.last_name}) not found in owner of record (${prop.owner_name}) — confirm ownership/deed`, { id: `${ex.first_name} ${ex.last_name}`, owner: prop.owner_name });
+  else add("name_match", "info", "name", "Name matches owner of record");
+  if (!signerOk) add("signer_mismatch", "blocking", "signature", `Name on ID (${ex.first_name} ${ex.last_name}) differs from the typed signature (${typedName}) — confirm identity`, { id: `${ex.first_name} ${ex.last_name}`, typed: typedName });
+  if (expired) add("expired", "warning", "expiry", "ID is expired — TCAD may accept; flag for reviewer", { expiry: ex.expiry });
+  if (lowConf) add("low_confidence", "blocking", "confidence", "Low extraction confidence on a key field — reviewer to confirm against the image", { confidence: ex.confidence });
+  if (age != null && age >= 65) add("over_65", "info", "dob", `Applicant is ${age} — eligible for the over-65 exemption (add to 50-114)`, { age });
+  if (age != null && age < 18) add("under_18", "blocking", "dob", "Applicant under 18 — review", { age });
 
   let status: Validation["status"] = "ready_to_submit";
   if (!ex.readable || !texas || !nm || !signerOk || lowConf || (age != null && age < 18)) status = "needs_review";

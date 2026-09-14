@@ -1,0 +1,36 @@
+name: deploy (main)
+# Supabase is deployed only from main (CLAUDE.md): push pending migrations, deploy the four edge functions from this tree,
+# then prove parity — `supabase db diff --linked` must be empty (SPEC-04 §8). Needs repository secrets
+# SUPABASE_ACCESS_TOKEN (a personal access token from supabase.com/dashboard/account/tokens) and SUPABASE_DB_PASSWORD
+# (the project's database password). Optional OPS_PASSWORD runs the end-to-end selftest afterwards.
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/**", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  PROJECT_REF: letrfpwskjbgnyacesgv
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - run: supabase link --project-ref "$PROJECT_REF"
+      - name: apply pending migrations
+        run: supabase db push
+      - name: deploy edge functions (verify_jwt per supabase/config.toml)
+        run: supabase functions deploy --use-api --project-ref "$PROJECT_REF"
+      - name: schema parity — migrations must equal the live schema
+        run: |
+          supabase db diff --linked --schema public > diff.sql
+          if grep -v -E '^\s*(--.*)?$' diff.sql | grep -q .; then echo "::error::schema drift between migrations and the hosted database"; cat diff.sql; exit 1; fi
+          echo "no drift"
+      - name: end-to-end selftest (match scenario)
+        if: ${{ secrets.OPS_PASSWORD != '' }}
+        run: |
+          curl -sf "https://$PROJECT_REF.supabase.co/functions/v1/selftest?key=${{ secrets.OPS_PASSWORD }}&scenario=match" | tee selftest.json | grep -q '"pass":true'

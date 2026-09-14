@@ -32,16 +32,16 @@ def _dt(s: str | None) -> datetime | None:
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def select_purgeable(docs: list[dict], customers: dict[str, dict], filings: dict[str, list[dict]], now: datetime) -> list[tuple[dict, str]]:
+def select_purgeable(docs: list[dict], claims: dict[str, dict], filings: dict[str, list[dict]], now: datetime) -> list[tuple[dict, str]]:
     """Pure decision function (unit-tested). Returns [(document, reason)]."""
     out: list[tuple[dict, str]] = []
     for d in docs:
         if d.get("purged_at") or d.get("kind") not in ("dl_front", "dl_back"):
             continue
-        cust = customers.get(d["customer_id"]) or {}
+        cust = claims.get(d["claim_id"]) or {}
         created = _dt(d.get("created_at")) or now
         age = now - created
-        submitted = [_dt(f.get("submitted_at")) for f in filings.get(d["customer_id"], []) if f.get("submitted_at")]
+        submitted = [_dt(f.get("submitted_at")) for f in filings.get(d["claim_id"], []) if f.get("submitted_at")]
         if submitted and now - max(submitted) >= timedelta(days=RETENTION_DAYS):
             out.append((d, f"filed {RETENTION_DAYS}+ days ago"))
         elif cust.get("status") == "withdrawn" and age >= timedelta(days=7):
@@ -59,14 +59,14 @@ def main() -> int:
 
     sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
     now = datetime.now(timezone.utc)
-    docs = sb.table("documents").select("id, customer_id, kind, storage_path, created_at, purged_at").is_("purged_at", "null").execute().data
-    ids = sorted({d["customer_id"] for d in docs})
-    customers = {c["id"]: c for c in (sb.table("customers").select("id, status").in_("id", ids).execute().data if ids else [])}
+    docs = sb.table("documents").select("id, claim_id, kind, storage_path, created_at, purged_at").is_("purged_at", "null").execute().data
+    ids = sorted({d["claim_id"] for d in docs})
+    claims = {c["id"]: c for c in (sb.table("claims").select("id, status").in_("id", ids).execute().data if ids else [])}
     filings: dict[str, list[dict]] = {}
-    for f in (sb.table("filings").select("customer_id, submitted_at").in_("customer_id", ids).execute().data if ids else []):
-        filings.setdefault(f["customer_id"], []).append(f)
+    for f in (sb.table("filings").select("claim_id, submitted_at").in_("claim_id", ids).execute().data if ids else []):
+        filings.setdefault(f["claim_id"], []).append(f)
 
-    todo = select_purgeable(docs, customers, filings, now)
+    todo = select_purgeable(docs, claims, filings, now)
     print(f"{len(docs)} un-purged ID images; {len(todo)} due for purge ({'APPLYING' if a.apply else 'dry run'})")
     for d, reason in todo:
         print(f"  {d['storage_path']}  <- {reason}")

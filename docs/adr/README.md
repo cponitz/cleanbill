@@ -16,3 +16,4 @@ One file per technical decision (T-nn in the handbook). Business decisions (B-nn
 - [0012](./0012-customer-front-end-nextjs-on-vercel.md) — customer front end nextjs on vercel (2026-09-12)
 - [0013](./0013-structured-findings.md) — structured findings (2026-09-12)
 - [0014](./0014-rate-table-as-data-with-confirmation-rule.md) — rate table as data with a confirmation rule (2026-09-13)
+- [0015](./0015-migrations-named-by-hosted-version-deploy-from-main-in-ci.md) — migrations named by the hosted version; deploy from main in CI (2026-09-13)

@@ -16,11 +16,11 @@ TCAD export ─▶ [1] ETL + lead engine ─▶ [2] letters ─▶ [3] claim pag
 | `trd/etl/` | `load.py` parses TCAD's fixed-width PACS export into DuckDB from a layout spec; `leads.py` runs the lead heuristic + tiering; `publish.py` loads leads into Supabase (or emits batched SQL). |
 | `trd/letters/` | Outreach letter PDFs with the §41.0051 compliance block and a QR to the claim page. |
 | `trd/agent/` | **The agent.** `loop.py` (the tool loop — read this first), `tools.py` (7 tools), `store.py` (fixtures vs. Supabase), `system_prompt.md`, `validate.py` (mirror of the edge-function rules), `run.py` (CLI). |
-| `supabase/migrations/` | Schema. `supabase/functions/` — `claim` (public page), `process-claim` (extraction → validation → packet → draft), `ops` (dashboard), `selftest` (end-to-end regression). |
+| `supabase/migrations/` | Schema, one file per hosted migration version (data model v2: `claims` = engagement, `customers` = account). `supabase/functions/` — `claim` (public API), `process-claim` (extraction → validation → packet → draft), `ops` (dashboard), `selftest` (end-to-end regression). `supabase/ci/` — scratch-DB shim and schema check used by CI. |
 | `copy/` | Letters (2 variants), claim page copy, service agreement, follow-up templates. |
 | `eval/` | Synthetic ID eval set + `run_extraction_eval.py` (≥ 95% field accuracy gate). |
 | `tests/` | pytest (estimator, validation, ETL, agent loop with a scripted fake model). Deno tests for the edge-function validator. |
-| `.github/workflows/` | `agent.yml` (claims agent, shadow mode; manual `workflow_dispatch` until there is test data), `etl.yml` (manual). |
+| `.github/workflows/` | `ci.yml` (pytest, Deno tests, migration chain on a scratch Postgres), `deploy.yml` (main only: db push, functions deploy, schema parity), `agent.yml` (claims agent, shadow mode; manual until there is test data), `etl.yml` (manual). |
 
 ## Run
 

@@ -39,29 +39,32 @@ Deno.serve(async (req: Request) => {
     counts[st] = count ?? 0; leadsTotal += count ?? 0;
   }
   const { count: views } = await sb.from("events").select("id", { count: "exact", head: true }).eq("kind", "view");
-  const { data: custs } = await sb.from("customers").select("*, leads(claim_code, est_refund_total, prop_id, properties(situs_full, owner_name))").order("created_at", { ascending: false }).limit(200);
+  // v2: `claims` is the engagement (joined to its lead, property and account); findings are structured on the claim.
+  const { data: custs } = await sb.from("claims").select("*, leads(claim_code, est_refund_total, prop_id, properties(situs_full, owner_name)), customers(id, email, card_on_file)").order("created_at", { ascending: false }).limit(200);
   const ids = (custs ?? []).map((c) => c.id);
-  const { data: docs } = ids.length ? await sb.from("documents").select("customer_id, kind, extracted, validation, extraction_cost_usd").in("customer_id", ids) : { data: [] };
-  const { data: filings } = ids.length ? await sb.from("filings").select("customer_id, packet_path, generated_at, form_version").in("customer_id", ids) : { data: [] };
-  const { data: msgs } = ids.length ? await sb.from("messages").select("*").in("customer_id", ids).order("created_at", { ascending: false }) : { data: [] };
+  const { data: docs } = ids.length ? await sb.from("documents").select("claim_id, kind, extracted, validation, extraction_cost_usd").in("claim_id", ids) : { data: [] };
+  const { data: filings } = ids.length ? await sb.from("filings").select("claim_id, packet_path, generated_at, form_version").in("claim_id", ids) : { data: [] };
+  const { data: msgs } = ids.length ? await sb.from("messages").select("*").in("claim_id", ids).order("created_at", { ascending: false }) : { data: [] };
 
   const claims = [];
   for (const c of custs ?? []) {
     const lead = c.leads ?? {}; const prop = lead.properties ?? {};
-    const d = (docs ?? []).find((x) => x.customer_id === c.id && x.kind === "dl_front");
-    const fil = (filings ?? []).filter((x) => x.customer_id === c.id).sort((a, b) => (a.generated_at < b.generated_at ? 1 : -1))[0];
+    const d = (docs ?? []).find((x) => x.claim_id === c.id && x.kind === "dl_front");
+    const fil = (filings ?? []).filter((x) => x.claim_id === c.id).sort((a, b) => (a.generated_at < b.generated_at ? 1 : -1))[0];
     let packetUrl: string | null = null;
     if (fil?.packet_path) {
       const { data: s } = await sb.storage.from("packets").createSignedUrl(fil.packet_path, 600);
       packetUrl = s?.signedUrl ?? null;
     }
     claims.push({
-      id: c.id, status: c.status, status_reason: c.status_reason, full_name: c.full_name, email: c.email, phone: c.phone,
+      id: c.id, customer_id: c.customer_id, account: c.customers ?? null, status: c.status, status_reason: c.status_reason, full_name: c.full_name, email: c.email, phone: c.phone,
       signed_at: c.agreement_signed_at, signature_ip: c.signature_ip, created_at: c.created_at,
       claim_code: lead.claim_code, est_refund_total: lead.est_refund_total, situs_full: prop.situs_full, owner_name: prop.owner_name,
-      extracted: d?.extracted ?? null, findings: (d?.validation as { findings?: string[] } | null)?.findings ?? [], extraction_cost_usd: d?.extraction_cost_usd ?? null,
+      extracted: d?.extracted ?? null,
+      findings: Array.isArray(c.findings) && c.findings.length ? c.findings : ((d?.validation as { findings?: unknown[] } | null)?.findings ?? []),
+      extraction_cost_usd: d?.extraction_cost_usd ?? null,
       packet: fil ? { url: packetUrl, form_version: fil.form_version, generated_at: fil.generated_at } : null,
-      messages: (msgs ?? []).filter((m) => m.customer_id === c.id).map((m) => ({ id: m.id, subject: m.subject, body: m.body, intent: m.intent, agent_draft: m.agent_draft, direction: m.direction, created_at: m.created_at })),
+      messages: (msgs ?? []).filter((m) => m.claim_id === c.id).map((m) => ({ id: m.id, subject: m.subject, body: m.body, intent: m.intent, agent_draft: m.agent_draft, direction: m.direction, created_at: m.created_at })),
     });
   }
   const kpis = {

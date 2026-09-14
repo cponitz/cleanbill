@@ -45,25 +45,26 @@ class Tools:
         self.client = anthropic_client
         self.today = today or date.today()
         self.calls: list[dict] = []
+        self._last_findings: dict[str, list[dict]] = {}   # claim_id -> structured findings from the last validation
 
     # ---- schemas the model sees -------------------------------------------------
     def schemas(self) -> list[dict]:
         return [
-            {"name": "get_claim", "description": "Load everything about one claim: customer, lead, property record from the appraisal roll, uploaded documents with any extraction/validation, prior messages, and filings.",
-             "input_schema": {"type": "object", "properties": {"customer_id": {"type": "string"}}, "required": ["customer_id"]}},
+            {"name": "get_claim", "description": "Load everything about one claim: the claim (signed answers, status, findings), the customer account, lead, property record from the appraisal roll, uploaded documents with any extraction/validation, prior messages, and filings.",
+             "input_schema": {"type": "object", "properties": {"claim_id": {"type": "string"}}, "required": ["claim_id"]}},
             {"name": "extract_id_fields", "description": "Run vision extraction on the customer's uploaded ID image(s). Costs money — call only if no extraction exists yet or the image was re-uploaded.",
-             "input_schema": {"type": "object", "properties": {"customer_id": {"type": "string"}}, "required": ["customer_id"]}},
+             "input_schema": {"type": "object", "properties": {"claim_id": {"type": "string"}}, "required": ["claim_id"]}},
             {"name": "validate_against_roll", "description": "Compare the extracted ID fields with the appraisal-roll record (address, owner name, Texas ID, expiry, age) and return the recommended routing status with findings.",
-             "input_schema": {"type": "object", "properties": {"customer_id": {"type": "string"}}, "required": ["customer_id"]}},
+             "input_schema": {"type": "object", "properties": {"claim_id": {"type": "string"}}, "required": ["claim_id"]}},
             {"name": "generate_form_50114", "description": "Build the application packet PDF (Form 50-114 data + signature/audit block) for a validated claim. Returns filing id and SHA-256.",
-             "input_schema": {"type": "object", "properties": {"customer_id": {"type": "string"}, "over65": {"type": "boolean", "description": "Include the over-65 exemption request"}}, "required": ["customer_id"]}},
+             "input_schema": {"type": "object", "properties": {"claim_id": {"type": "string"}, "over65": {"type": "boolean", "description": "Include the over-65 exemption request"}}, "required": ["claim_id"]}},
             {"name": "lookup_tcad_status", "description": "Check the Travis Central Appraisal District record for the property's current exemption flags (to detect approval). May be unavailable in some runtimes.",
              "input_schema": {"type": "object", "properties": {"prop_id": {"type": "integer"}}, "required": ["prop_id"]}},
             {"name": "draft_message", "description": "Write an outbound email DRAFT for a human to approve (shadow mode). Never claims something was sent or filed unless the record shows it.",
-             "input_schema": {"type": "object", "properties": {"customer_id": {"type": "string"}, "intent": {"type": "string", "enum": ["needs_dl_update", "ready_to_submit", "needs_review", "filed", "approved", "denied", "reply", "other"]},
-                                                              "subject": {"type": "string"}, "body": {"type": "string"}}, "required": ["customer_id", "intent", "subject", "body"]}},
-            {"name": "set_status", "description": "Move the claim to a new status with a one-line reason. Only allowed transitions succeed.",
-             "input_schema": {"type": "object", "properties": {"customer_id": {"type": "string"}, "status": {"type": "string", "enum": ["processing", "ready_to_submit", "needs_dl_update", "needs_review", "withdrawn"]}, "reason": {"type": "string"}}, "required": ["customer_id", "status", "reason"]}},
+             "input_schema": {"type": "object", "properties": {"claim_id": {"type": "string"}, "intent": {"type": "string", "enum": ["needs_dl_update", "ready_to_submit", "needs_review", "filed", "approved", "denied", "reply", "other"]},
+                                                              "subject": {"type": "string"}, "body": {"type": "string"}}, "required": ["claim_id", "intent", "subject", "body"]}},
+            {"name": "set_status", "description": "Move the claim to a new status with a one-line reason (the structured findings from the last validation are stored with it). Only allowed transitions succeed.",
+             "input_schema": {"type": "object", "properties": {"claim_id": {"type": "string"}, "status": {"type": "string", "enum": ["processing", "ready_to_submit", "needs_dl_update", "needs_review", "withdrawn"]}, "reason": {"type": "string"}}, "required": ["claim_id", "status", "reason"]}},
         ]
 
     # ---- dispatcher ------------------------------------------------------------
@@ -79,16 +80,16 @@ class Tools:
         return out
 
     # ---- handlers --------------------------------------------------------------
-    def t_get_claim(self, customer_id: str) -> dict:
-        claim = self.store.get_claim(customer_id)
+    def t_get_claim(self, claim_id: str) -> dict:
+        claim = self.store.get_claim(claim_id)
         for d in claim["documents"]:
             if d.get("extracted"):
                 d["extracted"] = {**d["extracted"], "dl_number": mask_dl(d["extracted"].get("dl_number", ""))}
         claim["today"] = self.today.isoformat()
         return claim
 
-    def t_extract_id_fields(self, customer_id: str) -> dict:
-        claim = self.store.get_claim(customer_id)
+    def t_extract_id_fields(self, claim_id: str) -> dict:
+        claim = self.store.get_claim(claim_id)
         docs = [d for d in claim["documents"] if d["kind"] in ("dl_front", "dl_back")]
         if not docs:
             return {"error": "no ID documents uploaded"}
@@ -110,46 +111,47 @@ class Tools:
             tool_choice={"type": "tool", "name": "record_id_fields"}, messages=[{"role": "user", "content": content}])
         fields = next(b for b in msg.content if b.type == "tool_use").input
         cost = (msg.usage.input_tokens * PRICE_IN + msg.usage.output_tokens * PRICE_OUT) / 1e6
-        v = validate(fields, claim["property"], claim["customer"]["full_name"], self.today).as_dict()
+        v = validate(fields, claim["property"], claim["claim"]["full_name"], self.today).as_dict()
         front = next((d for d in docs if d["kind"] == "dl_front"), docs[0])
         self.store.record_extraction(front["id"], {**fields, "dl_number": mask_dl(fields.get("dl_number", ""))}, EXTRACTION_MODEL, cost, v)
-        self.store.audit("extracted", customer_id, {"cost": cost, "model": EXTRACTION_MODEL})
+        self.store.audit("extracted", claim_id, {"cost": cost, "model": EXTRACTION_MODEL})
         return {"extracted": {**fields, "dl_number": mask_dl(fields.get("dl_number", ""))}, "validation": v, "cost_usd": round(cost, 5)}
 
-    def t_validate_against_roll(self, customer_id: str) -> dict:
-        claim = self.store.get_claim(customer_id)
+    def t_validate_against_roll(self, claim_id: str) -> dict:
+        claim = self.store.get_claim(claim_id)
         front = next((d for d in claim["documents"] if d["kind"] == "dl_front" and d.get("extracted")), None)
         if not front:
             return {"error": "no extraction on file — call extract_id_fields first"}
-        v = validate(front["extracted"], claim["property"], claim["customer"]["full_name"], self.today)
+        v = validate(front["extracted"], claim["property"], claim["claim"]["full_name"], self.today)
+        self._last_findings[claim_id] = v.findings
         return v.as_dict()
 
-    def t_generate_form_50114(self, customer_id: str, over65: bool = False) -> dict:
+    def t_generate_form_50114(self, claim_id: str, over65: bool = False) -> dict:
         from trd.agent.packet import build_packet  # local import keeps reportlab optional for tests
-        claim = self.store.get_claim(customer_id)
+        claim = self.store.get_claim(claim_id)
         front = next((d for d in claim["documents"] if d["kind"] == "dl_front" and d.get("extracted")), None)
         if not front:
             return {"error": "no extraction on file"}
         pdf = build_packet(claim, front["extracted"], over65=over65, today=self.today)
         sha = hashlib.sha256(pdf).hexdigest()
-        fid = self.store.add_filing(customer_id, "50-114 (interim data sheet)" + (" + OV65" if over65 else ""), claim["lead"]["refund_years"], pdf, sha)
-        self.store.audit("packet_generated", customer_id, {"filing_id": fid, "sha256": sha, "over65": over65})
+        fid = self.store.add_filing(claim_id, "50-114 (interim data sheet)" + (" + OV65" if over65 else ""), claim["lead"]["refund_years"], pdf, sha)
+        self.store.audit("packet_generated", claim_id, {"filing_id": fid, "sha256": sha, "over65": over65})
         return {"filing_id": fid, "sha256": sha, "bytes": len(pdf)}
 
     def t_lookup_tcad_status(self, prop_id: int) -> dict:
         # TCAD's site is not reachable from the Claude sandbox; on GitHub Actions this becomes a real lookup.
         return {"available": False, "prop_id": prop_id, "reason": "TCAD lookup not available in this runtime — check traviscad.org/property-search manually or run on the scheduled job"}
 
-    def t_draft_message(self, customer_id: str, intent: str, subject: str, body: str) -> dict:
+    def t_draft_message(self, claim_id: str, intent: str, subject: str, body: str) -> dict:
         bad = [w for w in ("we have submitted", "has been submitted", "we filed", "was approved", "refund has been issued") if w in body.lower()]
-        claim = self.store.get_claim(customer_id)
+        claim = self.store.get_claim(claim_id)
         filed = any(f.get("submitted_at") for f in claim["filings"])
         if bad and not filed:
             return {"error": f"draft claims an action that has not happened ({bad[0]}); rewrite without it"}
-        mid = self.store.add_message(customer_id, intent, subject, body)
+        mid = self.store.add_message(claim_id, intent, subject, body)
         return {"message_id": mid, "status": "draft_saved_for_human_approval"}
 
-    def t_set_status(self, customer_id: str, status: str, reason: str) -> dict:
-        self.store.set_status(customer_id, status, reason)
-        self.store.audit("status_set_by_agent", customer_id, {"status": status, "reason": reason})
+    def t_set_status(self, claim_id: str, status: str, reason: str) -> dict:
+        self.store.set_status(claim_id, status, reason, self._last_findings.get(claim_id))
+        self.store.audit("status_set_by_agent", claim_id, {"status": status, "reason": reason})
         return {"ok": True, "status": status}
