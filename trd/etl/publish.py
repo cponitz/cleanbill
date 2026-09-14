@@ -18,9 +18,13 @@ import pandas as pd
 from trd.estimator.rates import unit
 
 
-def rows_from_csv(path: Path, limit: int | None = None, tax_year: int = 2026) -> tuple[list[dict], list[dict], list[dict]]:
-    """-> (properties, leads, property_entities) rows for the CSV written by trd.etl.leads."""
+PUBLISH_TIERS = (1, 2)   # Tier 3 (bought this year: bill reduction only, never mailed) is never published
+
+
+def rows_from_csv(path: Path, limit: int | None = None, tax_year: int = 2026, tiers: tuple[int, ...] = PUBLISH_TIERS) -> tuple[list[dict], list[dict], list[dict]]:
+    """-> (properties, leads, property_entities) rows for the CSV written by trd.etl.leads, restricted to `tiers`."""
     df = pd.read_csv(path, dtype={"situs_zip": str, "owner_zip": str, "situs_num": str, "situs_unit": str})
+    if "tier" in df: df = df[df["tier"].astype(int).isin(tiers)]
     if limit: df = df.head(limit)
     props, leads, ents = [], [], []
     for r in df.itertuples(index=False):
@@ -91,28 +95,46 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--sql-out", default=None, help="write batched SQL to this file instead of using the network")
     ap.add_argument("--update-estimates", action="store_true", help="refresh refund_years/est_* /estimate_unconfirmed on leads that already exist")
+    ap.add_argument("--tiers", default=",".join(map(str, PUBLISH_TIERS)), help="tiers to publish (default 1,2; Tier 3 is never mailed)")
     a = ap.parse_args()
-    props, leads, ents = rows_from_csv(Path(a.leads), a.limit)
+    props, leads, ents = rows_from_csv(Path(a.leads), a.limit, tiers=tuple(int(t) for t in a.tiers.split(",")))
     print(f"{len(props)} properties, {len(leads)} leads, {len(ents)} property-unit rows")
     if a.sql_out:
         Path(a.sql_out).write_text("\n\n".join(to_sql(props, leads, ents, update_estimates=a.update_estimates)))
         print(f"wrote {a.sql_out}"); return
     if a.dry_run: return
     from supabase import create_client
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
+    import httpx
+
+    def connect():
+        return create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
+
+    sb = connect()
+
+    def run(build):
+        """Execute a PostgREST call; on a dropped connection reconnect and retry (Supabase closes an HTTP/2 connection after ~10K requests)."""
+        nonlocal sb
+        for attempt in range(4):
+            try:
+                return build(sb).execute()
+            except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError, httpx.WriteError):
+                if attempt == 3: raise
+                sb = connect()
+
     for i in range(0, len(props), 500):
-        sb.table("properties").upsert(props[i:i + 500], on_conflict="prop_id", ignore_duplicates=True).execute()
-        existing = {r["prop_id"] for r in sb.table("leads").select("prop_id").in_("prop_id", [l["prop_id"] for l in leads[i:i + 500]]).execute().data}
+        if i and i % 2000 == 0: sb = connect()   # fresh connection well before the per-connection request cap
+        run(lambda c: c.table("properties").upsert(props[i:i + 500], on_conflict="prop_id", ignore_duplicates=True))
+        existing = {r["prop_id"] for r in run(lambda c: c.table("leads").select("prop_id").in_("prop_id", [l["prop_id"] for l in leads[i:i + 500]])).data}
         new = [l for l in leads[i:i + 500] if l["prop_id"] not in existing]
-        if new: sb.table("leads").insert(new).execute()
+        if new: run(lambda c: c.table("leads").insert(new))
         if a.update_estimates:  # SPEC-01 re-estimate of leads already published (claim_code, status, tier untouched)
             for l in leads[i:i + 500]:
                 if l["prop_id"] in existing:
-                    sb.table("leads").update({c: l[c] for c in ESTIMATE_COLS}).eq("prop_id", l["prop_id"]).execute()
-        print(f"batch {i // 500 + 1}: {len(new)} new leads" + (f", {len(existing)} estimates refreshed" if a.update_estimates else ""))
+                    run(lambda c, l=l: c.table("leads").update({k: l[k] for k in ESTIMATE_COLS}).eq("prop_id", l["prop_id"]))
+        print(f"batch {i // 500 + 1}: {len(new)} new leads" + (f", {len(existing)} estimates refreshed" if a.update_estimates else ""), flush=True)
     # property_entities: upsert for every published property (SPEC-01) — units can change between roll supplements
     for i in range(0, len(ents), 1000):
-        sb.table("property_entities").upsert(ents[i:i + 1000], on_conflict="prop_id,entity_cd").execute()
+        run(lambda c: c.table("property_entities").upsert(ents[i:i + 1000], on_conflict="prop_id,entity_cd"))
     print(f"{len(ents)} property_entities rows upserted")
 
 

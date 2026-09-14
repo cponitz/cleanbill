@@ -21,6 +21,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
   (Supabase MCP, recorded as `property_entities`). 13 new tests (41 total).
 
 ### Fixed
+- `trd.etl.publish` reconnects and retries when Supabase closes the HTTP/2 connection (about 10K requests per
+  connection), so `--update-estimates` completes over 16,775 leads; Tier-3 leads are never published unless `--tiers`
+  says so (the prototype loaded Tiers 1–2 only; the SPEC-01 CSV contains all tiers).
 - Scheduled `claims-agent` runs failed with `ImportError: cannot import name 'create_client' from 'supabase'`:
   the Python client `supabase` was never a declared dependency, so on a fresh runner the repo's own
   `supabase/` folder (migrations, functions) was imported as an empty namespace package. Added `supabase>=2.0`

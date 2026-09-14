@@ -38,3 +38,13 @@ def test_sql_path_upserts_entities_and_optionally_refreshes_estimates(tmp_path):
     sql2 = "\n".join(to_sql(props, leads, ents, update_estimates=True))
     assert "update leads set refund_years = array[2024,2025], est_refund_total = 3000.5" in sql2 and "where prop_id = 123;" in sql2
     assert "claim_code" not in sql2.split("update leads")[1]   # the refresh never touches the code or status
+
+
+def test_tier_3_is_never_published_by_default(tmp_path):
+    p = _csv(tmp_path)
+    df = pd.read_csv(p); df.loc[len(df)] = df.iloc[0]; df.loc[len(df) - 1, ["prop_id", "tier", "claim_code"]] = [124, 3, "TRD-CCCC-DDDD"]
+    df.to_csv(p, index=False)
+    props, leads, ents = rows_from_csv(p)
+    assert [l["prop_id"] for l in leads] == [123] and [e["prop_id"] for e in ents] == [123, 123]
+    props3, leads3, _ = rows_from_csv(p, tiers=(1, 2, 3))
+    assert sorted(l["prop_id"] for l in leads3) == [123, 124]
