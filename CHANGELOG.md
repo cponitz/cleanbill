@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 ## [Unreleased]
 
 ### Added
+- **SPEC-04b + SPEC-06b + SPEC-02 UI: the customer web app `apps/web`** (branch `spec-04b-web`; ADR 0017). Next.js 16 App
+  Router, TypeScript, Tailwind, deployed by Vercel (Root Directory `apps/web`, preview per branch, production from `main`).
+  Routes: `/` landing (code entry, what this is, filing is free at TCAD, the math); `/claim/[code]` — estimate → five
+  eligibility questions → typed pre-check (`GET /claim/precheck` on blur) + license photo with camera hint and browser-side
+  HEIC→JPEG conversion → contact → review & sign → inline result polling `GET /claim?c&claim` every 2 s (max 30 s) →
+  card step (rendered only when `NEXT_PUBLIC_STRIPE_ENABLED=true`; Task 3 fills it) → done; a claimed code opens the
+  SPEC-02 fix screen (both addresses side by side, DPS link, what DPS asks for, one upload → re-upload path), the review
+  question with a reply box, the SPEC-06 §4 typed-confirmation form (pre-filled), or the ready screen with the 10-minute
+  packet link; `/claim/[code]/status`; `/agreement/[code]`. Only `NEXT_PUBLIC_*` env is read; every string is in
+  `src/lib/copy.ts` with its `copy/*.md` source named (unreviewed strings marked `NEW`). Funnel events posted:
+  `validation_shown, dl_fix_started, dl_fix_uploaded, card_skipped, packet_viewed`. **Claim API additions:**
+  `POST /claim/reply {c, claim, body}` stores the customer's answer as an inbound `messages` row (`channel=portal`,
+  `intent=reply`); the poll/claim summary gains `typed_prefill` (name, DOB, address — never the DL number) for the typed
+  fallback. `eval/web_smoke.py --base <url>`: Playwright, phone viewport, happy path + fix-screen path + agreement, resets
+  the synthetic lead itself; passes against the local production build. Lighthouse mobile on `/claim/[code]` (production
+  build): performance 99, accessibility 100, best practices 96. `apps/web/README.md`.
+  No data-model change. `docs/` static pages untouched (frozen until cut-over).
 - **SPEC-06a + SPEC-02 API + G-9: findings rule table, inline-validation API, typed pre-check, license re-upload**
   (branch `spec-02-06-backend`; ADR 0016). One rule table `trd/findings.py` maps each finding code to severity, field, the
   ops sentence, the customer sentence and a next action; `supabase/functions/_shared/findings.ts` is generated from it

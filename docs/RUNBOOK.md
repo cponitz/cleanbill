@@ -11,7 +11,7 @@ Section 9
 |                        |                                                                                                                                                                                                                |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Landing (enter a code) | `https://cponitz.github.io/texas-refund-desk/index.html` (Pages serves `docs/` at the root; the old `homestead-refund` address does not redirect); after T-12: `https://texasrefunddesk.com`                                |
-| Claim page (test)      | `…/texas-refund-desk/claim.html?c=TRD-TEST-0001`                                                                                                                                                                            |
+| Claim page (test)      | Vercel preview `https://texas-refund-desk-<hash>-ponitz-development.vercel.app/claim/TRD-TEST-0001` (production URL after cut-over); fallback `…/texas-refund-desk/claim.html?c=TRD-TEST-0001`                                                                                                                                                                            |
 | Agreement              | `…/texas-refund-desk/agreement.html?c=TRD-TEST-0001`                                                                                                                                                                        |
 | Ops dashboard          | `…/texas-refund-desk/ops.html` — password rotated Sep 12 (in your password manager and `app_settings`; update the Mac `.env`). Never in a document.                                                                         |
 | Claim API              | `https://letrfpwskjbgnyacesgv.supabase.co/functions/v1/claim?c=TRD-TEST-0001`                                                                                                                                  |
@@ -46,7 +46,9 @@ Section 9
     python -m trd.agent.run --store supabase --claim <uuid>      # run the agent on one claim, see the trace
     python -m trd.agent.run --store fixtures                      # dry run over 5 fixture claims (needs API key)
     ANTHROPIC_API_KEY=… python eval/run_extraction_eval.py        # 30-image eval, ≥ 95% gate
-    python eval/browser_smoke.py                                  # Playwright end-to-end against the live pages
+    python eval/browser_smoke.py                                  # Playwright end-to-end against the static fallback pages
+    python eval/web_smoke.py --base http://localhost:3000        # Playwright end-to-end against apps/web (local `npm run build && npm start`, or a Vercel preview URL)
+    (cd apps/web && npm install && npm run build && npm start)   # the customer app locally; see apps/web/README.md
     psql/SQL: eval/reset_test_lead.sql                            # reset TRD-TEST-0001 to a clean state
     supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv   # manual fallback only; per-function verify_jwt in supabase/config.toml
     # schema + functions normally deploy from main via .github/workflows/deploy.yml (db push, functions deploy, db diff must be empty)

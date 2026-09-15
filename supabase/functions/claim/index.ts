@@ -9,6 +9,7 @@
 //   GET  /claim?c=CODE&claim=<uuid>        -> {status, findings[], packet_url?} — the inline-validation poll (SPEC-06 §2)
 //   GET  /claim/precheck?c&address&zip     -> {match, id_address, situs} — typed address pre-check (SPEC-06 §3)
 //   POST /claim/events {c, kind, detail}   -> funnel event from the page (SPEC-06 §5)
+//   POST /claim/reply {c, claim, body}     -> the customer's answer to a needs_review question: an inbound `messages` row (SPEC-06 §2)
 //   POST /claim (multipart)                -> new claim: eligibility answers, ID upload(s), contact, consents, typed signature,
 //                                             optional typed_* pre-check fields (stored as a `typed_id` document);
 //                                             for a code already claimed: re-upload (needs_dl_update + dl_front, SPEC-02 §2)
@@ -19,7 +20,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { clientIp, serviceClient } from "./db.ts";
 import { type Finding, makeFinding, reasonText, renderForCustomer } from "../_shared/findings.ts";
 import type { Extracted, PropertyRec } from "../_shared/validate.ts";
-import { extFor, followUpMode, isPageEvent, PAGE_EVENTS, parseTypedFields, precheck, typedExtracted } from "./logic.ts";
+import { extFor, followUpMode, isPageEvent, PAGE_EVENTS, parseTypedFields, precheck, TYPED_FALLBACK_CODES, typedExtracted } from "./logic.ts";
 
 type SB = ReturnType<typeof serviceClient>;
 
@@ -78,9 +79,11 @@ function kickProcessClaim(body: Record<string, unknown>) {
   }).catch((e) => console.error("process-claim kick failed", e)));
 }
 
-/** The claim as the page sees it: status, findings rendered for the customer, and a 10-minute packet link when ready. */
+/** The claim as the page sees it: status, findings rendered for the customer, a 10-minute packet link when ready, and —
+ *  for an unreadable / low-confidence photo — what the model read so the page can pre-fill the typed confirmation (SPEC-06 §4). */
 async function claimSummary(sb: SB, c: { id: string; status: string; findings: unknown }) {
-  const findings = (Array.isArray(c.findings) ? c.findings as Finding[] : []).map(renderForCustomer);
+  const raw = Array.isArray(c.findings) ? c.findings as Finding[] : [];
+  const findings = raw.map(renderForCustomer);
   let packet_url: string | null = null;
   if (c.status === "ready_to_submit") {
     const { data: fil } = await sb.from("filings").select("packet_path").eq("claim_id", c.id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
@@ -89,7 +92,14 @@ async function claimSummary(sb: SB, c: { id: string; status: string; findings: u
       packet_url = s?.signedUrl ?? null;
     }
   }
-  return { id: c.id, status: c.status, findings, packet_url };
+  let typed_prefill: Record<string, string> | null = null;
+  if (c.status === "needs_review" && raw.some((f) => TYPED_FALLBACK_CODES.includes(String(f.code)))) {
+    const { data: d } = await sb.from("documents").select("extracted").eq("claim_id", c.id).eq("kind", "dl_front").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const ex = (d?.extracted ?? {}) as Record<string, unknown>;
+    typed_prefill = {};
+    for (const k of ["first_name", "last_name", "dob", "address_line1", "city", "zip"]) typed_prefill[k] = String(ex[k] ?? "");   // never the DL number
+  }
+  return { id: c.id, status: c.status, findings, packet_url, typed_prefill };
 }
 
 async function latestClaimForLead(sb: SB, leadId: string) {
@@ -187,6 +197,24 @@ Deno.serve(async (req: Request) => {
     if (JSON.stringify(detail).length > 2048) return json({ ok: false, error: "bad_request" }, 400);
     await sb.from("events").insert({ claim_code: code, kind, detail });
     return json({ ok: true });
+  }
+
+  // ---- POST /claim/reply {c, claim, body} ------------------------------------------------------------------------
+  if (req.method === "POST" && path.endsWith("/reply")) {
+    const body = await req.json().catch(() => null) as { c?: string; claim?: string; body?: string } | null;
+    const code = normCode(body?.c ?? null);
+    const text = String(body?.body ?? "").trim().slice(0, 2000);
+    const claimId = String(body?.claim ?? "");
+    if (!code || !claimId || !text) return json({ ok: false, error: "bad_request" }, 400);
+    if (await rateLimited(sb, ip, ["view"])) return json({ ok: false, error: "rate_limited" }, 429);
+    const found = await loadLead(sb, code);
+    if (!found) return json({ ok: false, error: "not_found" }, 404);
+    const { data: c } = await sb.from("claims").select("id, status").eq("id", claimId).eq("lead_id", found.lead.id).maybeSingle();
+    if (!c) return json({ ok: false, error: "not_found" }, 404);
+    const { data: m, error } = await sb.from("messages").insert({ claim_id: c.id, direction: "inbound", channel: "portal", intent: "reply", subject: "Reply from the claim page", body: text, agent_draft: false }).select("id").single();
+    if (error || !m) return json({ ok: false, error: "server_error" }, 500);
+    await sb.from("audit_log").insert({ actor: "claim-api", action: "customer_reply", entity: "messages", entity_id: m.id, detail: { code, claim_id: c.id, status: c.status, chars: text.length } });
+    return json({ ok: true, message_id: m.id });
   }
 
   // ---- POST /claim (multipart) -------------------------------------------------------------------------------------
