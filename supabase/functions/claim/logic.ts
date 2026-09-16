@@ -77,3 +77,68 @@ export function typedExtracted(t: TypedFields, base?: Partial<Extracted>): Extra
 export function extFor(mime: string): string {
   return mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : mime === "application/pdf" ? "pdf" : mime === "image/heic" || mime === "image/heif" ? "heic" : "jpg";
 }
+
+// ---- SPEC-07 (website redesign): inbound inquiries and the portal view of a claim ---------------------------------
+
+export const INQUIRY_KINDS = ["address", "exemption", "appeal", "business"] as const;
+export type InquiryKind = typeof INQUIRY_KINDS[number];
+export const BILL_KINDS = ["property_tax", "utilities", "insurance", "telecom"] as const;
+export type Inquiry = {
+  kind: InquiryKind; address: string | null; email: string | null; company: string | null; properties: number | null;
+  bills: string[]; source_path: string | null;
+};
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/** Validate a public-site form post (`POST /claim/inquiry`). Returns the row to store, or the first problem.
+ *  Homeowner kinds need an address and an e-mail (we answer by e-mail, B-04); the business kind needs a work e-mail. */
+export function parseInquiry(body: unknown): { ok: true; row: Inquiry } | { ok: false; error: string } {
+  const b = (body && typeof body === "object" && !Array.isArray(body) ? body : {}) as Record<string, unknown>;
+  const str = (k: string, max: number) => { const v = typeof b[k] === "string" ? (b[k] as string).trim().slice(0, max) : ""; return v || null; };
+  const kind = String(b.kind ?? "");
+  if (!(INQUIRY_KINDS as readonly string[]).includes(kind)) return { ok: false, error: "bad_kind" };
+  const email = str("email", 200);
+  if (!email || !EMAIL_RE.test(email)) return { ok: false, error: "bad_email" };
+  const address = str("address", 200);
+  const company = str("company", 200);
+  const rawProps = Number(b.properties);
+  const properties = Number.isInteger(rawProps) && rawProps > 0 && rawProps < 100_000 ? rawProps : null;
+  const bills = Array.isArray(b.bills) ? [...new Set(b.bills.filter((x): x is string => typeof x === "string" && (BILL_KINDS as readonly string[]).includes(x)))] : [];
+  const source_path = str("source_path", 100);
+  if (kind !== "business" && !address) return { ok: false, error: "bad_address" };
+  if (kind === "business" && !company) return { ok: false, error: "bad_company" };
+  return { ok: true, row: { kind: kind as InquiryKind, address, email, company, properties, bills, source_path } };
+}
+
+/** The six portal stages (SPEC-07 §10) and which one each claim status has reached. `-1` = none (cancelled / denied
+ *  keep the stages they passed, so the page can grey the rest). Stage index: 0 received · 1 id_checked · 2 you approved
+ *  · 3 submitted to TCAD · 4 TCAD decision · 5 refund issued. */
+export function stageIndex(status: string): number {
+  switch (status) {
+    case "submitted": case "processing": case "needs_review": case "needs_dl_update": return 0;
+    case "ready_to_submit": return 1;
+    case "filed": return 3;
+    case "approved": case "denied": return 4;
+    case "refunded": case "paid": return 5;
+    case "withdrawn": return 0;
+    default: return 0;
+  }
+}
+
+export type Timeline = { received: string | null; id_checked: string | null; approved: string | null; filed: string | null; decided: string | null; refunded: string | null };
+
+/** Dates for the portal's progress row from the rows we keep: the claim, its latest filing, the first process-claim audit
+ *  row and the earliest observed refund. Only dates we actually have are filled; the page shows expectations otherwise. */
+export function timelineFrom(p: {
+  created_at: string | null; processed_at: string | null;
+  filing: { submitted_at: string | null; approved_at: string | null; denied_at: string | null } | null;
+  refund_observed_at: string | null;
+}): Timeline {
+  return {
+    received: p.created_at,
+    id_checked: p.processed_at,
+    approved: p.filing?.submitted_at ?? null,   // the customer's "go" precedes the submission; we keep no separate stamp
+    filed: p.filing?.submitted_at ?? null,
+    decided: p.filing?.approved_at ?? p.filing?.denied_at ?? null,
+    refunded: p.refund_observed_at,
+  };
+}

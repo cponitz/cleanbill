@@ -1,4 +1,4 @@
-import { extFor, followUpMode, isPageEvent, parseTypedFields, precheck, typedExtracted } from "./logic.ts";
+import { extFor, followUpMode, isPageEvent, parseInquiry, parseTypedFields, precheck, stageIndex, timelineFrom, typedExtracted } from "./logic.ts";
 import { makeFinding } from "../_shared/findings.ts";
 import type { PropertyRec } from "../_shared/validate.ts";
 
@@ -48,4 +48,27 @@ Deno.test("page events allowlist and file extensions", () => {
   assertEquals(isPageEvent("view"), false);
   assertEquals(isPageEvent("claim_submitted"), false);
   assertEquals([extFor("image/jpeg"), extFor("image/png"), extFor("application/pdf"), extFor("image/heic")], ["jpg", "png", "pdf", "heic"]);
+});
+
+Deno.test("inquiry: homeowner forms need address + e-mail, business needs company + e-mail; bills are an allowlist (SPEC-07)", () => {
+  const ok = parseInquiry({ kind: "address", address: " 3675 Duval St, Austin 78721 ", email: "a@b.co", source_path: "/" });
+  assertEquals(ok, { ok: true, row: { kind: "address", address: "3675 Duval St, Austin 78721", email: "a@b.co", company: null, properties: null, bills: [], source_path: "/" } });
+  assertEquals(parseInquiry({ kind: "address", email: "a@b.co" }), { ok: false, error: "bad_address" });
+  assertEquals(parseInquiry({ kind: "address", address: "x", email: "not-an-email" }), { ok: false, error: "bad_email" });
+  assertEquals(parseInquiry({ kind: "lookup", address: "x", email: "a@b.co" }), { ok: false, error: "bad_kind" });
+  assertEquals(parseInquiry({ kind: "business", email: "a@b.co" }), { ok: false, error: "bad_company" });
+  const biz = parseInquiry({ kind: "business", company: "Acme", email: "a@b.co", properties: "12", bills: ["utilities", "cable", "utilities", 3] });
+  assertEquals(biz.ok && biz.row.properties, 12);
+  assertEquals(biz.ok && biz.row.bills, ["utilities"]);
+  assertEquals(parseInquiry(null).ok, false);
+  assertEquals(parseInquiry({ kind: "appeal", address: "x".repeat(300), email: "a@b.co" }).ok && (parseInquiry({ kind: "appeal", address: "x".repeat(300), email: "a@b.co" }) as { row: { address: string } }).row.address.length, 200);
+});
+
+Deno.test("portal: stage per status and the timeline from the rows we keep (SPEC-07 §10)", () => {
+  assertEquals(["submitted", "processing", "needs_review", "needs_dl_update"].map(stageIndex), [0, 0, 0, 0]);
+  assertEquals([stageIndex("ready_to_submit"), stageIndex("filed"), stageIndex("approved"), stageIndex("denied"), stageIndex("refunded"), stageIndex("paid")], [1, 3, 4, 4, 5, 5]);
+  const t = timelineFrom({ created_at: "2026-09-02T10:00:00Z", processed_at: "2026-09-02T10:01:00Z", filing: { submitted_at: "2026-09-04T09:00:00Z", approved_at: null, denied_at: null }, refund_observed_at: null });
+  assertEquals(t, { received: "2026-09-02T10:00:00Z", id_checked: "2026-09-02T10:01:00Z", approved: "2026-09-04T09:00:00Z", filed: "2026-09-04T09:00:00Z", decided: null, refunded: null });
+  assertEquals(timelineFrom({ created_at: null, processed_at: null, filing: null, refund_observed_at: null }).filed, null);
+  assertEquals(timelineFrom({ created_at: "a", processed_at: null, filing: { submitted_at: "b", approved_at: null, denied_at: "c" }, refund_observed_at: null }).decided, "c");
 });

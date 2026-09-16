@@ -5,6 +5,11 @@
 export const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "https://letrfpwskjbgnyacesgv.supabase.co/functions/v1").replace(/\/$/, "");
 export const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
 
+/** The prefix printed on every letter and stored on every lead. Changing it is a backend + letter change, not a page change. */
+export const CODE_PREFIX = "TRD";
+export const CODE_PLACEHOLDER = `${CODE_PREFIX}-XXXX-XXXX`;
+export const CODE_MASK = `${CODE_PREFIX}-____-____`;
+
 export type Severity = "blocking" | "warning" | "info";
 export type Finding = {
   code: string; severity: Severity; field: string; message: string; detail?: Record<string, unknown>;
@@ -13,13 +18,20 @@ export type Finding = {
 export type ClaimSummary = {
   id: string; status: string; findings: Finding[]; packet_url: string | null; typed_prefill?: Record<string, string> | null;
 };
+export type Timeline = { received: string | null; id_checked: string | null; approved: string | null; filed: string | null; decided: string | null; refunded: string | null };
+export type PortalMessage = { subject: string; direction: "inbound" | "outbound"; at: string };
+/** The closed-lead claim (SPEC-07 §10): the summary plus what the portal page shows. */
+export type PortalClaim = ClaimSummary & {
+  first_name?: string | null; card_on_file?: boolean; timeline?: Timeline; messages?: PortalMessage[];
+};
+export type LeadEstimate = { refund_years: number[]; est_refund_total?: number; est_refund_by_year?: Record<string, { total: number }> | null; est_forward_annual?: number };
 export type LeadInfo = {
   ok: true;
   lead: { claim_code: string; refund_years: number[]; est_refund_total: number; est_refund_by_year: Record<string, { total: number }> | null; est_forward_annual: number; tier: number };
   property: { prop_id: number; owner_name: string; situs_full: string };
   earliest_year: number; deadline: string;
 };
-export type ClosedInfo = { ok: false; error: "closed"; status: string; property: { situs_full: string }; lead: { refund_years: number[] }; claim: ClaimSummary | null };
+export type ClosedInfo = { ok: false; error: "closed"; status: string; property: { situs_full: string }; lead: LeadEstimate; claim: PortalClaim | null };
 export type ApiError = { ok: false; error: string; errors?: string[]; reason?: string; status?: string };
 export type ClaimLookup = LeadInfo | ClosedInfo | ApiError;
 
@@ -27,6 +39,9 @@ export type SubmitResult = { ok: true; claim_id: string; status: string; mode?: 
 
 export const PAGE_EVENTS = ["validation_shown", "dl_fix_started", "dl_fix_uploaded", "typed_precheck", "card_saved", "card_skipped", "packet_viewed"] as const;
 export type PageEvent = typeof PAGE_EVENTS[number];
+
+export type InquiryKind = "address" | "exemption" | "appeal" | "business";
+export type Inquiry = { kind: InquiryKind; address?: string; email: string; company?: string; properties?: number | string; bills?: string[]; source_path?: string };
 
 async function asJson<T>(r: Response): Promise<T> {
   return await r.json().catch(() => ({ ok: false, error: `http_${r.status}` })) as T;
@@ -84,9 +99,24 @@ export async function sendReply(code: string, claimId: string, body: string): Pr
   return asJson(r);
 }
 
-/** Codes look like TRD-XXXX-XXXX; accept what people type (lowercase, no dashes) and normalise. */
+/** POST /claim/inquiry — a public-site form (SPEC-07): address check, exemption/appeal check or business review. We answer by e-mail. */
+export async function postInquiry(inq: Inquiry): Promise<{ ok: true; inquiry_id: string } | ApiError> {
+  const r = await fetch(`${API_BASE}/claim/inquiry`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(inq) });
+  return asJson(r);
+}
+
+/** Codes look like TRD-XXXX-XXXX; accept what people type (lowercase, no dashes, O for 0, I for 1) and normalise. */
 export function normalizeCode(raw: string): string | null {
   const c = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (c.length !== 11 || !c.startsWith("TRD")) return null;
-  return `TRD-${c.slice(3, 7)}-${c.slice(7, 11)}`;
+  if (c.length !== 11 || !c.startsWith(CODE_PREFIX)) return null;
+  const body = c.slice(3).replace(/O/g, "0").replace(/I/g, "1");   // letters O and I are never printed in a code (SPEC-07 "input mask")
+  return `${CODE_PREFIX}-${body.slice(0, 4)}-${body.slice(4, 8)}`;
+}
+
+/** What the claim-code input shows while typing: uppercase, dashes inserted after the prefix and the 4th body character. */
+export function maskCode(raw: string): string {
+  const c = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 11);
+  if (c.length <= 3) return c;
+  if (c.length <= 7) return `${c.slice(0, 3)}-${c.slice(3)}`;
+  return `${c.slice(0, 3)}-${c.slice(3, 7)}-${c.slice(7)}`;
 }

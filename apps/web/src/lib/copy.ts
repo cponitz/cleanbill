@@ -1,105 +1,107 @@
-// Customer-facing wording. Every string here is transcribed from the compliance-reviewed copy files in /copy — the source
-// section is named next to each block. Strings marked NEW are not in copy/*.md and are listed in the PR for review
-// (SPEC-04b §5: "no new claims in copy without review").
+// Customer-facing wording for the claim flow, status page and agreement. Every string here is transcribed from the
+// compliance-reviewed copy files in /copy — the source section is named next to each block. Strings marked NEW are not
+// in copy/*.md and are listed in the PR for review (SPEC-04b §5: "no new claims in copy without review"). Strings marked
+// SPEC-07 come from the design handoff (docs/specs/SPEC-07-website-redesign.md), whose copy the handoff calls final.
+// Marketing-page copy (home, pricing, how it works, FAQ, exemptions, appeals, businesses, about) lives in lib/site.ts.
 //   copy/claim_page.md      → HEADER, ESTIMATE, ELIGIBILITY, LICENSE, CONTACT, SIGN, DONE
 //   copy/followups.md       → FIX (needs_dl_update paragraph)
 //   copy/service_agreement.md → the agreement page (components/Agreement.tsx)
-//   docs/index.html (live prototype wording) → LANDING, FOOTER; docs/claim.html → the two eligibility questions the
-//   claim_page.md three-question list does not cover (previous homestead, household)
+//   docs/claim.html → the two eligibility questions the claim_page.md three-question list does not cover (previous homestead, household)
 
-export const BRAND = "Texas Refund Desk";
-export const SUPPORT_EMAIL = "hello@texasrefunddesk.com";
+// The brand is one token (SPEC-07 renames the customer-facing brand; the repo, Supabase and Vercel projects keep
+// their `texas-refund-desk` names per B-12). Flip these two lines and the whole site follows.
+export const BRAND = "Clean Bill";
+export const SUPPORT_EMAIL = "hello@cleanbillco.com";
+
 export const DPS_URL = "https://www.dps.texas.gov/section/driver-license/change-your-address";
 export const TCAD_URL = "https://traviscad.org/homesteadexemptions";
+export const TCAD_SEARCH_URL = "https://traviscad.org/property-search";
 export const TAXING_UNITS = "Austin ISD, the City of Austin, Travis County, Austin Community College, and Central Health";
+export const META_DESCRIPTION = `Travis County homeowners who missed the residence homestead exemption can claim a refund for up to two prior years (Tax Code §11.431). Filing is free at TCAD; ${BRAND}'s fee is 25% of the refund you actually receive, $0 otherwise.`;
 
 // copy/claim_page.md — Header
 export const HEADER = { brand: BRAND, sub: "Private company · Not affiliated with any government agency" };
 
-// docs/index.html (prototype landing, live since 2026-09-08)
-export const LANDING = {
-  h1: "Got a letter from us? Enter your claim code to see your estimated refund.",
-  codeLabel: "Claim code (printed on your letter)",
-  codePlaceholder: "TRD-XXXX-XXXX",
-  open: "Open my claim",
-  what: "What this is.",
-  whatBody: "We review the Travis Central Appraisal District's public records for owner-occupied homes with no homestead exemption and help owners claim the exemption retroactively — a refund of taxes already paid for up to two prior years, plus lower bills going forward.",
-  free: "You can always file yourself, free,",
-  freeBody: "If you'd rather we handle it: our fee is 25% of the refund you actually receive, and $0 otherwise.",
-  // NEW (landing "the math" block, SPEC-04b §2 — figures come from the letter/claim page, this explains the mechanism)
-  mathTitle: "How the refund works",
-  math: [
-    "Texas law lets a homeowner file the residence homestead exemption up to two years late (Tax Code §11.431).",
-    "When the Travis Central Appraisal District approves a late application, the Travis County Tax Office refunds the tax you overpaid for those years.",
-    "Your bill also goes down every year after that. You keep 100% of that part.",
-  ],
-  badCode: "Check the code printed on your letter (it looks like TRD-XXXX-XXXX) and try again.",
+// SPEC-07 footer (verbatim from the handoff, "Footer")
+export const FOOTER = {
+  disclaimer: `${BRAND} is a private company in Austin, Texas, not affiliated with any government agency. Estimates come from public appraisal data; the appraisal district decides eligibility. Not legal or tax advice.`,
+  links: [["Pricing", "/pricing"], ["FAQ", "/faq"], ["Service agreement", "/agreement"]] as Array<[string, string]>,
 };
 
-// docs/index.html + docs/claim.html footer (live prototype wording)
-export const FOOTER = `${BRAND} is a private company in Austin, Texas. We are not affiliated with the Travis Central Appraisal District, the Travis County Tax Office, or any government agency. Estimates are based on public appraisal data and current tax rates; the appraisal district decides eligibility. Refunds are issued by the Travis County Tax Office to the person who paid the tax. Not legal or tax advice. Questions: ${SUPPORT_EMAIL}`;
+// SPEC-07 §02 — the step chrome
+export const FLOW = {
+  step: (n: number, name: string) => `Step ${n} of 5 · ${name}`,
+  names: ["Estimate", "Eligibility", "Your Texas ID", "Contact", "Review and sign"],
+  continueCta: "Continue",
+  back: "Back",
+  loading: "Loading your claim…",
+};
 
-// copy/claim_page.md — Step 1
+// copy/claim_page.md — Step 1 · SPEC-07 §02 screen 1 for the line shapes
 export const ESTIMATE = {
-  account: (propId: number, owner: string) => `Travis Central Appraisal District account ${propId} · Owner of record: ${owner}`,
-  refundLabel: "Estimated refund:",
-  yearLine: (year: number, amount: string) => `Tax year ${year}: about ${amount}`,
-  forward: (amount: string) => `Plus an estimated ${amount} lower tax bill every year going forward`,
-  forwardNote: "(you keep 100% of that).",
+  account: (propId: number, owner: string) => `TCAD account ${propId} · Owner of record: ${owner}`,
+  refundLabel: "Estimated refund",
+  yearLine: (year: number, amount: string) => `Tax year ${year} · about ${amount}`,
+  forward: (amount: string) => `Plus ~${amount} lower bill every year (100% yours)`,
+  deadline: (earliest: number, deadline: string) => `The ${earliest} year can only be claimed until ${deadline}.`,   // the only urgency sentence allowed (SPEC-07 copy rules)
   disclaimer: `These are estimates from public appraisal data and current tax rates. The Travis Central Appraisal District decides eligibility; the Travis County Tax Office pays approved refunds on behalf of ${TAXING_UNITS}.`,
-  free: "You can file this yourself for free",
-  freeTail: "(Form 50-114). If you'd like us to handle it, continue.",
-  timing: (earliest: number, deadline: string) => `Timing: the ${earliest} tax year can only be claimed until ${deadline}; after that, the oldest refund year is gone for good.`, // docs/claim.html
-  cta: "Continue →",
+  free: "You can file this yourself for free at traviscad.org (Form 50-114). If you'd rather we handle it, continue.",
 };
 
-// copy/claim_page.md — Step 2 (questions 1–3) · docs/claim.html (questions 4–5, live prototype wording)
+// copy/claim_page.md — Step 2 (questions 1–3) · docs/claim.html (questions 4–5) · SPEC-07 §02 for the title and short labels
 export const ELIGIBILITY = {
-  title: "Confirm eligibility",
+  title: "Five quick questions",
   q1: (earliest: number) => `Did you own and live in this home on January 1, ${earliest}?`,
-  q1no: "No — I moved in later:",
+  q1no: "No, moved in later",
+  q1when: "Month you moved in",
   q2: "Is this your primary residence today?",
   q3: "Do you (or your spouse) claim a homestead exemption on any other property, in Texas or elsewhere?",
   q4: "Did you have a homestead exemption on a previous home?",
-  q4yes: "Yes — previous address:",
+  q4yes: "Yes",
+  q4where: "Previous address",
   q5: "Who owns the home?",
   q5opts: { single: "Just me", married: "My spouse and me", other: "Me with other co-owners" },
   note: 'Texas allows one homestead per family. If you answer "Yes" to another homestead, we\'ll pause and email you before doing anything.',
   yes: "Yes", no: "No",
 };
 
-// copy/claim_page.md — Step 3 · SPEC-06 §3 (pre-check sentences, approved spec wording)
+// copy/claim_page.md — Step 3 · SPEC-06 §3 (pre-check sentences) · SPEC-07 §02 screen 3 for the title and hints
 export const LICENSE = {
-  title: "Your Texas driver's license or ID",
-  intro: (situs: string) => `Texas law requires a copy of your Texas driver's license or DPS ID with the application, and the address on it must match ${situs}.`,
-  // SPEC-06 §3 — typed pre-check
-  precheckTitle: "First, a quick check (optional)",
+  title: "Texas driver's license or DPS ID",
+  intro: (situs: string) => `Texas law requires a copy with the application, and the address on it must match ${situs}.`,
+  precheckTitle: "Quick check (optional)",
   precheckHelp: "Type the address exactly as it appears on your license and we'll tell you right away whether it matches the property.", // NEW
   nameLabel: "Name as on your license",
-  addressLabel: "Address as on your license",
+  addressLabel: "Address as printed on your license",
   zipLabel: "ZIP",
   precheckMatch: "Matches the property.",
   precheckMismatch: "Doesn't match — you'll need to update it at DPS before TCAD will approve. You can still continue and fix it after.",
   front: "Take a photo of the front",
   back: "Back (optional)",
-  cameraHint: "Lay the card flat in good light and fill the frame. iPhone photos (HEIC) are converted automatically.", // NEW
-  privacy: "Your ID is used only to prepare your application. It is stored encrypted and deleted 30 days after your application is filed. ID numbers are confidential under Texas Tax Code §11.48.",
+  cameraHint: "Lay the card flat in good light. HEIC converted automatically.", // SPEC-07
+  privacy: "Stored encrypted, deleted 30 days after filing. ID numbers confidential under Tax Code §11.48.", // SPEC-07 (short form of claim_page.md's privacy line)
   mismatchCallout: "Address on your license doesn't match? No problem — you can update it online at the Texas DPS in about 10 minutes (we'll send you the link). We'll hold your claim until it's updated; nothing is filed until then.",
   fileTooBig: "License photo must be a JPEG/PNG/WebP/PDF under 15 MB.", // API error wording
   converting: "Converting photo…", // NEW
+  chosen: (name: string) => `Photo added · ${name}`, // NEW
+  retake: "Retake", // NEW
 };
 
-// copy/claim_page.md — Step 4
+// copy/claim_page.md — Step 4 · SPEC-07 §02 screen 4
 export const CONTACT = {
-  title: "Contact",
-  name: "Name (as it appears on your ID)",
+  title: "Where should we send updates?",
+  name: "Name (as on your ID)",
+  namePlaceholder: "Full name",
   email: "Email",
-  phone: "Mobile (optional, for status updates)",
+  emailPlaceholder: "you@example.com",
+  phone: "Mobile (optional, for status texts)",
+  phonePlaceholder: "(512) 555-0100",
+  note: "We only use this to send status updates and your completed application. No marketing.",
 };
 
-// copy/claim_page.md — Step 5
+// copy/claim_page.md — Step 5 (the disclosure block is compliance copy and stays verbatim; SPEC-07 supplies the title)
 export const SIGN = {
-  title: "Review and sign",
+  title: "What we do, what you pay",
   whatWeDo: "What we do:",
   whatWeDoBody: "prepare your Form 50-114 residence homestead exemption application (including the late-application years listed above) and the related refund paperwork, submit it as you direct, track it with the Travis Central Appraisal District, and handle any follow-up questions from the district.",
   whatYouPay: "What you pay:",
@@ -111,9 +113,11 @@ export const SIGN = {
   disclosureBody: "the refund, if approved, is owed by the taxing units served by the Travis County Tax Office — Austin ISD, City of Austin, Travis County, Austin Community College District, and Central Health — following approval by the Travis Central Appraisal District.",
   agreeTerms1: "I have read the ", agreeTermsLink: "Service Agreement", agreeTerms2: " and agree to it.",
   agreeEsign: "I agree to sign electronically. I understand my typed name below is my legal signature on the Service Agreement and on my Form 50-114 application, and that I am the property owner named above.",
-  agreeFree: "I understand I can file for free myself and am choosing to use Texas Refund Desk.",
+  agreeFree: `I understand I can file for free myself and am choosing ${BRAND}.`,
   sigLabel: "Type your full legal name to sign",
+  sigPlaceholder: "Type your full legal name",
   submit: "Sign and submit",
+  sending: "Sending…",
   record: "Signature record: name, date/time, IP address, and device are recorded and stamped on your application.",
   sigMismatch: "Your typed signature must match your full name exactly.", // API error wording
 };
@@ -131,11 +135,13 @@ export const RESULT = {
   replyLabel: "Your reply",
   replySend: "Send reply",
   replySent: "Thanks — we'll read this and email you. Nothing has been filed, and you owe nothing.", // NEW (mirrors followups needs_review)
+  replyFailed: "Couldn't send. Please try again.", // NEW
   confirmTitle: "Please confirm what's on your license", // NEW
   confirmHelp: "We couldn't read part of your photo clearly. Correct anything that's wrong, then confirm. The photo stays on file — Texas law requires a copy of the license with the application.", // NEW (SPEC-06 §4)
   confirm: "Confirm and re-check",
   errorTitle: "We hit a snag", // rule table processing_error (customer sentence supplies the body)
-  continue: "Continue →",
+  continue: "Continue",
+  status: "Claim status",
 };
 
 // SPEC-02 §1 (fix screen) · copy/followups.md (needs_dl_update)
@@ -151,6 +157,8 @@ export const FIX = {
   hold: "Your claim is on hold until then — nothing has been filed.",
   free: "(You can also file yourself for free at traviscad.org once your address is updated.)",
   submit: "Upload and re-check",
+  uploading: "Uploading…",
+  failed: "Upload failed. Please try again.",
 };
 
 // SPEC-03 §1 — the card step is rendered only when NEXT_PUBLIC_STRIPE_ENABLED=true (implemented in Task 3)
@@ -160,9 +168,10 @@ export const CARD = {
   skip: "Skip for now",
 };
 
-// copy/claim_page.md — Confirmation screen
+// copy/claim_page.md — Confirmation screen · SPEC-07 §02 screen 6 for the title shape
 export const DONE = {
-  title: "Done — we have everything.",
+  eyebrow: "Done",
+  title: (first: string | null) => first ? `We have everything, ${first}.` : "We have everything.",
   intro: "Here's what happens next:",
   steps: [
     "Within minutes we check your ID against the appraisal record and prepare your application. You'll get an email with a copy to review.",
@@ -170,25 +179,87 @@ export const DONE = {
     "If approved, the Travis County Tax Office mails your refund check (or applies it to your account) within about 60 days. We invoice 25% then — never before.",
   ],
   questions: `Questions? Reply to any of our emails or write ${SUPPORT_EMAIL}.`,
-  status: "See my claim status", // NEW
+  status: "See my claim status", // SPEC-07
 };
 
-// /claim/[code]/status — plain-English state (SPEC-04b §2). NEW sentences, derived from docs/RUNBOOK.md §9.4 meanings.
+// /claim/[code]/status — plain-English state. Headlines from SPEC-07 §10 ("Status → copy mapping"); bodies NEW, derived
+// from docs/RUNBOOK.md §9.4 meanings (unchanged since SPEC-04b) — the API status enum is the key.
 export const STATUS: Record<string, { title: string; body: string }> = {
   none: { title: "We haven't received your application yet.", body: "Open your claim page to see your estimate and get started." },
-  submitted: { title: "Received — checking now.", body: "We're checking your ID against the appraisal record and preparing your application." },
-  processing: { title: "Received — checking now.", body: "We're checking your ID against the appraisal record and preparing your application." },
-  ready_to_submit: { title: "Your application is ready for your review.", body: 'Check the PDF, then reply "go" to our email and we\'ll submit it to the Travis Central Appraisal District.' },
-  needs_dl_update: { title: "Waiting on your license address.", body: "The address on your license doesn't match the property yet. Update it at the Texas DPS, then upload the new license from your claim page." },
-  needs_review: { title: "We're reviewing one detail.", body: "Something on your ID didn't line up with the appraisal record. We'll email you; nothing has been filed and you owe nothing." },
-  filed: { title: "Submitted to TCAD.", body: "The Travis Central Appraisal District may take up to 90 days. If they ask for anything else, we'll handle it and let you know." },
+  submitted: { title: "We have your application.", body: "We're checking your ID against the appraisal record and preparing your application." },
+  processing: { title: "We have your application.", body: "We're checking your ID against the appraisal record and preparing your application." },
+  ready_to_submit: { title: "Your application is ready to review.", body: 'Check the PDF, then reply "go" to our email and we\'ll submit it to the Travis Central Appraisal District.' },
+  needs_dl_update: { title: "We need one thing from you.", body: "The address on your license doesn't match the property yet. Update it at the Texas DPS, then upload the new license from your claim page." },
+  needs_review: { title: "We need one thing from you.", body: "Something on your ID didn't line up with the appraisal record. We'll email you; nothing has been filed and you owe nothing." },
+  filed: { title: "Submitted to TCAD.", body: "The Travis Central Appraisal District may take up to 90 days. If they ask for anything else, we'll handle it and let you know. Nothing is owed until a refund is actually issued." },
   approved: { title: "Approved by TCAD.", body: "The Travis County Tax Office issues refunds within about 60 days of approval. We'll email you when we see it." },
   refunded: { title: "Your refund has been issued.", body: "Check your email for the itemized invoice." },
-  paid: { title: "All done.", body: "Thank you. Your bill going forward should be lower every year — that part is all yours." },
-  denied: { title: "TCAD did not approve the application.", body: "You owe nothing. We've emailed your options." },
-  withdrawn: { title: "This claim was withdrawn.", body: `Nothing was filed and nothing is owed. Questions: ${SUPPORT_EMAIL}.` },
+  paid: { title: "Your refund has been issued.", body: "Thank you. Your bill going forward should be lower every year — that part is all yours." },
+  denied: { title: "TCAD denied the application.", body: "You owe nothing. We've emailed your options." },
+  withdrawn: { title: "Cancelled.", body: `Nothing was filed and nothing is owed. Questions: ${SUPPORT_EMAIL}.` },
 };
-export const STATUS_PAGE = { title: "Claim status", back: "Back to my claim", packet: "Download my Form 50-114 (PDF)", notFound: "We couldn't find a claim for that code." };
+
+// SPEC-07 §10 — the portal page
+export const PORTAL = {
+  tabs: [["My claims", "#claim"], ["Documents", "#documents"], ["Messages", "#messages"], ["Billing", "#billing"]] as Array<[string, string]>,
+  service: "Homestead refund",
+  stages: ["Received", "ID checked", "You approved", "Submitted to TCAD", "TCAD decision", "Refund issued"],
+  expected: ["", "", "", "", "30–90 days", "~60 days after"],
+  documents: "Documents",
+  packet: "Form 50-114 (as submitted)",
+  packetReady: "Form 50-114 (ready to review)",
+  packetPending: "Form 50-114",
+  packetPendingNote: "Prepared after your ID check",
+  pdf: "PDF",
+  agreement: "Service agreement",
+  view: "View",
+  license: "Driver's license",
+  licenseNote: "Purged 30 days after filing",
+  messages: "Messages",
+  noMessages: "Nothing yet. We email you at every step.",
+  send: "Send a message",
+  estimate: "Estimate",
+  yearRow: (y: number) => `Tax year ${y}`,
+  fee: "Fee if refunded in full (25%)",
+  billing: "Billing",
+  noCard: "No card on file. Add one and we'll charge the 25% only after the refund is issued, with 3 business days' notice.",
+  card: "A card is on file. We charge the 25% only after the refund is issued, with 3 business days' notice.",
+  addCard: "Add a card",
+  addCardSoon: "Card on file arrives with SPEC-03; until then we invoice by email.", // NEW
+  other: "Other properties?",
+  otherBody: "Add another Travis County property and we'll check it for missing exemptions.",
+  addProperty: "Add a property",
+  back: "Back to my claim",
+  notFound: "We couldn't find a claim for that code.",
+  empty: "No claims yet",
+  emptyBody: "Open the link from your letter, or check an address.",
+  checkAddress: "Check an address",
+  signInTitle: "Your claim code is your sign-in", // NEW
+  signInBody: "There is no password. The code printed on your letter opens your claim, your documents and your status.", // NEW
+};
+
+// SPEC-07 §11 — claim-code entry
+export const CODE_PAGE = {
+  title: "Got a letter from us?",
+  body: "Enter the claim code printed above your address. It opens the estimate we prepared for your property.",
+  label: "Claim code",
+  hint: "Letters and numbers only. We'll add the dashes.",
+  open: "Open my estimate",
+  noLetter: "No letter?",
+  byAddress: "Check by address instead",
+  notFound: "We can't find that code. Check the letter for O vs 0, or try your address.",
+  tryAgain: "Try again",
+  foundTitle: "Is this your property?",
+  foundAccount: (masked: string, owner: string) => `TCAD account ${masked} · Owner of record: ${owner}`,
+  foundEstimate: (amount: string) => `Estimated refund: about ${amount}`,
+  yes: "Yes, show my estimate",
+  notMine: "Not my property",
+  fine: "Nothing is filed until you sign. Filing yourself is free.",
+  whyTitle: "Why we sent you a letter",
+  whyBody: "Public appraisal records show no homestead exemption on your property. Texas allows a two-year late filing. You can do it yourself for free, or we can.",
+  alreadyClaimed: "This code already has a claim. Open it to see the status.", // NEW
+  openStatus: "See my claim status",
+};
 
 export const ERRORS = {
   notFound: "We couldn't find that claim code.",
@@ -196,4 +267,5 @@ export const ERRORS = {
   offline: "We couldn't connect. Please check your connection and try again.", // docs/claim.html (adapted)
   generic: "Something went wrong saving your claim. Please try again.", // API error wording
   rateLimited: "This page has been opened many times from your connection in the last hour. Please wait a little while and try again.", // NEW
+  retry: "Try again",
 };

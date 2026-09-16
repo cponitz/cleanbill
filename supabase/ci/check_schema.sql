@@ -6,7 +6,8 @@ begin
   select array_agg(x) into missing from unnest(array[
     'claims.customer_id', 'claims.findings', 'claims.service_type', 'customers.email', 'customers.card_on_file',
     'documents.claim_id', 'filings.claim_id', 'messages.claim_id', 'property_entities.entity_cd',
-    'property_values.tax_year', 'record_checks.source', 'refunds.dispute_status', 'refunds.record_check_id'
+    'property_values.tax_year', 'record_checks.source', 'refunds.dispute_status', 'refunds.record_check_id',
+    'inquiries.kind', 'inquiries.email'
   ]) x
   where not exists (select 1 from information_schema.columns c
                     where c.table_schema = 'public' and c.table_name = split_part(x, '.', 1) and c.column_name = split_part(x, '.', 2));
