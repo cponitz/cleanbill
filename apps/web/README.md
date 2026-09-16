@@ -1,17 +1,32 @@
 # apps/web — the customer front-end (Next.js on Vercel)
 
-SPEC-04 Part B (ADR 0012, ADR 0017). Landing, claim flow with inline validation (SPEC-06b) and the license fix screen
-(SPEC-02), status and agreement pages. It talks only to the public claim API (`docs/ARCHITECTURE.md` §5.8); the claim code
-is the credential and there is no server-side secret anywhere in this app.
+SPEC-04 Part B (ADR 0012, ADR 0017) with the SPEC-07 redesign (ADR 0018): the marketing site, the claim-code entry, the
+claim flow with inline validation (SPEC-06b) and the license fix screen (SPEC-02), the portal-style status page and the
+agreement. It talks only to the public claim API (`docs/ARCHITECTURE.md` §5.8); the claim code is the credential and there
+is no server-side secret anywhere in this app.
+
+## Design system (SPEC-07)
+
+`src/app/globals.css` holds every token of the handoff (`docs/specs/SPEC-07-website-redesign.md`) as a custom property and
+the component sheet as named classes in `@layer components` (`.btn`, `.input`, `.choice`, `.card`, `.pill`, `.progress`,
+`.nav`, `.footer`, `.acc`, `.flow-*`). Tailwind utilities are used for one-off layout and win over the component classes.
+DM Sans is self-hosted by `next/font/google` (variable weight, optical-size axis). The brand is one token: `BRAND` and
+`SUPPORT_EMAIL` in `src/lib/copy.ts`.
 
 ## Routes
 
-| Route | What |
-|---|---|
-| `/` | Landing: enter the claim code from the letter; what this is; filing is free at TCAD; the math. |
-| `/claim/[code]` | Estimate → eligibility (5 questions) → typed pre-check + license photo → contact → review & sign → inline result (polls every 2 s, max 30 s) → card step (only with `NEXT_PUBLIC_STRIPE_ENABLED=true`) → done. A code whose claim is `needs_dl_update` opens the fix screen (both addresses, DPS link, one upload). |
-| `/claim/[code]/status` | Plain-English state, packet download when ready. |
-| `/agreement/[code]` | Service agreement v0.1 with the property and years filled in. |
+| Route | Group | What |
+|---|---|---|
+| `/` | site | Home: editorial hero with the "Start with either" card (address → inquiry, claim code → `/claim/[code]`), photo slot, four-step timeline, fee band, "You can do this yourself" callout, "Also from" cards. |
+| `/pricing`, `/how-it-works`, `/faq`, `/exemptions`, `/appeals`, `/businesses`, `/about` | site | The SPEC-07 marketing pages, copy verbatim from `src/lib/site.ts`. The address forms (exemptions, appeals) and the portfolio-review form post `POST /claim/inquiry`. |
+| `/claim` | site | Claim-code entry from the letter: default → not found → "Is this your property?" → `/claim/[code]`. "Sign in" and `/app` redirect here — the code is the credential. |
+| `/claim/[code]` | flow | Mobile-first five steps: estimate → eligibility (5 questions) → typed pre-check + license photo → contact → review & sign → inline result (polls every 2 s, max 30 s) → card step (only with `NEXT_PUBLIC_STRIPE_ENABLED=true`) → done. A code whose claim is `needs_dl_update` opens the fix screen. |
+| `/claim/[code]/status` | portal | The portal view of the claim: status card with the six-stage progress row and dates, documents, messages (reply box), estimate, billing, other properties. |
+| `/agreement/[code]`, `/agreement` | site | Service agreement v0.1 with the property and years filled in (or as placeholders). |
+
+Wording: `src/lib/copy.ts` (claim flow, status, portal, agreement — from `copy/*.md`, `NEW` where not yet reviewed) and
+`src/lib/site.ts` (marketing pages — from the SPEC-07 handoff). The claim status enum is mapped onto the portal's pills
+and stages in `src/lib/status.ts`.
 
 ## Run
 
@@ -28,7 +43,8 @@ npm run lint && npx tsc --noEmit
 
 Smoke test (Playwright, from the repo root; needs `.env` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to reset the
 synthetic lead `TRD-TEST-0001`): `python eval/web_smoke.py --base http://localhost:3000` (or a Vercel preview URL; add
-`--stripe-on` when that deployment has the card step enabled).
+`--stripe-on` when that deployment has the card step enabled, `--skip-inquiry` while the claim API it talks to predates
+`POST /claim/inquiry`).
 
 Lighthouse (mobile, production build): `npx lighthouse http://localhost:3000/claim/TRD-TEST-0001 --preset=perf --form-factor=mobile --only-categories=performance,accessibility --chrome-flags="--headless" --output=json --output-path=eval/out/web/lighthouse.json`. Scores are recorded in the PR that changes the page.
 

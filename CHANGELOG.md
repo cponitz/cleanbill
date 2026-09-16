@@ -6,6 +6,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 ## [Unreleased]
 
 ### Added
+- **SPEC-07: the website redesign ("Clean Bill", Ownwell-inspired)** (branch `website-redesign`; ADR 0018; the design
+  handoff is copied to `docs/specs/SPEC-07-website-redesign.md`). `apps/web` rebuilt on the handoff's design system: DM Sans
+  (self-hosted by `next/font`), the teal/navy token set and the component sheet as CSS in `globals.css`, one `BRAND` /
+  `SUPPORT_EMAIL` token (`Clean Bill`, `hello@cleanbillco.com`; repo, Supabase and Vercel names unchanged per B-12; claim
+  codes stay `TRD-…`). New pages: `/` (editorial hero, "Start with either" address-or-code card, timeline, fee band, DIY
+  callout, "Also from"), `/pricing`, `/how-it-works`, `/faq` (category rail / chips, accordion), `/exemptions`, `/appeals`,
+  `/businesses` (portfolio-review form), `/about`, `/claim` (claim-code entry: default → not found → confirm the property;
+  "Sign in" and `/app` land here), `/agreement`. `/claim/[code]` restyled as the mobile-first five-step flow (progress
+  bar, step eyebrow, choice buttons, upload zone, pinned CTA, navy done screen with the customer's first name; the
+  eligibility questions, the §41.0051 sign-step disclosure, the done steps and the agreement keep the compliance-reviewed
+  wording). `/claim/[code]/status` is now the portal view: status card with the six-stage progress row and dates,
+  documents (Form 50-114, agreement, license purge note), messages with a reply box, estimate, billing, other
+  properties. Address / business forms are **lead capture**, not lookup (ADR 0018): they post `POST /claim/inquiry` and we
+  answer by e-mail. **Claim API:** `POST /claim/inquiry` (validated by `parseInquiry`, rate-limited 30/IP/h); the closed-lead
+  `GET /claim?c` response gains the lead's estimate fields and `claim.{first_name, card_on_file, timeline, messages}`;
+  `packet_url` is returned from `ready_to_submit` onward. **Data model:** migration `20260916150000_inquiries.sql` — new
+  `inquiries` table (kind, address, email, company, properties, bills, source_path, ip, ua, handled_at, notes); `events.kind`
+  gains `inquiry`. Tests: Deno +2 (`parseInquiry`, `stageIndex` / `timelineFrom`; 33 total), Python unchanged (49);
+  `eval/web_smoke.py` gains scenario D (every page renders, the FAQ accordion, `/claim` states, the home inquiry form;
+  `--skip-inquiry` for a branch run before the deploy). `apps/web/README.md`, `docs/ARCHITECTURE.md` §3.1 / §4.1 / §5.8.
+  Not built (needs a decision or a later spec): instant address→estimate lookup, customer accounts / `/app` login, a
+  reader for `inquiries` in `ops`, real photography for the `[ photo ]` slots, a `CB-` code prefix.
 - **SPEC-04b + SPEC-06b + SPEC-02 UI: the customer web app `apps/web`** (branch `spec-04b-web`; ADR 0017). Next.js 16 App
   Router, TypeScript, Tailwind, deployed by Vercel (Root Directory `apps/web`, preview per branch, production from `main`).
   Routes: `/` landing (code entry, what this is, filing is free at TCAD, the math); `/claim/[code]` — estimate → five

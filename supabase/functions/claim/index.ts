@@ -10,6 +10,8 @@
 //   GET  /claim/precheck?c&address&zip     -> {match, id_address, situs} — typed address pre-check (SPEC-06 §3)
 //   POST /claim/events {c, kind, detail}   -> funnel event from the page (SPEC-06 §5)
 //   POST /claim/reply {c, claim, body}     -> the customer's answer to a needs_review question: an inbound `messages` row (SPEC-06 §2)
+//   POST /claim/inquiry {kind, ...}        -> a public-site form (address check, exemption/appeal check, business portfolio
+//                                             review): an `inquiries` row we answer by e-mail (SPEC-07). No claim code.
 //   POST /claim (multipart)                -> new claim: eligibility answers, ID upload(s), contact, consents, typed signature,
 //                                             optional typed_* pre-check fields (stored as a `typed_id` document);
 //                                             for a code already claimed: re-upload (needs_dl_update + dl_front, SPEC-02 §2)
@@ -20,7 +22,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { clientIp, serviceClient } from "./db.ts";
 import { type Finding, makeFinding, reasonText, renderForCustomer } from "../_shared/findings.ts";
 import type { Extracted, PropertyRec } from "../_shared/validate.ts";
-import { extFor, followUpMode, isPageEvent, PAGE_EVENTS, parseTypedFields, precheck, TYPED_FALLBACK_CODES, typedExtracted } from "./logic.ts";
+import { extFor, followUpMode, isPageEvent, PAGE_EVENTS, parseInquiry, parseTypedFields, precheck, timelineFrom, TYPED_FALLBACK_CODES, typedExtracted } from "./logic.ts";
 
 type SB = ReturnType<typeof serviceClient>;
 
@@ -81,11 +83,13 @@ function kickProcessClaim(body: Record<string, unknown>) {
 
 /** The claim as the page sees it: status, findings rendered for the customer, a 10-minute packet link when ready, and —
  *  for an unreadable / low-confidence photo — what the model read so the page can pre-fill the typed confirmation (SPEC-06 §4). */
+const PACKET_STATUSES = new Set(["ready_to_submit", "filed", "approved", "refunded", "paid"]);   // the packet exists and is the customer's to see (SPEC-07 portal: "Form 50-114 (as submitted)")
+
 async function claimSummary(sb: SB, c: { id: string; status: string; findings: unknown }) {
   const raw = Array.isArray(c.findings) ? c.findings as Finding[] : [];
   const findings = raw.map(renderForCustomer);
   let packet_url: string | null = null;
-  if (c.status === "ready_to_submit") {
+  if (PACKET_STATUSES.has(c.status)) {
     const { data: fil } = await sb.from("filings").select("packet_path").eq("claim_id", c.id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
     if (fil?.packet_path) {
       const { data: s } = await sb.storage.from("packets").createSignedUrl(fil.packet_path, 600);
@@ -103,8 +107,33 @@ async function claimSummary(sb: SB, c: { id: string; status: string; findings: u
 }
 
 async function latestClaimForLead(sb: SB, leadId: string) {
-  const { data } = await sb.from("claims").select("id, status, findings, full_name").eq("lead_id", leadId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data } = await sb.from("claims").select("id, status, findings, full_name, customer_id, created_at").eq("lead_id", leadId).order("created_at", { ascending: false }).limit(1).maybeSingle();
   return data;
+}
+
+/** What the portal page (SPEC-07 §10, `/claim/[code]/status`) shows beyond the summary: the customer's first name, the
+ *  card-on-file flag, the dated timeline and the real (sent or received) messages — never agent drafts, never the DL. */
+async function portalSummary(sb: SB, c: { id: string; status: string; findings: unknown; full_name?: string | null; customer_id?: string | null; created_at?: string | null }) {
+  const summary = await claimSummary(sb, c);
+  const [{ data: fil }, { data: processed }, { data: msgs }, { data: acct }] = await Promise.all([
+    sb.from("filings").select("id, submitted_at, approved_at, denied_at").eq("claim_id", c.id).order("generated_at", { ascending: false }).limit(1).maybeSingle(),
+    sb.from("audit_log").select("at").eq("entity", "claims").eq("entity_id", c.id).eq("actor", "process-claim").eq("action", "processed").order("at", { ascending: true }).limit(1).maybeSingle(),
+    sb.from("messages").select("subject, direction, sent_at, created_at").eq("claim_id", c.id).eq("agent_draft", false).order("created_at", { ascending: false }).limit(10),
+    c.customer_id ? sb.from("customers").select("card_on_file").eq("id", c.customer_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  let refund_observed_at: string | null = null;
+  if (fil?.id) {
+    const { data: r } = await sb.from("refunds").select("observed_at").eq("filing_id", fil.id).not("observed_at", "is", null).order("observed_at", { ascending: true }).limit(1).maybeSingle();
+    refund_observed_at = r?.observed_at ?? null;
+  }
+  const messages = (msgs ?? []).filter((m) => m.direction === "inbound" || m.sent_at).map((m) => ({ subject: m.subject ?? "", direction: m.direction, at: m.sent_at ?? m.created_at }));
+  return {
+    ...summary,
+    first_name: (c.full_name ?? "").split(" ")[0] || null,
+    card_on_file: !!(acct as { card_on_file?: boolean } | null)?.card_on_file,
+    timeline: timelineFrom({ created_at: c.created_at ?? null, processed_at: processed?.at ?? null, filing: fil ? { submitted_at: fil.submitted_at, approved_at: fil.approved_at, denied_at: fil.denied_at } : null, refund_observed_at }),
+    messages,
+  };
 }
 
 function validFile(f: unknown): f is File {
@@ -169,8 +198,9 @@ Deno.serve(async (req: Request) => {
       // lead also returns its claim so the page can show the fix screen / status (SPEC-02 §1, SPEC-04b status page).
       const c = lead.status === "claimed" ? await latestClaimForLead(sb, lead.id) : null;
       return json({
-        ok: false, error: "closed", status: lead.status, property: { situs_full: prop.situs_full }, lead: { refund_years: years },
-        claim: c ? await claimSummary(sb, c) : null,
+        ok: false, error: "closed", status: lead.status, property: { situs_full: prop.situs_full },
+        lead: { refund_years: years, est_refund_total: Number(lead.est_refund_total), est_refund_by_year: lead.est_refund_by_year, est_forward_annual: Number(lead.est_forward_annual) },
+        claim: c ? await portalSummary(sb, c) : null,
       });
     }
     const earliest = years[0] ?? new Date().getFullYear() - 2;
@@ -215,6 +245,21 @@ Deno.serve(async (req: Request) => {
     if (error || !m) return json({ ok: false, error: "server_error" }, 500);
     await sb.from("audit_log").insert({ actor: "claim-api", action: "customer_reply", entity: "messages", entity_id: m.id, detail: { code, claim_id: c.id, status: c.status, chars: text.length } });
     return json({ ok: true, message_id: m.id });
+  }
+
+  // ---- POST /claim/inquiry {kind, address?, email, company?, properties?, bills?, source_path?} (SPEC-07) ------------
+  // The public site's forms. No claim code, no lookup, nothing returned about any property: the row waits for a human
+  // to answer by e-mail. 30 per IP per hour, counted like the other page events.
+  if (req.method === "POST" && path.endsWith("/inquiry")) {
+    const body = await req.json().catch(() => null);
+    const parsed = parseInquiry(body);
+    if (!parsed.ok) return json({ ok: false, error: parsed.error }, 400);
+    if (await rateLimited(sb, ip, ["inquiry"], 30)) return json({ ok: false, error: "rate_limited" }, 429);
+    const { data: row, error } = await sb.from("inquiries").insert({ ...parsed.row, ip, ua }).select("id").single();
+    if (error || !row) return json({ ok: false, error: "server_error" }, 500);
+    inBackground(sb.from("events").insert({ claim_code: null, kind: "inquiry", detail: { ip, ua, source: "page", kind: parsed.row.kind, inquiry_id: row.id, source_path: parsed.row.source_path } }));
+    inBackground(sb.from("audit_log").insert({ actor: "claim-api", action: "inquiry_received", entity: "inquiries", entity_id: row.id, detail: { kind: parsed.row.kind, has_address: !!parsed.row.address, company: parsed.row.company } }));
+    return json({ ok: true, inquiry_id: row.id });
   }
 
   // ---- POST /claim (multipart) -------------------------------------------------------------------------------------

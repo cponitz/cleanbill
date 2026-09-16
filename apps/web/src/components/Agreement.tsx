@@ -1,15 +1,17 @@
 "use client";
-// /agreement/[code] — copy/service_agreement.md v0.1 verbatim, with the property and years filled from the claim API.
+// /agreement/[code] — copy/service_agreement.md v0.1 verbatim (the brand name and support address are the shared
+// tokens), with the property and years filled from the claim API when a code is given.
 // SPEC-03 amendment 2026-09-14: the fee-timing wording (§5) is replaced from copy/service_agreement.md after the copy review.
 import { useEffect, useState } from "react";
 import { type ClaimLookup, getClaim } from "@/lib/api";
-import { SUPPORT_EMAIL } from "@/lib/copy";
+import { BRAND, SUPPORT_EMAIL } from "@/lib/copy";
 import { yearsText } from "@/lib/format";
 
 export function Agreement({ code }: { code: string }) {
   const [situs, setSitus] = useState("the property on your claim page");
   const [years, setYears] = useState("shown on your claim page");
   useEffect(() => {
+    if (!code) return;
     getClaim(code).then((j: ClaimLookup) => {
       const prop = "property" in j ? j.property : null;
       const lead = "lead" in j ? j.lead : null;
@@ -18,10 +20,10 @@ export function Agreement({ code }: { code: string }) {
     }).catch(() => {});
   }, [code]);
   return (
-    <article className="space-y-3">
-      <h1>Texas Refund Desk — Service Agreement (v0.1)</h1>
-      <p className="note">Plain-English agreement. Glossary: TCAD = Travis Central Appraisal District; Tax Office = Travis County Tax Assessor-Collector; Form 50-114 = the Texas residence homestead exemption application.</p>
-      <p><b>Parties.</b> This agreement is between you, the owner of the property at <b data-testid="agreement-situs">{situs}</b> (&quot;you&quot;), and Texas Refund Desk, a private company based in Austin, Texas (&quot;we&quot;). We are not affiliated with TCAD, the Tax Office, or any government agency.</p>
+    <article className="card flex flex-col gap-4 body-lg" style={{ padding: 40 }}>
+      <h1 className="h2" style={{ fontSize: 30 }}>{BRAND} — Service Agreement (v0.1)</h1>
+      <p className="fine">Plain-English agreement. Glossary: TCAD = Travis Central Appraisal District; Tax Office = Travis County Tax Assessor-Collector; Form 50-114 = the Texas residence homestead exemption application.</p>
+      <p><b>Parties.</b> This agreement is between you, the owner of the property at <b data-testid="agreement-situs">{situs}</b> (&quot;you&quot;), and {BRAND}, a private company based in Austin, Texas (&quot;we&quot;). We are not affiliated with TCAD, the Tax Office, or any government agency.</p>
       <p><b>1. What we do.</b> We prepare your Form 50-114 residence homestead exemption application, including the late-application request for tax years <b>{years}</b> under Texas Tax Code §11.431, using the information and identification you provide. We assemble the application for your signature, submit it to TCAD as you direct (or provide it to you to submit), monitor its status, and respond to routine document requests from TCAD on your behalf. We do not represent you in a protest or hearing; if TCAD denies your application, we will tell you your options, and any protest representation would be a separate written engagement with a registered property tax consultant or attorney.</p>
       <p><b>2. What you do.</b> You confirm that the information you give us is accurate; that the property is your principal residence; that you owned and occupied it on January 1 of each tax year claimed; and that you and your spouse do not claim a homestead exemption on any other property. You provide a Texas driver&apos;s license or DPS ID whose address matches the property, and you sign the application yourself.</p>
       <p><b>3. You can do this for free.</b> Filing Form 50-114 with TCAD is free, and you do not need anyone&apos;s help to do it. You are choosing to pay for our preparation and follow-through.</p>

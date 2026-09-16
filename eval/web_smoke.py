@@ -7,6 +7,8 @@ Drives headless Chromium (phone viewport) through:
   B. fix screen   property situs moved to Brodie Ln so the same ID mismatches -> needs_dl_update -> the fix screen shows both
                   addresses -> situs restored -> re-upload through the fix screen -> inline result ready_to_submit
   C. agreement    /agreement/<code> fills the situs from the API
+  D. site         every SPEC-07 marketing page renders without a page error; /claim opens a code into the confirm state;
+                  the home hero's address form posts an inquiry (skipped with --skip-inquiry until the API is deployed)
 Only ever touches the synthetic lead TRD-TEST-0001 / property 999000001 (reset here with the service-role key, mirroring
 eval/reset_test_lead.sql). Screenshots land in eval/out/web/.
 
@@ -127,7 +129,43 @@ def fill_and_sign(page: Page, base: str, results: dict, tag: str, email: str) ->
     page.wait_for_selector("[data-testid=result-ready], [data-testid=result-review], [data-testid=result-error], [data-testid=fix-screen]", timeout=45000)
 
 
-def run(base: str, stripe_on: bool) -> int:
+def site_pages(page: Page, base: str, results: dict, skip_inquiry: bool) -> bool:
+    """SPEC-07: the marketing pages, the claim-code entry and the address inquiry."""
+    ok = True
+    for path in ("/", "/pricing", "/how-it-works", "/faq", "/exemptions", "/appeals", "/businesses", "/about", "/claim", "/agreement"):
+        r = page.goto(f"{base}{path}")
+        ok &= bool(r) and r.status == 200
+        page.wait_for_selector("footer")
+    shot(page, "D_01_home_mobile")
+    # the FAQ accordion: one open at a time
+    page.goto(f"{base}/faq")
+    page.click("#faq-2 .acc-q")
+    results["D_faq_open"] = page.evaluate("document.querySelectorAll('.acc[data-open=\"true\"]').length")
+    ok &= results["D_faq_open"] == 1
+    # /claim: a real code opens the confirm card, a bad one the error
+    page.goto(f"{base}/claim")
+    page.fill("#code", "trd-nope-0000")
+    page.click("button[type=submit]")
+    page.wait_for_selector("[data-testid=code-entry] [role=alert]", timeout=15000)
+    page.fill("#code", TEST_CODE.lower())
+    page.click("button[type=submit]")
+    page.wait_for_selector("[data-testid=code-found]", timeout=15000)
+    results["D_code_found"] = page.inner_text("[data-testid=code-found]")[:80]
+    shot(page, "D_02_code_found")
+    if not skip_inquiry:
+        page.goto(f"{base}/")
+        page.fill("#address", "3675 Duval St, Austin 78721")
+        page.click("[data-testid=start-card] button[type=submit]")
+        page.wait_for_selector("[data-testid=inquiry-email]", timeout=5000)
+        page.fill("#start_email", "web-smoke@example.com")
+        page.click("[data-testid=start-card] button[type=submit]")
+        page.wait_for_selector("[data-testid=inquiry-done]", timeout=15000)
+        results["D_inquiry"] = True
+        shot(page, "D_03_inquiry_done")
+    return ok
+
+
+def run(base: str, stripe_on: bool, skip_inquiry: bool = False) -> int:
     load_env()
     OUT.mkdir(parents=True, exist_ok=True)
     data = TestData()
@@ -154,16 +192,20 @@ def run(base: str, stripe_on: bool) -> int:
             return 1
 
         try:
-            return _scenarios(page, base, data, results, stripe_on, console)
+            return _scenarios(page, base, data, results, stripe_on, console, skip_inquiry)
         except Exception as exc:  # noqa: BLE001 — report, screenshot, reset, exit 1
             return on_failure(exc)
         finally:
             browser.close()
 
 
-def _scenarios(page: Page, base: str, data: TestData, results: dict, stripe_on: bool, console: list[str]) -> int:
+def _scenarios(page: Page, base: str, data: TestData, results: dict, stripe_on: bool, console: list[str], skip_inquiry: bool = False) -> int:
     ok = True
     if True:
+        # ---- D. the site (SPEC-07) ------------------------------------------------------------------------------------
+        data.reset(DUVAL)
+        ok &= site_pages(page, base, results, skip_inquiry)
+
         # ---- A. happy path ------------------------------------------------------------------------------------------
         data.reset(DUVAL)
         fill_and_sign(page, base, results, "A", "web-smoke@example.com")
@@ -230,5 +272,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:3000")
     ap.add_argument("--stripe-on", action="store_true", help="the deployment has NEXT_PUBLIC_STRIPE_ENABLED=true (expect the card step)")
+    ap.add_argument("--skip-inquiry", action="store_true", help="the claim API on this deployment has no POST /claim/inquiry yet (branch run before the deploy)")
     a = ap.parse_args()
-    sys.exit(run(a.base.rstrip("/"), a.stripe_on))
+    sys.exit(run(a.base.rstrip("/"), a.stripe_on, a.skip_inquiry))
