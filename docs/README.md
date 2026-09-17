@@ -10,6 +10,6 @@
 | `plans/` | Development plans as handed to Claude Code (`phase1-v3.2.md`) | Cowork project; copied here when work starts |
 | `adr/` | Architecture decision records (T-nn) | This repo |
 | `figures/*.svg` | The handbook's diagrams (architecture, ER, state machines, claim sequence, validation, agent loop, post-filing, timeline) | Regenerated from the handbook; editable here |
-| `*.html`, `config.js` | The static prototype pages served by GitHub Pages until the Vercel front-end (SPEC-04b) cuts over | This repo |
+| `*.html`, `config.js` | The static prototype pages served by GitHub Pages until the Vercel front-end (SPEC-04b) cuts over; `ops.html` is a pointer to `/ops` since SPEC-09 D3 | This repo |
 
 The full handbook (business + technical, with the review dispositions) and Charlie's setup checklist live outside the repo in `../artifacts/` and in the Cowork project (`claude/handbook-v2.md`).

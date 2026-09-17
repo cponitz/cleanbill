@@ -35,6 +35,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
   font unchanged). No wording change; no data-model change; no new runtime dependency (fontTools is a dev-only tool
   for the wordmark SVG).
 
+- **SPEC-09 D3: the old ops page retired.** `docs/ops.html` is a one-line pointer to `https://cleanbillco.com/ops`
+  (until SPEC-08 R2 attaches the domain: the project's Vercel production URL + `/ops`). RUNBOOK §9.1 (ops console row),
+  §9.2 rewritten as the eight-step daily loop entirely from `/ops` — no SQL step, no Mac step (mark filed, reprocess,
+  withdraw, inquiries, walkthrough claims, health all in the console) —, §9.5 (reprocess from the drawer, the login /
+  429 case, a red Health tile). ARCHITECTURE §3.2 public URLs, `docs/README.md`. SPEC-09 D1–D3 complete; D4 is Charlie's
+  phone review, D5 (Supabase Auth) is Phase 2.
 - **SPEC-09 D2: the operator console `/ops`** (`apps/web`; ADR 0020). One page, five anchored sections on the design
   system: **Funnel** (12 KPI tiles incl. filed / approved / refunded / open inquiries, the views → claimed → ready →
   filed strip, events by kind for 7 days and all time, the last 7 days by day), **Claims** (status filter, search,
