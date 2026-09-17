@@ -14,12 +14,12 @@ export default function PricingPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="card" style={{ padding: 32, gap: 8 }}>
-          <div className="eyebrow eyebrow-sm muted" style={{ color: "var(--muted)" }}>{PRICING.exampleEyebrow}</div>
+          <div className="eyebrow eyebrow-sm muted" style={{ color: "var(--color-muted)" }}>{PRICING.exampleEyebrow}</div>
           <div className="ledger">
             {PRICING.example.map((r) => (
-              <div key={r.label} className={`ledger-row ${r.keep ? "!text-[20px]" : ""}`} style={r.teal ? { color: "var(--teal)" } : r.muted ? { color: "var(--muted)" } : undefined}>
+              <div key={r.label} className={`ledger-row ${r.keep ? "!text-[20px]" : ""}`} style={r.teal ? { color: "var(--color-primary)" } : r.muted ? { color: "var(--color-muted)" } : undefined}>
                 {r.bold || r.keep ? <b>{r.label}</b> : <span>{r.label}</span>}
-                {r.bold || r.keep ? <b>{r.value}</b> : <span className="font-semibold" style={r.teal ? { color: "var(--teal)" } : undefined}>{r.value}</span>}
+                {r.bold || r.keep ? <b>{r.value}</b> : <span className="font-semibold" style={r.teal ? { color: "var(--color-primary)" } : undefined}>{r.value}</span>}
               </div>
             ))}
           </div>
@@ -29,7 +29,7 @@ export default function PricingPage() {
           {PRICING.cards.map(([t, b]) => (
             <div key={t} className="card card-sm" style={{ padding: 22, gap: 6 }}><div className="h3" style={{ fontSize: 17 }}>{t}</div><p className="text-body">{b}</p></div>
           ))}
-          <div className="card card-sm card-tint" style={{ padding: 22, gap: 6 }}><div className="h3" style={{ fontSize: 17, color: "var(--teal-deep)" }}>{PRICING.free[0]}</div><p className="text-body">{PRICING.free[1]}</p></div>
+          <div className="card card-sm card-tint" style={{ padding: 22, gap: 6 }}><div className="h3" style={{ fontSize: 17, color: "var(--color-primary-strong)" }}>{PRICING.free[0]}</div><p className="text-body">{PRICING.free[1]}</p></div>
         </div>
       </div>
 

@@ -5,6 +5,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 
 ## [Unreleased]
 
+### Added
+- **SPEC-08 Part C: the Clean Bill design system** (R5; ADR 0019; `docs/DESIGN-SYSTEM.md`). One brand definition every
+  surface reads. **Tokens:** `apps/web/src/styles/tokens.css` (spacing, radii, motion, type scale, and every semantic
+  token `--color-*`, `--shadow-*`, `--ring`, `--font-*`); the colour / type primitives live in two theme files with the
+  same names, `theme-handoff.css` (the SPEC-07 teal / navy set, DM Sans — the default) and `theme-brief.css` (the brand
+  brief's forest / amber palette, Source Serif 4 + Inter Tight, tabular figures). `DEFAULT_THEME` in `layout.tsx` is the
+  one-line switch for O-13; `?theme=brief` or the toggle on `/design-system` switches the whole site per browser.
+  `globals.css` reads semantic tokens only; the JSX's inline `var(--teal)`-style references and `#fff` literals are
+  rewritten to semantics. **Component sheet:** the SPEC-07 classes plus, for SPEC-09, `.table` / `.table-wrap`, `.kpi` /
+  `.kpis`, `.badge` (status tones from the one map in `src/lib/status.ts`, `StatusBadge`), `.toolbar`, `.drawer`,
+  `.btn-sm` / `.btn-bad`, `.input-sm`, `.banner-ok`, with hover / focus-visible / disabled / error / loading states and
+  `prefers-reduced-motion`. **Assets:** `apps/web/public/brand/` — wordmark (glyph outlines from the vendored DM Sans
+  Bold), mark (an original receipt-with-check line drawing, one geometry in `trd/brand.py`), favicon `.svg` / `.ico`,
+  apple-touch icon, Open Graph image, e-mail header; the nav logo is the mark; `layout.tsx` metadata points at them.
+  **Adapters:** `python -m trd.brand --sync` generates `trd/brand_tokens.py`, `supabase/functions/_shared/brand.ts` and
+  `apps/web/src/styles/brand.generated.ts` from the tokens (CI fails when stale); DM Sans vendored under `trd/fonts/`
+  (OFL); the letter (`trd/letters/generate.py` — letterhead wordmark, DM Sans, theme colours; the §41.0051 block
+  untouched), the packet data sheet, and both Form 50-114 audit pages (Python and pdf-lib) read them.
+  `trd/email/base.html` + `trd.email.render_email()` — table-based, inline-styled template (wordmark header, §41.0051
+  footer, support address) with a generated text alternative, for Task 4's Resend send. **Style guide:** `/design-system`
+  (noindex, no nav link) renders every token from the live CSS, the type ramp, spacing, every component in every state,
+  the status map, the assets on light and dark, the e-mail template in an iframe, and the theme toggle. **Lint:**
+  `npm run lint:design` (`apps/web/scripts/design-lint.mjs`) fails on a hex literal, `rgb(` or a literal font family
+  outside `src/styles/`, on a primitive read by a component, and on a semantic token that does not resolve in every
+  theme; new CI job `design-system` (lint, `tsc`, eslint) and `python -m trd.brand --sync --check` + the contrast table
+  in the Python job. Tests: Python +8 (`tests/test_brand.py`: generated files current, both themes resolve and pass the
+  WCAG table, fonts vendored with licence, e-mail render, letter carries the wordmark in DM Sans with the disclaimer's
+  font unchanged). No wording change; no data-model change; no new runtime dependency (fontTools is a dev-only tool
+  for the wordmark SVG).
+
 ### Changed
 - **SPEC-08 Part A: rebrand to Clean Bill** (R1; B-19; `docs/specs/SPEC-08-rebrand-clean-bill.md`, `SPEC-09-admin-dashboard.md`,
   `docs/brand/brand-brief.md` and `docs/plans/phase1-v3.2.md` copied in). "Texas Refund Desk" → "Clean Bill" (legal Parties

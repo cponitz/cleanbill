@@ -20,3 +20,4 @@ One file per technical decision (T-nn in the handbook). The product was renamed 
 - [0016](./0016-findings-rule-table-generated-ts-and-parity-snapshot.md) — one findings rule table in Python, TypeScript generated from it, parity proven by a snapshot (2026-09-14)
 - [0017](./0017-web-app-is-a-browser-only-client-of-the-claim-api.md) — the customer web app is a browser-only client of the claim API (2026-09-14)
 - [0018](./0018-site-design-system-brand-token-inquiries-code-keyed-portal.md) — the SPEC-07 site: design tokens in CSS, one brand token, lead capture instead of address lookup, a code-keyed portal (2026-09-16)
+- [0019](./0019-brand-as-tokens-and-themes-print-and-email-adapters-generated.md) — brand as tokens + themes; print and e-mail adapters generated from the same file (2026-09-17)

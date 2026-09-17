@@ -10,17 +10,22 @@ from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
+from trd import brand
+from trd import brand_tokens as T
+
 
 def build_packet(claim: dict, extracted: dict, over65: bool = False, today: date | None = None) -> bytes:
     c, cust, lead, prop = claim, claim["claim"], claim["lead"], claim["property"]   # v2: the signed claim row
     buf = BytesIO()
     pdf = canvas.Canvas(buf, pagesize=LETTER)
     W, H = LETTER
+    F = brand.register_fonts()
     y = H - 0.9 * inch
-    def line(t: str, bold=False, size=10.5):
+    brand.draw_wordmark(pdf, 0.9 * inch, y - 2, 16, T.PRIMARY); y -= 30   # SPEC-08 Part C: the wordmark heads every print surface
+    def line(t: str, bold=False, size=10.5, color=T.INK):
         nonlocal y
-        pdf.setFont("Helvetica-Bold" if bold else "Helvetica", size); pdf.drawString(0.9 * inch, y, t); y -= size + 6
-    line("Clean Bill — Residence Homestead Exemption Application Packet (data sheet)", True, 13)
+        pdf.setFillColorRGB(*color); pdf.setFont(F["bold"] if bold else F["regular"], size); pdf.drawString(0.9 * inch, y, t); y -= size + 6
+    line("Residence Homestead Exemption Application Packet (data sheet)", True, 13, T.PRIMARY_STRONG)
     line("Accompanies Comptroller Form 50-114. Prepared for the applicant's electronic signature.", False, 9)
     y -= 8; line("PROPERTY", True)
     line(f"TCAD account: {prop['prop_id']}    Situs: {prop['situs_full']}")

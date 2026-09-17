@@ -146,7 +146,7 @@ export function ClaimFlow({ code }: { code: string }) {
       <Progress done={step ?? 5} total={5} thin label={`Step ${step ?? 5} of 5`} />
       <div className="flex items-baseline justify-between gap-4">
         {step ? <div className="flow-step">{FLOW.step(step, FLOW.names[step - 1])}</div> : <span />}
-        {back && <button type="button" className="fine font-semibold" style={{ color: "var(--teal)", background: "none", border: 0, padding: 0, cursor: "pointer" }} onClick={() => go(back)}>← {FLOW.back}</button>}
+        {back && <button type="button" className="fine font-semibold" style={{ color: "var(--color-primary)", background: "none", border: 0, padding: 0, cursor: "pointer" }} onClick={() => go(back)}>← {FLOW.back}</button>}
       </div>
       <h1 className="flow-title">{title}</h1>
       {children}
@@ -176,15 +176,15 @@ export function ClaimFlow({ code }: { code: string }) {
           <section data-testid="estimate" className="flex flex-col gap-4">
             <p className="fine">{ESTIMATE.account(info.property.prop_id, info.property.owner_name)}</p>
             <div className="card card-tint" style={{ gap: 8 }}>
-              <div className="fine" style={{ color: "var(--teal-deep)", fontWeight: 500 }}>{ESTIMATE.refundLabel}</div>
+              <div className="fine" style={{ color: "var(--color-primary-strong)", fontWeight: 500 }}>{ESTIMATE.refundLabel}</div>
               <div className="amount" data-testid="refund">{moneyFloor(info.lead.est_refund_total)}</div>
               <ul className="m-0 mt-2 list-none p-0 text-[15px] text-body">
                 {byYear(info.lead.est_refund_by_year).map(([y, t]) => <li key={y}>{ESTIMATE.yearLine(y, moneyFloor(t))}</li>)}
               </ul>
-              <p className="text-[15px] font-medium" style={{ color: "var(--teal-deep)" }}>{ESTIMATE.forward(moneyFloor(info.lead.est_forward_annual))}</p>
+              <p className="text-[15px] font-medium" style={{ color: "var(--color-primary-strong)" }}>{ESTIMATE.forward(moneyFloor(info.lead.est_forward_annual))}</p>
             </div>
             <p className="fine">{ESTIMATE.deadline(earliest, info.deadline)}</p>
-            <div className="card card-dark card-sm"><p className="text-[15px]">{ESTIMATE.free.split("traviscad.org")[0]}<a href={TCAD_URL} target="_blank" rel="noopener" style={{ color: "#fff", textDecoration: "underline" }}>traviscad.org</a>{ESTIMATE.free.split("traviscad.org")[1]}</p></div>
+            <div className="card card-dark card-sm"><p className="text-[15px]">{ESTIMATE.free.split("traviscad.org")[0]}<a href={TCAD_URL} target="_blank" rel="noopener" style={{ color: "var(--color-on-dark-strong)", textDecoration: "underline" }}>traviscad.org</a>{ESTIMATE.free.split("traviscad.org")[1]}</p></div>
             <p className="fine">{ESTIMATE.disclaimer}</p>
           </section>
         ), <button className="btn btn-l btn-block" data-testid="btn-continue" onClick={() => go("eligibility")}>{FLOW.continueCta}</button>)}
@@ -215,7 +215,7 @@ export function ClaimFlow({ code }: { code: string }) {
               </div>
               <div className="min-h-6 text-[14px]" aria-live="polite" data-testid="precheck-result">
                 {preBusy && <span className="fine">Checking…</span>}
-                {!preBusy && pre && (pre.match ? <span className="font-semibold" style={{ color: "var(--success)" }}><span className="dot-ok" aria-hidden="true" />{LICENSE.precheckMatch}</span> : <span className="font-semibold" style={{ color: "var(--error)" }}>{LICENSE.precheckMismatch}</span>)}
+                {!preBusy && pre && (pre.match ? <span className="font-semibold" style={{ color: "var(--color-success)" }}><span className="dot-ok" aria-hidden="true" />{LICENSE.precheckMatch}</span> : <span className="font-semibold" style={{ color: "var(--color-error)" }}>{LICENSE.precheckMismatch}</span>)}
               </div>
             </div>
             <label className={`upload relative ${front ? "upload-done" : ""}`} htmlFor="dl_front">
@@ -245,7 +245,7 @@ export function ClaimFlow({ code }: { code: string }) {
 
         {(phase === "sign" || phase === "submitting") && chrome(SIGN.title, (
           <section className="flex flex-col gap-4">
-            <div className="rounded-2xl p-4 text-[14px] text-body" style={{ background: "var(--row-tint)" }}>
+            <div className="rounded-2xl p-4 text-[14px] text-body" style={{ background: "var(--color-row-tint)" }}>
               <p><b className="text-ink">{SIGN.whatWeDo}</b> {SIGN.whatWeDoBody}</p>
               <p className="mt-3"><b className="text-ink">{SIGN.whatYouPay}</b> <b className="text-ink">{SIGN.whatYouPayBody1}</b> {SIGN.whatYouPayBody2} <b className="text-ink">{SIGN.whatYouPayBody3}</b> {SIGN.whatYouPayBody4}</p>
               <p className="fine mt-3"><b>{SIGN.disclosure}</b> {SIGN.disclosureBody}</p>

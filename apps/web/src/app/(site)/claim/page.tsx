@@ -11,7 +11,7 @@ export default function ClaimCodePage() {
     <div className="wrap section grid items-start justify-center gap-6 md:grid-cols-[minmax(0,420px)]">
       <ClaimCodeEntry />
       <div className="card card-tint card-sm" style={{ gap: 6 }}>
-        <div className="h3" style={{ fontSize: 16, color: "var(--teal-deep)" }}>{CODE_PAGE.whyTitle}</div>
+        <div className="h3" style={{ fontSize: 16, color: "var(--color-primary-strong)" }}>{CODE_PAGE.whyTitle}</div>
         <p className="text-[14px] text-body">{CODE_PAGE.whyBody}</p>
       </div>
     </div>

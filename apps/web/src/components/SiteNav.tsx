@@ -84,7 +84,7 @@ export function SiteNav({ portal }: { portal?: { initials: string; name: string 
             {NAV.homeownersMenu.map(([t, href]) => <Link key={href} href={href} className="nav-sub">{t}</Link>)}
             {NAV.links.map(([t, href]) => <Link key={href} href={href}>{t}</Link>)}
             <Link href="/claim">{NAV.signIn}</Link>
-            <Link href="/#start" className="btn btn-l btn-block mt-4" style={{ color: "#fff" }}>{NAV.getStarted}</Link>
+            <Link href="/#start" className="btn btn-l btn-block mt-4" style={{ color: "var(--color-on-dark-strong)" }}>{NAV.getStarted}</Link>
           </div>
         </div>
       )}

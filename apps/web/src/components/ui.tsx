@@ -3,14 +3,32 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { BRAND } from "@/lib/copy";
 import { PILL, type PillTone } from "@/lib/status";
+import { MARK_PATH, MARK_STROKE } from "@/styles/brand.generated";
+
+/** The mark (SPEC-08 Part C): a receipt outline with a check, stroked in currentColor. Same geometry as trd/brand.py. */
+export function Mark({ size = 28, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg className={className} width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <path d={MARK_PATH} fill="none" stroke="currentColor" strokeWidth={MARK_STROKE} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export function Logo({ href = "/" }: { href?: string }) {
   return (
     <Link href={href} className="logo" aria-label={`${BRAND} home`}>
-      <span className="logo-mark" aria-hidden="true" />
+      <span className="logo-mark"><Mark /></span>
       <span>{BRAND}</span>
     </Link>
   );
+}
+
+const BADGE: Record<PillTone, string> = { neutral: "badge-neutral", teal: "badge-teal", sand: "badge-sand", ok: "badge-ok", bad: "badge-bad", off: "badge-off" };
+
+/** Status badge for dense tables (SPEC-09): the same map as StatusPill at table scale. */
+export function StatusBadge({ status }: { status: string }) {
+  const p = PILL[status] ?? { label: status, tone: "neutral" as PillTone };
+  return <span className={`badge ${BADGE[p.tone]}`} data-status={status}>{p.label}</span>;
 }
 
 export function PhotoSlot({ label, className = "", style }: { label: string; className?: string; style?: React.CSSProperties }) {

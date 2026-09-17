@@ -82,9 +82,9 @@ export function StatusView({ code }: { code: string }) {
                         const failed = terminal && current;
                         return (
                           <li key={label} className="flex flex-col gap-1.5">
-                            <span className="block h-1.5 rounded-[3px]" style={{ background: done ? (failed ? "var(--error)" : "var(--teal)") : "var(--border)" }} />
-                            <span className="text-[13px] font-semibold" style={{ color: current ? (failed ? "var(--error)" : "var(--teal)") : done ? "var(--ink)" : "var(--placeholder)" }}>{label}</span>
-                            <span className="text-[12px]" style={{ color: done ? "var(--muted)" : "var(--placeholder)" }}>{dates[i] || (done ? "" : PORTAL.expected[i])}</span>
+                            <span className="block h-1.5 rounded-[3px]" style={{ background: done ? (failed ? "var(--color-error)" : "var(--color-primary)") : "var(--color-line)" }} />
+                            <span className="text-[13px] font-semibold" style={{ color: current ? (failed ? "var(--color-error)" : "var(--color-primary)") : done ? "var(--color-ink)" : "var(--color-placeholder)" }}>{label}</span>
+                            <span className="text-[12px]" style={{ color: done ? "var(--color-muted)" : "var(--color-placeholder)" }}>{dates[i] || (done ? "" : PORTAL.expected[i])}</span>
                           </li>
                         );
                       })}
@@ -129,7 +129,7 @@ export function StatusView({ code }: { code: string }) {
               <aside className="contents md:flex md:flex-col md:gap-5">
                 {hasEstimate && (
                   <section className="card order-3 md:order-none" style={{ gap: 8 }}>
-                    <div className="eyebrow eyebrow-sm" style={{ color: "var(--muted)" }}>{PORTAL.estimate}</div>
+                    <div className="eyebrow eyebrow-sm" style={{ color: "var(--color-muted)" }}>{PORTAL.estimate}</div>
                     <div className="amount" style={{ fontSize: 36 }}>{moneyFloor(est.est_refund_total)}</div>
                     <div className="ledger mt-1">
                       {byYear(est.est_refund_by_year).map(([y, v]) => <div key={y} className="ledger-row !py-2 !text-[15px]"><span>{PORTAL.yearRow(y)}</span><b>{moneyFloor(v)}</b></div>)}
@@ -145,7 +145,7 @@ export function StatusView({ code }: { code: string }) {
                 <section className="card card-sand order-7 md:order-none" style={{ gap: 8 }}>
                   <h2 className="h3" style={{ fontSize: 18 }}>{PORTAL.other}</h2>
                   <p className="text-[15px]">{PORTAL.otherBody}</p>
-                  <Link href="/#start" className="link-arrow" style={{ color: "var(--sand-text)" }}>{PORTAL.addProperty}</Link>
+                  <Link href="/#start" className="link-arrow" style={{ color: "var(--color-accent-text)" }}>{PORTAL.addProperty}</Link>
                 </section>
               </aside>
             </div>

@@ -23,7 +23,7 @@ export function FixScreen({ code, claimId, situs, findings, onReuploaded }: { co
       <h1 className="flow-title">{FIX.title}</h1>
       <p className="text-body">{FIX.body(idAddress || "…", property)}</p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="card card-sm" style={{ gap: 4, borderColor: "var(--error)", background: "var(--error-bg)" }}><div className="fine">{FIX.onId}</div><div className="font-semibold text-ink" data-testid="fix-id-address">{idAddress || "—"}</div></div>
+        <div className="card card-sm" style={{ gap: 4, borderColor: "var(--color-error)", background: "var(--color-error-bg)" }}><div className="fine">{FIX.onId}</div><div className="font-semibold text-ink" data-testid="fix-id-address">{idAddress || "—"}</div></div>
         <div className="card card-sm" style={{ gap: 4 }}><div className="fine">{FIX.onRoll}</div><div className="font-semibold text-ink" data-testid="fix-situs">{property}</div></div>
       </div>
       <div className="h3" style={{ fontSize: 17 }}>{FIX.fastest}</div>

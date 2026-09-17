@@ -22,13 +22,17 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
+from trd import brand
+from trd import brand_tokens as T
 from trd.estimator.refund import conservative_display, late_filing_deadline
 
-BRAND = "Clean Bill"
-SUPPORT = "hello@cleanbillco.com"
-DISCLAIMER = "THIS DOCUMENT IS AN ADVERTISEMENT OF SERVICES. IT IS NOT AN OFFICIAL DOCUMENT OF THE STATE OF TEXAS."
-NAVY = (0x1F / 255, 0x38 / 255, 0x64 / 255)
-GREY = (0x6B / 255, 0x76 / 255, 0x86 / 255)
+# Brand values come from the design system (SPEC-08 Part C): trd/brand_tokens.py is generated from tokens.css.
+BRAND = T.BRAND_NAME
+SUPPORT = T.SUPPORT_EMAIL
+DISCLAIMER = brand.DISCLAIMER
+NAVY = T.PRIMARY_STRONG      # headline / letterhead colour (the theme's strong primary)
+GREY = T.MUTED
+INK = T.INK
 
 
 @dataclass
@@ -80,6 +84,8 @@ def _qr_png(url: str) -> BytesIO:
 
 
 def render_letter(d: LetterData, out_path: Path) -> Path:
+    F = brand.register_fonts()   # DM Sans (vendored, OFL) — the site's typeface on paper
+    SANS, SANS_B = F["regular"], F["bold"]
     c = canvas.Canvas(str(out_path), pagesize=LETTER)
     W, H = LETTER
     m = 0.75 * inch
@@ -93,14 +99,14 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
     y -= 6
     c.setStrokeColorRGB(*GREY); c.setLineWidth(0.5); c.line(m, y, W - m, y); y -= 18
 
-    # letterhead + date
-    c.setFont("Helvetica-Bold", 13); c.setFillColorRGB(*NAVY); c.drawString(m, y, BRAND)
-    c.setFont("Helvetica", 9); c.setFillColorRGB(*GREY)
+    # letterhead (the wordmark: mark + name in DM Sans Bold, primary colour) + date
+    brand.draw_wordmark(c, m, y - 4, 16, T.PRIMARY)
+    c.setFont(SANS, 9); c.setFillColorRGB(*GREY)
     c.drawRightString(W - m, y, (d.mail_date or date.today()).strftime("%B %d, %Y"))
-    y -= 12; c.drawString(m, y, "Private company · Austin, Texas · Not affiliated with any government agency"); y -= 26
+    y -= 16; c.drawString(m, y, "Private company · Austin, Texas · Not affiliated with any government agency"); y -= 26
 
     # recipient block (window-envelope position)
-    c.setFillColorRGB(0, 0, 0); c.setFont("Helvetica", 10.5)
+    c.setFillColorRGB(*INK); c.setFont(SANS, 10.5)
     for line in [d.owner_name] + d.mail_lines:
         c.drawString(m, y, line); y -= 13
     y -= 14
@@ -127,19 +133,19 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
                    f"our estimate for your home is <b>${refund:,}</b> — and your bill drops by roughly <b>${forward:,} every year</b> from here on.")
 
     body = [
-        ("Helvetica-Bold", 12.5, NAVY, headline),
-        ("Helvetica", 10.5, (0, 0, 0), f"Dear {d.owner_first},"),
-        ("Helvetica", 10.5, (0, 0, 0), opening),
-        ("Helvetica-Bold", 10.5, (0, 0, 0), "Two ways to claim it:"),
-        ("Helvetica", 10.5, (0, 0, 0), "<b>1. Do it yourself, free.</b> File Form 50-114 with the Travis Central Appraisal District at traviscad.org or by mail. "
+        (SANS_B, 12.5, NAVY, headline),
+        (SANS, 10.5, INK, f"Dear {d.owner_first},"),
+        (SANS, 10.5, INK, opening),
+        (SANS_B, 10.5, INK, "Two ways to claim it:"),
+        (SANS, 10.5, INK, "<b>1. Do it yourself, free.</b> File Form 50-114 with the Travis Central Appraisal District at traviscad.org or by mail. "
                                         "There is no fee, and you do not need anyone's help to do it."),
-        ("Helvetica", 10.5, (0, 0, 0), "<b>2. Let us handle it.</b> We prepare the complete application and refund paperwork; you review and sign on your phone "
+        (SANS, 10.5, INK, "<b>2. Let us handle it.</b> We prepare the complete application and refund paperwork; you review and sign on your phone "
                                         "in about five minutes. Our fee is <b>25% of the refund you actually receive — nothing if there is no refund</b>, and nothing "
                                         "on your future annual savings."),
-        ("Helvetica-Bold", 11, NAVY, f"Start here: {d.claim_url}   ·   Your claim code: {d.claim_code}"),
-        ("Helvetica", 10.5, (0, 0, 0), f"<b>Timing matters.</b> The {earliest} tax year can only be claimed until <b>{deadline}</b>. After that, the oldest year of refund is gone for good."),
-        ("Helvetica", 10.5, (0, 0, 0), "Sincerely,"),
-        ("Helvetica", 10.5, (0, 0, 0), f"Charlie Ponitz<br/>{BRAND} · Austin, Texas · {SUPPORT}"),
+        (SANS_B, 11, NAVY, f"Start here: {d.claim_url}   ·   Your claim code: {d.claim_code}"),
+        (SANS, 10.5, INK, f"<b>Timing matters.</b> The {earliest} tax year can only be claimed until <b>{deadline}</b>. After that, the oldest year of refund is gone for good."),
+        (SANS, 10.5, INK, "Sincerely,"),
+        (SANS, 10.5, INK, f"Charlie Ponitz<br/>{BRAND} · Austin, Texas · {SUPPORT}"),
     ]
     text_w = W - 2 * m - 1.35 * inch  # leave room for the QR block on the right
     for font, size, color, txt in body:
@@ -154,7 +160,7 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
     from reportlab.lib.utils import ImageReader
     qx, qy, qs = W - m - 1.15 * inch, H - m - 4.9 * inch, 1.15 * inch
     c.drawImage(ImageReader(qr), qx, qy, qs, qs)
-    c.setFont("Helvetica", 7.5); c.setFillColorRGB(*GREY)
+    c.setFont(SANS, 7.5); c.setFillColorRGB(*GREY)
     c.drawCentredString(qx + qs / 2, qy - 10, "Scan to open your claim")
 
     # footer disclosures (§41.0051(b) + not-affiliated + opt-out)
@@ -163,7 +169,7 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
             f"after approval by the Travis Central Appraisal District. Estimates are based "
             f"on public appraisal data and current tax rates; the appraisal district makes all eligibility decisions. Refunds are issued to the person who paid the tax. "
             f"This is not legal or tax advice. To stop receiving mail from us, email {SUPPORT} with \"remove\" and your address.")
-    style = ParagraphStyle("f", fontName="Helvetica", fontSize=7.5, leading=9.5, textColor=GREY)
+    style = ParagraphStyle("f", fontName=SANS, fontSize=7.5, leading=9.5, textColor=GREY)
     p = Paragraph(foot, style); _, ph = p.wrap(W - 2 * m, 2 * inch); p.drawOn(c, m, m - 0.25 * inch + ph - ph)  # sits at bottom margin
     c.showPage(); c.save()
     return out_path

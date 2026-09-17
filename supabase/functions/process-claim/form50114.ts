@@ -1,7 +1,8 @@
 // Fill the official Comptroller Form 50-114 (Rev. 02-26/39) with pdf-lib, stamp the typed e-signature, append an audit page,
 // and flatten. Mirrors trd/agent/form50114.py — keep the two field maps in sync.
-import { PDFButton, PDFDocument, PDFSignature, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+import { LineCapStyle, PDFButton, PDFDocument, PDFSignature, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import type { Extracted, PropertyRec } from "./validate.ts";
+import { BRAND_NAME, MARK_PATH, MARK_STROKE, RGB } from "../_shared/brand.ts";   // generated from the design tokens (SPEC-08 Part C)
 
 export const FORM_VERSION = "50-114 (Rev. 02-26/39)";
 export const FORM_URL = "https://comptroller.texas.gov/forms/50-114.pdf";
@@ -109,15 +110,20 @@ export async function fill50114(blank: Uint8Array, p: FillInput): Promise<Uint8A
   form.updateFieldAppearances(helv);
   form.flatten();
 
-  // Audit page (attachment).
+  // Audit page (attachment) — wordmark and theme colours from _shared/brand.ts (SPEC-08 Part C).
   const page = doc.addPage([612, 792]);
   let y = 740;
-  const line = (t: string, bold = false, size = 10.5) => {
-    page.drawText(ansi(t), { x: 54, y, size, font: bold ? helvB : helv, color: rgb(0.12, 0.15, 0.2), maxWidth: 504, lineHeight: size + 2 });
+  const ink = rgb(...RGB.ink), primary = rgb(...RGB.primary), primaryStrong = rgb(...RGB["primary-strong"]);
+  const markSize = 16;
+  page.drawSvgPath(MARK_PATH, { x: 54, y: y + markSize - 2, scale: markSize / 100, borderColor: primary, borderWidth: MARK_STROKE * markSize / 100, borderLineCap: LineCapStyle.Round });
+  page.drawText(BRAND_NAME, { x: 54 + markSize * 1.18, y: y - 1, size: markSize * 0.78, font: helvB, color: primary });
+  y -= 30;
+  const line = (t: string, bold = false, size = 10.5, color = ink) => {
+    page.drawText(ansi(t), { x: 54, y, size, font: bold ? helvB : helv, color, maxWidth: 504, lineHeight: size + 2 });
     y -= size + 6 + (t.length > 110 ? size + 2 : 0);
   };
   const yearsTxt = text["Tax Years for Application"];
-  line("Electronic Signature and Preparation Record - attachment to Form 50-114", true, 13);
+  line("Electronic Signature and Preparation Record - attachment to Form 50-114", true, 13, primaryStrong);
   line(`Property: TCAD account ${p.prop.prop_id} - ${p.prop.situs_full}`);
   line(`Applicant: ${text["Name of Property Owner 1"]}    Exemptions requested: General residence homestead${p.over65 ? " + Age 65 or older" : ""}`);
   line(`Tax years: ${yearsTxt} (late application under Tax Code Sec. 11.431)`);

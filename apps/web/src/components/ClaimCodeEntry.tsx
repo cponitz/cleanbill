@@ -36,8 +36,8 @@ export function ClaimCodeEntry() {
         <h1 className="h2" style={{ fontSize: 30 }}>{CODE_PAGE.foundTitle}</h1>
         <div className="card card-tint card-sm" style={{ gap: 6 }}>
           <div className="h3" style={{ fontSize: 18 }}>{info.property.situs_full}</div>
-          <div className="fine" style={{ color: "var(--teal-deep)" }}>{CODE_PAGE.foundAccount(maskAccount(info.property.prop_id), info.property.owner_name)}</div>
-          <div className="fine" style={{ color: "var(--teal-deep)" }}>{CODE_PAGE.foundEstimate(moneyFloor(info.lead.est_refund_total))}</div>
+          <div className="fine" style={{ color: "var(--color-primary-strong)" }}>{CODE_PAGE.foundAccount(maskAccount(info.property.prop_id), info.property.owner_name)}</div>
+          <div className="fine" style={{ color: "var(--color-primary-strong)" }}>{CODE_PAGE.foundEstimate(moneyFloor(info.lead.est_refund_total))}</div>
         </div>
         <Link href={`/claim/${code}`} className="btn btn-l btn-block">{CODE_PAGE.yes}</Link>
         <button type="button" className="btn btn-neutral btn-block" onClick={() => { setRaw(""); setState({ kind: "idle" }); }}>{CODE_PAGE.notMine}</button>

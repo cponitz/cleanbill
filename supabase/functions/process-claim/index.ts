@@ -7,8 +7,9 @@
 //     still extracted (the form needs the real DL number) and still required for filing (§11.43(j)).
 //   * Findings are structured; every sentence comes from the generated rule table (_shared/findings.ts, ADR 0016).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
-import { serviceClient } from "./db.ts";
+import { LineCapStyle, PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+import { BRAND, serviceClient } from "./db.ts";
+import { MARK_PATH, MARK_STROKE, RGB as BRAND_RGB } from "../_shared/brand.ts";
 import { blocking, reasonText, validate, type Extracted, type Finding, type PropertyRec } from "./validate.ts";
 import { customerMessage, makeFinding } from "../_shared/findings.ts";
 import { fill50114, FORM_VERSION, loadBlankForm } from "./form50114.ts";
@@ -96,8 +97,13 @@ async function buildPacket(p: {
   const page = doc.addPage([612, 792]);
   const f = await doc.embedFont(StandardFonts.Helvetica), fb = await doc.embedFont(StandardFonts.HelveticaBold);
   let y = 740;
-  const line = (t: string, bold = false, size = 11) => { page.drawText(t, { x: 54, y, size, font: bold ? fb : f, color: rgb(0.12, 0.15, 0.2) }); y -= size + 6; };
-  line("Clean Bill — Residence Homestead Exemption Application Packet (data sheet)", true, 13);
+  const ink = rgb(...BRAND_RGB.ink), primary = rgb(...BRAND_RGB.primary);   // design tokens (SPEC-08 Part C)
+  const markSize = 16;
+  page.drawSvgPath(MARK_PATH, { x: 54, y: y + markSize - 2, scale: markSize / 100, borderColor: primary, borderWidth: MARK_STROKE * markSize / 100, borderLineCap: LineCapStyle.Round });
+  page.drawText(BRAND, { x: 54 + markSize * 1.18, y: y - 1, size: markSize * 0.78, font: fb, color: primary });
+  y -= 30;
+  const line = (t: string, bold = false, size = 11, color = ink) => { page.drawText(t, { x: 54, y, size, font: bold ? fb : f, color }); y -= size + 6; };
+  line("Residence Homestead Exemption Application Packet (data sheet)", true, 13, rgb(...BRAND_RGB["primary-strong"]));
   line("Prepared for signature on Comptroller Form 50-114. This sheet accompanies the official form.", false, 9);
   y -= 8;
   line("PROPERTY", true);
