@@ -61,8 +61,8 @@ Never set the service-role key, the ops password or any other server secret in V
 
 ## Vercel
 
-Project `texas-refund-desk` (team Ponitz Development, Hobby). Root Directory `apps/web`, framework preset Next.js,
-production branch `main`, a preview per branch push (`https://texas-refund-desk-<hash>-ponitz-development.vercel.app`).
+Project `cleanbill` (team Ponitz Development, Hobby; renamed from `texas-refund-desk` by SPEC-08 R2 on 2026-09-17). Root Directory `apps/web`, framework preset Next.js,
+production branch `main`, a preview per branch push (`https://cleanbill-<hash>-ponitz-development.vercel.app`); production `https://cleanbillco.com` (`texasrefunddesk.com` redirects, 308).
 Domain `cleanbillco.com` is attached at cut-over (Task 6 of the Phase 1 plan). Builds on branches without `apps/web`
 fail with "Root Directory does not exist" — expected.
 

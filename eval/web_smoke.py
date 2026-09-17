@@ -14,7 +14,7 @@ Only ever touches the synthetic lead CB-TEST-0001 / property 999000001 (reset he
 eval/reset_test_lead.sql). Screenshots land in eval/out/web/.
 
 Run:  python eval/web_smoke.py --base http://localhost:3000            (after `npm run build && npm start` in apps/web)
-      python eval/web_smoke.py --base https://texas-refund-desk-<hash>-ponitz-development.vercel.app
+      python eval/web_smoke.py --base https://cleanbill-<hash>-ponitz-development.vercel.app   (or https://cleanbillco.com)
 Needs .env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Exit 0 = PASS.
 Vercel previews with Deployment Protection (Vercel Authentication) redirect to a Vercel login; either turn it off for
 previews (Vercel → Settings → Deployment Protection) or set VERCEL_AUTOMATION_BYPASS_SECRET in .env — it is sent as the

@@ -36,7 +36,7 @@ ANTHROPIC_API_KEY=... python -m trd.agent.run --store fixtures   # dry run over 
 
 Edge functions are deployed from the repo root with the Supabase CLI: `supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv` (per-function `verify_jwt` settings are in `supabase/config.toml`). Secrets `ANTHROPIC_API_KEY` and `OPS_PASSWORD` live in the function environment (fallback: `app_settings` table).
 
-The customer app is `apps/web` on Vercel (production domain `https://cleanbillco.com`, attached by SPEC-08 Part B1; `texasrefunddesk.com` redirects to it). The static fallback pages are served by GitHub Pages from `docs/` at `https://cponitz.github.io/texas-refund-desk/` until cut-over. Hosted Supabase project: `letrfpwskjbgnyacesgv`.
+The customer app is `apps/web` on Vercel (production domain `https://cleanbillco.com`, attached by SPEC-08 Part B1; `texasrefunddesk.com` redirects to it). The static fallback pages are served by GitHub Pages from `docs/` at `https://cponitz.github.io/cleanbill/` until cut-over. Hosted Supabase project: `letrfpwskjbgnyacesgv`.
 
 ## Working on this repo
 

@@ -75,6 +75,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
   `supabase/ci/check_schema.sql` checks the table and the function. ARCHITECTURE §3.1 row 10, §4.1, §5.8.
 
 ### Changed
+- **SPEC-08 Part B2: repo-internal names** (R3, after Charlie's R2 renames on 2026-09-17: GitHub `cponitz/cleanbill`,
+  Vercel project `cleanbill`, Supabase display name `cleanbill`, Mac folder `~/Desktop/ClaudeCowork/cleanbill`,
+  cleanbillco.com attached with `texasrefunddesk.com` redirecting). `supabase/config.toml` `project_id`, `pyproject.toml`
+  name, `apps/web/README.md` and `eval/web_smoke.py` Vercel names and preview pattern
+  (`https://cleanbill-<hash>-ponitz-development.vercel.app`), RUNBOOK §9.1 (production `https://cleanbillco.com`, Actions
+  `github.com/cponitz/cleanbill/actions`, Pages fallback `cponitz.github.io/cleanbill/…`, `gh … -R cponitz/cleanbill`),
+  CLAUDE.md naming rule, README, ARCHITECTURE §3.2, the architecture figure, `samples/README.md`, `docs/ops.html`. The
+  Python package stays `trd` until Part B3.
 - **SPEC-08 Part A: rebrand to Clean Bill** (R1; B-19; `docs/specs/SPEC-08-rebrand-clean-bill.md`, `SPEC-09-admin-dashboard.md`,
   `docs/brand/brand-brief.md` and `docs/plans/phase1-v3.2.md` copied in). "Texas Refund Desk" → "Clean Bill" (legal Parties
   line: "Clean Bill Co."), `hello@texasrefunddesk.com` → `hello@cleanbillco.com`, `texasrefunddesk.com` → `cleanbillco.com`

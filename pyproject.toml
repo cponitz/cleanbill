@@ -1,5 +1,5 @@
 [project]
-name = "texas-refund-desk"
+name = "cleanbill"
 version = "0.1.0"
 description = "Clean Bill — finds Austin homeowners owed retroactive property-tax refunds and prepares their exemption filings."
 requires-python = ">=3.11"
