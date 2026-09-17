@@ -2,71 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>Ops — Clean Bill</title>
-<style>
-:root{--navy:#1F3864;--ink:#1F2733;--grey:#6B7686;--line:#C9D2DF;--tint:#F1F4F9;--amber:#C08A2E;--ok:#2E7D4F}
-*{box-sizing:border-box}body{margin:0;font:14px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#fff}
-.wrap{max-width:1100px;margin:0 auto;padding:16px}h1{color:var(--navy);font-size:20px;margin:6px 0 14px}h2{color:var(--navy);font-size:15px;text-transform:uppercase;letter-spacing:.4px;margin:22px 0 8px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.kpi{background:var(--tint);border:1px solid var(--line);border-radius:8px;padding:10px 12px}.kpi b{display:block;font-size:22px;color:var(--navy)}.kpi span{font-size:12px;color:var(--grey)}
-table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;color:#fff;background:var(--navy);padding:8px}td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
-.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:var(--tint);border:1px solid var(--line)}.pill.ready{background:#e6f4ec;border-color:var(--ok)}.pill.dl{background:#fff4e5;border-color:var(--amber)}.pill.rev{background:#fde8e8;border-color:#c0392b}
-.find{font-size:12px;color:var(--grey);margin:2px 0}.find.bad{color:#b03a2e}.draft{background:var(--tint);border:1px solid var(--line);border-radius:8px;padding:10px;margin:6px 0;white-space:pre-wrap;font-size:13px}
-button{background:var(--navy);color:#fff;border:0;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;margin-right:6px}button.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}
-a{color:var(--navy)}.small{font-size:12px;color:var(--grey)}input[type=password]{padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;width:320px}
-[hidden]{display:none!important}
-</style>
+<title>Ops has moved — Clean Bill</title>
 </head>
-<body><div class="wrap">
-<h1>Clean Bill — Ops</h1>
-<div id="login"><label>Ops password <input type="password" id="pw"></label> <button id="go">Open</button> <span class="small">Shadow mode: nothing is sent to a homeowner until a draft is approved here.</span></div>
-<div id="dash" hidden>
-  <div class="kpis" id="kpis"></div>
-  <h2>Claims</h2>
-  <table><thead><tr><th>Property / customer</th><th>Status</th><th>ID extraction · validation · packet</th><th>Agent drafts (shadow mode)</th></tr></thead><tbody id="rows"></tbody></table>
-  <p class="small">Packet links expire after 10 minutes. <button class="sec" id="refresh">Refresh</button></p>
-</div>
-</div>
-<script src="config.js"></script>
-<script>
-(function () {
-  const API = window.TRD.API, $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const money = (n) => "$" + (Math.floor(Number(n || 0) / 100) * 100).toLocaleString("en-US");
-  let key = sessionStorage.getItem("ops_key") || new URLSearchParams(location.search).get("key") || "";
-  const pill = (s) => `<span class="pill ${s === "ready_to_submit" ? "ready" : s === "needs_dl_update" ? "dl" : s === "needs_review" ? "rev" : ""}">${esc(s)}</span>`;
-
-  async function load() {
-    const r = await fetch(`${API}/ops`, { headers: { "x-ops-key": key } });
-    if (r.status === 403) { $("login").hidden = false; $("dash").hidden = true; sessionStorage.removeItem("ops_key"); return; }
-    const j = await r.json(); sessionStorage.setItem("ops_key", key); $("login").hidden = true; $("dash").hidden = false;
-    const k = j.kpis;
-    $("kpis").innerHTML = [["leads loaded", k.leads_loaded], ["mailed", k.mailed], ["page views", k.page_views], ["opened", k.opened], ["claimed", k.claimed],
-      ["ready to submit", k.ready_to_submit], ["need DL update", k.needs_dl_update], ["need review", k.needs_review]].map(([l, v]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
-    $("rows").innerHTML = j.claims.map((c) => {
-      const ex = c.extracted;
-      const drafts = c.messages.map((m) => `<div class="draft"><b>${esc(m.subject)}</b> <span class="small">${m.direction === "inbound" ? "INBOUND" : m.agent_draft ? "DRAFT (agent)" : "approved"} · ${esc(m.intent ?? "")}</span>\n${esc(m.body)}
-        ${m.agent_draft ? `<div style="margin-top:6px"><button data-act="approve" data-id="${m.id}">Approve</button><button class="sec" data-act="discard" data-id="${m.id}">Discard</button></div>` : ""}</div>`).join("");
-      return `<tr>
-        <td><b>${esc(c.situs_full)}</b><br><span class="small">${esc(c.owner_name)} · ${esc(c.claim_code)} · est ${money(c.est_refund_total)}</span><br>
-            <span class="small">${esc(c.full_name)} · ${esc(c.email)} · ${esc(c.phone ?? "")}</span><br><span class="small">signed ${esc(c.signed_at ? new Date(c.signed_at).toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " CT" : "")} from ${esc(c.signature_ip)}</span></td>
-        <td>${pill(c.status)}<br><span class="small">${esc(c.status_reason ?? "")}</span></td>
-        <td>${ex ? `<span class="small">${esc(ex.first_name)} ${esc(ex.last_name)} · DOB ${esc(ex.dob)} · ${esc(ex.address_line1)}, ${esc(ex.city)} ${esc(ex.zip)} · exp ${esc(ex.expiry)} · $${Number(c.extraction_cost_usd ?? 0).toFixed(4)}</span>` : `<span class="small">not extracted</span>`}
-            ${c.findings.map((f) => typeof f === "string" ? `<div class="find ${f.startsWith("!") ? "bad" : ""}">${esc(f)}</div>`
-              : `<div class="find ${f.severity === "blocking" ? "bad" : ""}" title="${esc(f.code)}">${f.severity === "blocking" ? "! " : ""}${esc(f.message)} <span class="small">[${esc(f.code)}]</span></div>`).join("")}
-            ${c.packet?.url ? `<a href="${esc(c.packet.url)}" target="_blank">packet PDF</a> <span class="small">(${esc(c.packet.form_version)})</span>` : ""}</td>
-        <td>${drafts || `<span class="small">—</span>`}</td></tr>`;
-    }).join("") || `<tr><td colspan="4" class="small">No claims yet.</td></tr>`;
-  }
-  $("go").addEventListener("click", () => { key = $("pw").value.trim(); load(); });
-  $("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("go").click(); });
-  $("refresh").addEventListener("click", load);
-  $("rows").addEventListener("click", async (e) => {
-    const b = e.target.closest("button[data-act]"); if (!b) return;
-    b.disabled = true;
-    await fetch(`${API}/ops`, { method: "POST", headers: { "content-type": "application/json", "x-ops-key": key }, body: JSON.stringify({ action: b.dataset.act, message_id: b.dataset.id }) });
-    load();
-  });
-  if (key) load();
-})();
-</script>
-</body></html>
+<body style="font:16px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:640px;margin:48px auto;padding:0 24px;">
+<!-- SPEC-09 D3: the GitHub Pages ops dashboard is retired. The operator console is /ops in the web app (ADR 0020). -->
+<p><b>The ops dashboard has moved</b> to the web app: <a href="https://cleanbillco.com/ops">https://cleanbillco.com/ops</a> (same ops password). Until the domain is attached (SPEC-08 R2), use the Vercel production URL for the project, path <code>/ops</code>.</p>
+</body>
+</html>
