@@ -3,7 +3,7 @@
 # (the claim code / ops password is the secret); process-claim is called service-to-service with the service-role key.
 # Deploy from the repo root, no Docker needed:
 #   supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv
-project_id = "texas-refund-desk"
+project_id = "cleanbill"
 
 [functions.claim]
 verify_jwt = false

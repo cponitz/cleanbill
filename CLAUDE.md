@@ -9,8 +9,8 @@ before touching anything; it defines every module, table, column and flow.
 ## Sources of truth
 - Code, schema, deploys, technical decisions: THIS REPO (docs/ARCHITECTURE.md, docs/adr/, CHANGELOG.md).
 - Naming (B-19, SPEC-08): the product is **Clean Bill** (legal line: Clean Bill Co.), domain cleanbillco.com, support
-  hello@cleanbillco.com, claim codes `CB-XXXX-XXXX`. The repo, Vercel project, Supabase display name, Mac folder and Python
-  package become `cleanbill` in SPEC-08 Part B (until then: `texas-refund-desk` / `trd`). Do not introduce other names;
+  hello@cleanbillco.com, claim codes `CB-XXXX-XXXX`. The repo (`cponitz/cleanbill`), Vercel project, Supabase display name and
+  Mac folder are `cleanbill` (SPEC-08 R2, 2026-09-17); the Python package becomes `cleanbill` in Part B3 (until then `trd`). Do not introduce other names;
   "Texas Refund Desk" is retired except in history (CHANGELOG entries, ADRs, SPEC-01…07).
 - Business decisions, specs, plans, research: the Cowork project "Clean Bill"
   (claude/decisions.md, claude/specs/). Never make a business decision here — if a task needs one
@@ -46,7 +46,7 @@ before touching anything; it defines every module, table, column and flow.
 5. The ETL (trd/etl) runs on Charlie's Mac only (17 GB export). Do not schedule it on hosted runners.
 
 ## Environment
-Supabase project texas-refund-desk (ref letrfpwskjbgnyacesgv). Front-end: Next.js on Vercel (apps/web) once SPEC-04b
+Supabase project cleanbill (ref letrfpwskjbgnyacesgv). Front-end: Next.js on Vercel (apps/web) once SPEC-04b
 lands; docs/ static pages are the fallback until cut-over. Batch: GitHub Actions (agent.yml schedule disabled until
 test data exists — run manually; etl.yml manual). Models: claude-haiku-4-5 (extraction), claude-sonnet-5 (agent).
 Sandbox cannot reach traviscad.org or api.supabase.com; use the Supabase MCP or CLI for deploys.

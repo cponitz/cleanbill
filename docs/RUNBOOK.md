@@ -10,15 +10,15 @@ Section 9
 
 |                        |                                                                                                                                                                                                                |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Landing (enter a code) | `https://cponitz.github.io/texas-refund-desk/index.html` (Pages serves `docs/` at the root; the old `homestead-refund` address does not redirect); production (SPEC-08 R2, then cut-over): `https://cleanbillco.com`                                |
-| Claim page (test)      | Vercel preview `https://texas-refund-desk-<hash>-ponitz-development.vercel.app/claim/CB-TEST-0001` (production URL after cut-over); fallback `…/texas-refund-desk/claim.html?c=CB-TEST-0001`                                                                                                                                                                            |
-| Agreement              | `…/texas-refund-desk/agreement.html?c=CB-TEST-0001`                                                                                                                                                                        |
-| Ops console            | `https://cleanbillco.com/ops` (SPEC-09; until the domain is attached in SPEC-08 R2, the Vercel production URL of the project + `/ops`; a branch preview + `/ops` works too) — ops password rotated Sep 12 (in your password manager and `app_settings`; update the Mac `.env`). Never in a document. The old `docs/ops.html` is a pointer. |
+| Landing (enter a code) | Production `https://cleanbillco.com` (attached 2026-09-17, SPEC-08 R2; `texasrefunddesk.com` redirects). Static fallback until cut-over: `https://cponitz.github.io/cleanbill/index.html` (Pages serves `docs/` at the root; the old `homestead-refund` address does not redirect)                                |
+| Claim page (test)      | `https://cleanbillco.com/claim/CB-TEST-0001`; a branch preview at `https://cleanbill-<hash>-ponitz-development.vercel.app/claim/CB-TEST-0001`; fallback `…/cleanbill/claim.html?c=CB-TEST-0001`                                                                                                                                                                            |
+| Agreement              | `https://cleanbillco.com/agreement/CB-TEST-0001`; fallback `…/cleanbill/agreement.html?c=CB-TEST-0001`                                                                                                                                                                        |
+| Ops console            | `https://cleanbillco.com/ops` (SPEC-09; a branch preview + `/ops` works too) — ops password rotated Sep 12 (in your password manager and `app_settings`; update the Mac `.env`). Never in a document. The old `docs/ops.html` is a pointer. |
 | Claim API              | `https://letrfpwskjbgnyacesgv.supabase.co/functions/v1/claim?c=CB-TEST-0001`                                                                                                                                  |
 | Self-test              | `…/functions/v1/selftest?key=<OPS_PASSWORD>&scenario=match` (or `mismatch`, `mismatch_then_fix`) → expect `"pass": true` in ~10 s                                                                                                    |
 | Supabase dashboard     | `https://supabase.com/dashboard/project/letrfpwskjbgnyacesgv` — read-only by convention (§2)                                                                                                                   |
-| Actions                | `https://github.com/cponitz/texas-refund-desk/actions` — `claims-agent` schedule **disabled until test data exists** (run it manually with "Run workflow" or `gh workflow run agent.yml`); `tcad-etl` manual; `ci` on every push/PR; `deploy (main)` on merges touching `supabase/**` |
-| Vercel                 | Project `texas-refund-desk` (team Ponitz Development, Hobby), Root Directory `apps/web`, production from `main`; every branch push builds a preview at `https://texas-refund-desk-<hash>-ponitz-development.vercel.app`. Previews fail with "Root Directory does not exist" until `apps/web` is on the branch — expected. |
+| Actions                | `https://github.com/cponitz/cleanbill/actions` — `claims-agent` schedule **disabled until test data exists** (run it manually with "Run workflow" or `gh workflow run agent.yml`); `tcad-etl` manual; `ci` on every push/PR; `deploy (main)` on merges touching `supabase/**` |
+| Vercel                 | Project `cleanbill` (team Ponitz Development, Hobby), Root Directory `apps/web`, production from `main` at `https://cleanbillco.com`; every branch push builds a preview at `https://cleanbill-<hash>-ponitz-development.vercel.app`. Previews fail with "Root Directory does not exist" until `apps/web` is on the branch — expected. |
 
 ### 9.2 Daily loop (5 minutes while claims are few — all of it from `/ops`, no SQL, no Mac)
 
@@ -63,7 +63,7 @@ Section 9
     supabase link --project-ref letrfpwskjbgnyacesgv                           # once per machine (needs the DB password)
     supabase db diff --linked --schema public                                  # must print nothing (needs Docker for the shadow DB)
     supabase secrets set NAME=value --project-ref letrfpwskjbgnyacesgv         # function secrets; never echo the value
-    gh run list -R cponitz/texas-refund-desk --limit 5                          # recent CI / deploy / agent runs
+    gh run list -R cponitz/cleanbill --limit 5                          # recent CI / deploy / agent runs
     gh run view <run-id> --log                                                 # step logs (check "no drift" and "selftest passed" after a deploy)
     gh workflow run agent.yml && gh run watch                                  # run the claims agent by hand and wait for it
 
