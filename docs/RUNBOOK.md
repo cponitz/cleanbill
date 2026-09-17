@@ -34,7 +34,7 @@ Section 9
 ### 9.3 Commands (from the repo folder on the Mac)
 
     pip install -e .[dev] && python -m pytest -q                                     # Python tests (49 on main at 2026-09-17)
-    deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts   # Deno tests (33)
+    deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts supabase/functions/ops/logic_test.ts   # Deno tests (40)
     python -m trd.findings --emit-ts --emit-snapshot            # regenerate _shared/findings.ts + the G-9 snapshot after editing trd/findings.py (CI checks with --check)
     python -m trd.brand --sync                                    # regenerate brand_tokens.py / _shared/brand.ts / brand.generated.ts from apps/web/src/styles/tokens.css (CI checks with --check)
     python -m trd.brand --assets                                  # re-render apps/web/public/brand/* after a token change (needs `pip install fonttools` for the wordmark SVG)
@@ -54,6 +54,8 @@ Section 9
     python eval/web_smoke.py --base http://localhost:3000        # Playwright end-to-end against apps/web (local `npm run build && npm start`, or a Vercel preview URL)
     (cd apps/web && npm install && npm run build && npm start)   # the customer app locally; see apps/web/README.md
     psql/SQL: eval/reset_test_lead.sql                            # reset CB-TEST-0001 to a clean state
+    curl -s -H "x-ops-key: $OPS_PASSWORD" "https://letrfpwskjbgnyacesgv.supabase.co/functions/v1/ops?limit=20" | jq '.kpis, .system'   # the console's data (SPEC-09 D1)
+    curl -s -H "x-ops-key: $OPS_PASSWORD" -H 'content-type: application/json' -d '{"action":"mark_filed","claim_id":"<uuid>","channel":"email"}' https://letrfpwskjbgnyacesgv.supabase.co/functions/v1/ops   # until /ops (D2) ships
     supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv   # manual fallback only; per-function verify_jwt in supabase/config.toml
     # schema + functions normally deploy from main via .github/workflows/deploy.yml (db push, functions deploy, db diff must be empty)
     supabase link --project-ref letrfpwskjbgnyacesgv                           # once per machine (needs the DB password)

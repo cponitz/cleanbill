@@ -8,6 +8,9 @@ on:
       export_url:
         description: "TCAD export zip URL (defaults to the current certified export)"
         required: false
+env:
+  OPS_PASSWORD: ${{ secrets.OPS_PASSWORD }}
+  PROJECT_REF: letrfpwskjbgnyacesgv
 jobs:
   etl:
     runs-on: ubuntu-latest
@@ -25,9 +28,18 @@ jobs:
       - run: python -m trd.etl.load --export data/raw/export.zip --layout trd/etl/layouts/pacs_8_0_33_full.json --db data/tcad.duckdb
       - run: python -m trd.etl.leads --db data/tcad.duckdb --out data/out/leads.csv
       - name: load new leads into Supabase
+        id: publish
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python -m trd.etl.publish --leads data/out/leads.csv
       - uses: actions/upload-artifact@v4
         with: { name: leads, path: data/out/leads.csv }
+      - name: record this run for /ops (system_status, SPEC-09)
+        if: always() && env.OPS_PASSWORD != ''
+        run: |
+          VALUE=$(jq -nc --arg sha "$GITHUB_SHA" --arg run "$GITHUB_RUN_ID" --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --arg result "${{ job.status }}" --arg publish "${{ steps.publish.outcome }}" --argjson leads "$(python -c 'import csv,sys;print(sum(1 for _ in csv.DictReader(open("data/out/leads.csv"))))' 2>/dev/null || echo null)" \
+            '{commit: $sha, run_id: $run, url: $url, result: $result, at: (now | todate), publish: $publish, leads: $leads}')
+          curl -sf -m 30 -X POST "https://$PROJECT_REF.supabase.co/functions/v1/ops" -H "x-ops-key: $OPS_PASSWORD" -H "content-type: application/json" \
+            -d "$(jq -nc --arg key "etl" --argjson value "$VALUE" '{action: "system_status", key: $key, value: $value}')" > /dev/null \
+            || echo "::warning::could not record etl status in system_status"

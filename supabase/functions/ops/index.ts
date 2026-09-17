@@ -1,16 +1,245 @@
-// ops API (JSON). The dashboard page is static (docs/ops.html). Password-gated via ?key= or x-ops-key header.
-//   GET  /ops                       -> funnel KPIs + claims with extraction/validation, signed packet URLs, drafts
-//   POST /ops {action, message_id}  -> approve | discard a draft (shadow mode: approving marks it ready; sending is a later step)
+// ops API (JSON) — the operator console's only backend (SPEC-09 D1, ADR 0020). Password-gated via the x-ops-key
+// header or ?key=; 20 failed keys per IP per hour → 429 (counted as events of kind ops_auth_fail).
+//   GET  /ops?status=&limit=   -> {ok, kpis, funnel, claims, inquiries, system}
+//   POST /ops {action, …}      -> approve | discard {message_id} · mark_filed {claim_id, channel} · reprocess {claim_id}
+//                                 · withdraw {claim_id} · inquiry_handled {inquiry_id, notes} · new_claim {prop_id | address, create}
+//                                 · run_selftest {scenario} · system_status {key, value} (workflows report their last run)
+// Every mutating action writes audit_log (actor 'ops'); the status guards are in logic.ts (mirror of trd/agent/store.py).
+// Nothing here sends, files with TCAD or charges (shadow mode; B-13).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { serviceClient } from "./db.ts";
+import { clientIp, serviceClient } from "./db.ts";
+import { CLAIM_STATUSES, claimLink, filedDraft, FUNNEL_KINDS, funnelSteps, guardAction, maskSelftest, parseChannel, parseLimit, SELFTEST_SCENARIOS, addressKey, scoreMatch } from "./logic.ts";
 
+type SB = ReturnType<typeof serviceClient>;
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type, x-ops-key", "cache-control": "no-store" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "content-type": "application/json; charset=utf-8", ...CORS } });
+const SITE_BASE = Deno.env.get("BRAND_URL") ?? "https://cleanbillco.com";
+const AUTH_FAILS_PER_HOUR = 20;
 
-async function opsKey(sb: ReturnType<typeof serviceClient>): Promise<string> {
+async function opsKey(sb: SB): Promise<string> {
   const env = Deno.env.get("OPS_PASSWORD"); if (env) return env;
   const { data } = await sb.from("app_settings").select("value").eq("key", "OPS_PASSWORD").maybeSingle();
   return data?.value ?? "";
+}
+
+function inBackground(p: PromiseLike<unknown>) {
+  const promise = Promise.resolve(p).catch((e) => console.error("background task failed", e));
+  // deno-lint-ignore no-explicit-any
+  const rt = (globalThis as any).EdgeRuntime;
+  if (rt?.waitUntil) rt.waitUntil(promise);
+}
+
+async function audit(sb: SB, action: string, entity: string, entityId: string, detail: Record<string, unknown> = {}) {
+  await sb.from("audit_log").insert({ actor: "ops", action, entity, entity_id: entityId, detail });
+}
+
+async function count(sb: SB, table: string, col: string, val: string): Promise<number> {
+  const { count } = await sb.from(table).select("id", { count: "exact", head: true }).eq(col, val);
+  return count ?? 0;
+}
+
+// ---- POST actions ---------------------------------------------------------------------------------------------------
+async function loadClaim(sb: SB, id: string) {
+  const { data } = await sb.from("claims").select("id, status, lead_id, leads(claim_code, prop_id, properties(situs_full))").eq("id", id).maybeSingle();
+  return data as { id: string; status: string; lead_id: string; leads?: { claim_code: string; prop_id: number; properties?: { situs_full: string } } } | null;
+}
+
+async function markFiled(sb: SB, claimId: string, channelRaw: unknown): Promise<Response> {
+  const c = await loadClaim(sb, claimId);
+  if (!c) return json({ ok: false, error: "not_found" }, 404);
+  const g = guardAction("mark_filed", c.status);
+  if (!g.ok) return json({ ok: false, error: g.error, status: c.status }, g.status);
+  const { data: fil } = await sb.from("filings").select("id, submitted_at").eq("claim_id", c.id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
+  if (!fil) return json({ ok: false, error: "no_filing" }, 409);
+  const channel = parseChannel(channelRaw);
+  const now = new Date();
+  await sb.from("filings").update({ submitted_at: now.toISOString(), channel }).eq("id", fil.id);
+  await sb.from("claims").update({ status: "filed", status_reason: `marked filed by ops via ${channel}`, updated_at: now.toISOString() }).eq("id", c.id);
+  await sb.from("leads").update({ status: "filed", updated_at: now.toISOString() }).eq("id", c.lead_id);
+  const draft = filedDraft(c.leads?.properties?.situs_full ?? "your property", now, channel);
+  const { data: msg } = await sb.from("messages").insert({ claim_id: c.id, direction: "outbound", channel: "email", subject: draft.subject, body: draft.body, intent: draft.intent, agent_draft: true }).select("id").single();
+  await audit(sb, "mark_filed", "claims", c.id, { filing_id: fil.id, channel, message_id: msg?.id ?? null, from: c.status });
+  return json({ ok: true, status: "filed", filing_id: fil.id, message_id: msg?.id ?? null });
+}
+
+async function reprocess(sb: SB, claimId: string): Promise<Response> {
+  const c = await loadClaim(sb, claimId);
+  if (!c) return json({ ok: false, error: "not_found" }, 404);
+  const g = guardAction("reprocess", c.status);
+  if (!g.ok) return json({ ok: false, error: g.error, status: c.status }, g.status);
+  inBackground(fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-claim`, {
+    method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+    body: JSON.stringify({ claim_id: c.id }),
+  }));
+  await audit(sb, "reprocess", "claims", c.id, { from: c.status });
+  return json({ ok: true, status: c.status, kicked: true });
+}
+
+async function withdraw(sb: SB, claimId: string): Promise<Response> {
+  const c = await loadClaim(sb, claimId);
+  if (!c) return json({ ok: false, error: "not_found" }, 404);
+  const g = guardAction("withdraw", c.status);
+  if (!g.ok) return json({ ok: false, error: g.error, status: c.status }, g.status);
+  await sb.from("claims").update({ status: "withdrawn", status_reason: "withdrawn by ops", updated_at: new Date().toISOString() }).eq("id", c.id);
+  await audit(sb, "withdraw", "claims", c.id, { from: c.status });
+  return json({ ok: true, status: "withdrawn" });
+}
+
+async function inquiryHandled(sb: SB, inquiryId: string, notes: unknown): Promise<Response> {
+  const { data: row } = await sb.from("inquiries").select("id").eq("id", inquiryId).maybeSingle();
+  if (!row) return json({ ok: false, error: "not_found" }, 404);
+  const n = String(notes ?? "").slice(0, 2000) || null;
+  await sb.from("inquiries").update({ handled_at: new Date().toISOString(), notes: n }).eq("id", inquiryId);
+  await audit(sb, "inquiry_handled", "inquiries", inquiryId, { notes: n });
+  return json({ ok: true });
+}
+
+/** Walkthrough claims over the published properties: preview matches (owner, situs, estimate, already-exempt flag, the
+ *  lead's code and status), then `create: true` with a prop_id confirms the code and link. A published property always
+ *  has a lead (the ETL publishes them together); one without is the Mac CLI's case. */
+async function newClaim(sb: SB, body: Record<string, unknown>): Promise<Response> {
+  const propId = Number(body.prop_id);
+  const address = String(body.address ?? "").trim();
+  const sel = "prop_id, situs_full, owner_name, hs_exempt, ov65_exempt, appraised_value, deed_date, leads(id, claim_code, status, tier, refund_years, est_refund_total, est_forward_annual, estimate_unconfirmed)";
+  type Row = { prop_id: number; situs_full: string; owner_name: string; hs_exempt: boolean; ov65_exempt: boolean; appraised_value: number | null; deed_date: string | null; leads: Array<{ id: string; claim_code: string; status: string; tier: number; refund_years: number[]; est_refund_total: number; est_forward_annual: number; estimate_unconfirmed: boolean }> | null };
+  let rows: Row[] = [];
+  if (Number.isFinite(propId) && propId > 0) {
+    const { data } = await sb.from("properties").select(sel).eq("prop_id", propId).limit(1);
+    rows = (data ?? []) as unknown as Row[];
+  } else if (address) {
+    const { num, key, words } = addressKey(address);
+    if (!key) return json({ ok: false, error: "bad_request", hint: "house number and street, e.g. 3675 Duval St" }, 400);
+    let q = sb.from("properties").select(sel).ilike("situs_full", `%${key}%`).limit(60);
+    if (num) q = q.ilike("situs_full", `${num} %`);
+    const { data } = await q;
+    rows = ((data ?? []) as unknown as Row[]).map((r) => ({ r, s: scoreMatch(r.situs_full, words) })).sort((a, b) => b.s - a.s || a.r.situs_full.localeCompare(b.r.situs_full)).slice(0, 8).map((x) => x.r);
+  } else return json({ ok: false, error: "bad_request", hint: "prop_id or address" }, 400);
+  const matches = rows.map((r) => {
+    const lead = r.leads?.[0] ?? null;
+    return {
+      prop_id: r.prop_id, situs_full: r.situs_full, owner_name: r.owner_name, hs_exempt: !!r.hs_exempt, ov65_exempt: !!r.ov65_exempt,
+      appraised_value: r.appraised_value, deed_date: r.deed_date,
+      lead: lead ? { claim_code: lead.claim_code, status: lead.status, tier: lead.tier, refund_years: lead.refund_years, est_refund_total: lead.est_refund_total, est_forward_annual: lead.est_forward_annual, estimate_unconfirmed: lead.estimate_unconfirmed, link: claimLink(SITE_BASE, lead.claim_code) } : null,
+    };
+  });
+  if (!body.create) return json({ ok: true, matches });
+  if (!(Number.isFinite(propId) && propId > 0)) return json({ ok: false, error: "bad_request", hint: "create needs prop_id (pick one match)" }, 400);
+  const m = matches[0];
+  if (!m) return json({ ok: false, error: "not_found" }, 404);
+  if (!m.lead) return json({ ok: false, error: "no_lead_for_property", hint: "not in the published lead list — use python -m trd.ops.new_claim on the Mac" }, 409);
+  if (["suppressed", "closed"].includes(m.lead.status)) return json({ ok: false, error: `lead_${m.lead.status}`, status: m.lead.status }, 409);
+  await audit(sb, "new_claim", "leads", m.lead.claim_code, { prop_id: m.prop_id, hs_exempt: m.hs_exempt, lead_status: m.lead.status });
+  return json({ ok: true, claim_code: m.lead.claim_code, link: m.lead.link, status: m.lead.status, hs_exempt: m.hs_exempt, match: m });
+}
+
+async function runSelftest(sb: SB, want: string, scenarioRaw: unknown): Promise<Response> {
+  const scenario = String(scenarioRaw ?? "match");
+  if (!SELFTEST_SCENARIOS.includes(scenario)) return json({ ok: false, error: "bad_request", hint: SELFTEST_SCENARIOS.join("|") }, 400);
+  const t0 = Date.now();
+  const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/selftest?key=${encodeURIComponent(want)}&scenario=${scenario}`, { signal: AbortSignal.timeout(120_000) }).catch((e) => ({ ok: false, status: 0, json: async () => ({ error: String(e) }) }));
+  const result = await r.json().catch(() => ({ error: `http ${r.status}` }));
+  const pass = r.ok && (result as { pass?: boolean }).pass === true;
+  await audit(sb, "run_selftest", "selftest", scenario, { pass, ms: Date.now() - t0, http: r.status });
+  return json({ ok: true, scenario, pass, ms: Date.now() - t0, result: maskSelftest(result) });
+}
+
+async function systemStatus(sb: SB, keyRaw: unknown, value: unknown): Promise<Response> {
+  const key = String(keyRaw ?? "").trim();
+  if (!/^[a-z_]{1,40}$/.test(key) || typeof value !== "object" || value === null) return json({ ok: false, error: "bad_request", hint: "key [a-z_], value object" }, 400);
+  const now = new Date().toISOString();
+  await sb.from("system_status").upsert({ key, value, updated_at: now }, { onConflict: "key" });
+  await audit(sb, "system_status", "system_status", key, { keys: Object.keys(value as Record<string, unknown>) });
+  return json({ ok: true, key, updated_at: now });
+}
+
+async function post(sb: SB, want: string, body: Record<string, unknown>): Promise<Response> {
+  const action = String(body.action ?? "");
+  switch (action) {
+    case "approve": case "discard": {
+      const mid = String(body.message_id ?? "");
+      if (!mid) return json({ ok: false, error: "bad_request" }, 400);
+      if (action === "approve") await sb.from("messages").update({ agent_draft: false, approved_by: "ops", approved_at: new Date().toISOString() }).eq("id", mid);
+      if (action === "discard") await sb.from("messages").delete().eq("id", mid);
+      await audit(sb, `message_${action}`, "messages", mid);
+      return json({ ok: true });
+    }
+    case "mark_filed": return body.claim_id ? markFiled(sb, String(body.claim_id), body.channel) : json({ ok: false, error: "bad_request" }, 400);
+    case "reprocess": return body.claim_id ? reprocess(sb, String(body.claim_id)) : json({ ok: false, error: "bad_request" }, 400);
+    case "withdraw": return body.claim_id ? withdraw(sb, String(body.claim_id)) : json({ ok: false, error: "bad_request" }, 400);
+    case "inquiry_handled": return body.inquiry_id ? inquiryHandled(sb, String(body.inquiry_id), body.notes) : json({ ok: false, error: "bad_request" }, 400);
+    case "new_claim": return newClaim(sb, body);
+    case "run_selftest": return runSelftest(sb, want, body.scenario);
+    case "system_status": return systemStatus(sb, body.key, body.value);
+    default: return json({ ok: false, error: "bad_request", hint: "unknown action" }, 400);
+  }
+}
+
+// ---- GET -------------------------------------------------------------------------------------------------------------
+async function dashboard(sb: SB, url: URL): Promise<Response> {
+  const statusFilter = url.searchParams.get("status");
+  const limit = parseLimit(url.searchParams.get("limit"));
+  const dayMs = 86_400_000;
+  const since7 = new Date(Date.now() - 7 * dayMs).toISOString(), since30 = new Date(Date.now() - 30 * dayMs).toISOString();
+
+  // Per-status counts via head queries (a plain select is capped at 1,000 rows by PostgREST); events grouped in SQL.
+  const leadCounts: Record<string, number> = {}; let leadsTotal = 0;
+  for (const st of ["new", "mailed", "opened", "claimed", "filed", "approved", "refunded", "closed", "suppressed"]) { leadCounts[st] = await count(sb, "leads", "status", st); leadsTotal += leadCounts[st]; }
+  const claimCounts: Record<string, number> = {};
+  for (const st of CLAIM_STATUSES) claimCounts[st] = await count(sb, "claims", "status", st);
+  const [{ data: k7 }, { data: kAll }, { data: byDay }] = await Promise.all([
+    sb.rpc("ops_events_by_kind", { since: since7 }), sb.rpc("ops_events_by_kind", {}), sb.rpc("ops_events_by_day", { since: since30 }),
+  ]);
+  const toMap = (rows: Array<{ kind: string; n: number }> | null) => Object.fromEntries(FUNNEL_KINDS.map((k) => [k, Number((rows ?? []).find((r) => r.kind === k)?.n ?? 0)]));
+  const byKindAll = toMap(kAll as Array<{ kind: string; n: number }> | null);
+
+  const kpis = {
+    leads_loaded: leadsTotal, mailed: leadCounts.mailed, page_views: byKindAll.view, opened: leadCounts.opened + leadCounts.claimed + leadCounts.filed, claimed: leadCounts.claimed + leadCounts.filed,
+    ready_to_submit: claimCounts.ready_to_submit, needs_dl_update: claimCounts.needs_dl_update, needs_review: claimCounts.needs_review,
+    filed: claimCounts.filed, approved: claimCounts.approved, refunded: claimCounts.refunded + claimCounts.paid,
+    inquiries_open: 0,
+  };
+  const funnel = { by_kind_7d: toMap(k7 as Array<{ kind: string; n: number }> | null), by_kind_all: byKindAll, by_day_30d: (byDay ?? []) as Array<{ day: string; kind: string; n: number }>, steps: funnelSteps(kpis) };
+
+  // v2: `claims` is the engagement (joined to its lead, property and account); findings are structured on the claim.
+  let q = sb.from("claims").select("*, leads(claim_code, est_refund_total, prop_id, properties(situs_full, owner_name)), customers(id, email, card_on_file)").order("created_at", { ascending: false }).limit(limit);
+  if (statusFilter && CLAIM_STATUSES.includes(statusFilter)) q = q.eq("status", statusFilter);
+  const { data: custs } = await q;
+  const ids = (custs ?? []).map((c) => c.id);
+  const [{ data: docs }, { data: filings }, { data: msgs }] = ids.length
+    ? await Promise.all([
+      sb.from("documents").select("claim_id, kind, extracted, validation, extraction_cost_usd").in("claim_id", ids),
+      sb.from("filings").select("claim_id, packet_path, generated_at, submitted_at, channel, form_version").in("claim_id", ids),
+      sb.from("messages").select("*").in("claim_id", ids).order("created_at", { ascending: false }),
+    ])
+    : [{ data: [] }, { data: [] }, { data: [] }];
+  const latestFiling = new Map<string, { claim_id: string; packet_path: string | null; generated_at: string; submitted_at: string | null; channel: string | null; form_version: string | null }>();
+  for (const f of (filings ?? [])) { const cur = latestFiling.get(f.claim_id); if (!cur || f.generated_at > cur.generated_at) latestFiling.set(f.claim_id, f); }
+  const paths = [...latestFiling.values()].map((f) => f.packet_path).filter((p): p is string => !!p);
+  const signed = new Map<string, string>();
+  if (paths.length) { const { data: s } = await sb.storage.from("packets").createSignedUrls(paths, 600); for (const x of s ?? []) if (x.path && x.signedUrl) signed.set(x.path, x.signedUrl); }
+
+  const claims = (custs ?? []).map((c) => {
+    const lead = c.leads ?? {}; const prop = lead.properties ?? {};
+    const d = (docs ?? []).find((x) => x.claim_id === c.id && x.kind === "dl_front");
+    const fil = latestFiling.get(c.id);
+    const ex = d?.extracted as Record<string, unknown> | null;
+    const extracted = ex ? Object.fromEntries(Object.entries(ex).filter(([k]) => k !== "dl_number")) : null;   // never the DL number, masked or not
+    return {
+      id: c.id, customer_id: c.customer_id, account: c.customers ?? null, status: c.status, status_reason: c.status_reason, full_name: c.full_name, email: c.email, phone: c.phone,
+      signed_at: c.agreement_signed_at, created_at: c.created_at, updated_at: c.updated_at,
+      claim_code: lead.claim_code, est_refund_total: lead.est_refund_total, prop_id: lead.prop_id, situs_full: prop.situs_full, owner_name: prop.owner_name,
+      extracted,
+      findings: Array.isArray(c.findings) && c.findings.length ? c.findings : ((d?.validation as { findings?: unknown[] } | null)?.findings ?? []),
+      extraction_cost_usd: d?.extraction_cost_usd ?? null,
+      packet: fil ? { url: fil.packet_path ? signed.get(fil.packet_path) ?? null : null, form_version: fil.form_version, generated_at: fil.generated_at, submitted_at: fil.submitted_at, channel: fil.channel } : null,
+      messages: (msgs ?? []).filter((m) => m.claim_id === c.id).map((m) => ({ id: m.id, subject: m.subject, body: m.body, intent: m.intent, agent_draft: m.agent_draft, direction: m.direction, channel: m.channel, approved_at: m.approved_at, sent_at: m.sent_at, created_at: m.created_at })),
+    };
+  });
+
+  const { data: inquiries } = await sb.from("inquiries").select("id, created_at, kind, address, email, company, properties, bills, source_path, handled_at, notes").order("handled_at", { ascending: true, nullsFirst: true }).order("created_at", { ascending: false }).limit(200);
+  kpis.inquiries_open = (inquiries ?? []).filter((i) => !i.handled_at).length;
+  const { data: system } = await sb.from("system_status").select("key, value, updated_at").order("key");
+  return json({ ok: true, kpis, funnel, claims, inquiries: inquiries ?? [], system: system ?? [], generated_at: new Date().toISOString() });
 }
 
 Deno.serve(async (req: Request) => {
@@ -19,60 +248,17 @@ Deno.serve(async (req: Request) => {
   const url = new URL(req.url);
   const want = await opsKey(sb);
   const key = req.headers.get("x-ops-key") ?? url.searchParams.get("key") ?? "";
-  if (!want || key !== want) return json({ ok: false, error: "forbidden" }, 403);
-
+  if (!want || key !== want) {
+    const ip = clientIp(req);
+    const since = new Date(Date.now() - 3_600_000).toISOString();
+    const { count: fails } = await sb.from("events").select("id", { count: "exact", head: true }).eq("kind", "ops_auth_fail").gte("at", since).eq("detail->>ip", ip);
+    inBackground(sb.from("events").insert({ claim_code: null, kind: "ops_auth_fail", detail: { ip, ua: req.headers.get("user-agent") ?? "" } }));
+    const limited = (fails ?? 0) >= AUTH_FAILS_PER_HOUR;
+    return json({ ok: false, error: limited ? "rate_limited" : "forbidden" }, limited ? 429 : 403);
+  }
   if (req.method === "POST") {
-    const body = await req.json().catch(() => ({}));
-    const action = String(body.action ?? ""), mid = String(body.message_id ?? "");
-    if (!mid || !["approve", "discard"].includes(action)) return json({ ok: false, error: "bad_request" }, 400);
-    if (action === "approve") await sb.from("messages").update({ agent_draft: false, approved_by: "ops", approved_at: new Date().toISOString() }).eq("id", mid);
-    if (action === "discard") await sb.from("messages").delete().eq("id", mid);
-    await sb.from("audit_log").insert({ actor: "ops", action: `message_${action}`, entity: "messages", entity_id: mid });
-    return json({ ok: true });
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    return post(sb, want, body);
   }
-
-  // Per-status counts via head queries (a plain select is capped at 1,000 rows by PostgREST).
-  const counts: Record<string, number> = {};
-  let leadsTotal = 0;
-  for (const st of ["new", "mailed", "opened", "claimed", "filed", "approved", "refunded", "closed", "suppressed"]) {
-    const { count } = await sb.from("leads").select("id", { count: "exact", head: true }).eq("status", st);
-    counts[st] = count ?? 0; leadsTotal += count ?? 0;
-  }
-  const { count: views } = await sb.from("events").select("id", { count: "exact", head: true }).eq("kind", "view");
-  // v2: `claims` is the engagement (joined to its lead, property and account); findings are structured on the claim.
-  const { data: custs } = await sb.from("claims").select("*, leads(claim_code, est_refund_total, prop_id, properties(situs_full, owner_name)), customers(id, email, card_on_file)").order("created_at", { ascending: false }).limit(200);
-  const ids = (custs ?? []).map((c) => c.id);
-  const { data: docs } = ids.length ? await sb.from("documents").select("claim_id, kind, extracted, validation, extraction_cost_usd").in("claim_id", ids) : { data: [] };
-  const { data: filings } = ids.length ? await sb.from("filings").select("claim_id, packet_path, generated_at, form_version").in("claim_id", ids) : { data: [] };
-  const { data: msgs } = ids.length ? await sb.from("messages").select("*").in("claim_id", ids).order("created_at", { ascending: false }) : { data: [] };
-
-  const claims = [];
-  for (const c of custs ?? []) {
-    const lead = c.leads ?? {}; const prop = lead.properties ?? {};
-    const d = (docs ?? []).find((x) => x.claim_id === c.id && x.kind === "dl_front");
-    const fil = (filings ?? []).filter((x) => x.claim_id === c.id).sort((a, b) => (a.generated_at < b.generated_at ? 1 : -1))[0];
-    let packetUrl: string | null = null;
-    if (fil?.packet_path) {
-      const { data: s } = await sb.storage.from("packets").createSignedUrl(fil.packet_path, 600);
-      packetUrl = s?.signedUrl ?? null;
-    }
-    claims.push({
-      id: c.id, customer_id: c.customer_id, account: c.customers ?? null, status: c.status, status_reason: c.status_reason, full_name: c.full_name, email: c.email, phone: c.phone,
-      signed_at: c.agreement_signed_at, signature_ip: c.signature_ip, created_at: c.created_at,
-      claim_code: lead.claim_code, est_refund_total: lead.est_refund_total, situs_full: prop.situs_full, owner_name: prop.owner_name,
-      extracted: d?.extracted ?? null,
-      findings: Array.isArray(c.findings) && c.findings.length ? c.findings : ((d?.validation as { findings?: unknown[] } | null)?.findings ?? []),
-      extraction_cost_usd: d?.extraction_cost_usd ?? null,
-      packet: fil ? { url: packetUrl, form_version: fil.form_version, generated_at: fil.generated_at } : null,
-      messages: (msgs ?? []).filter((m) => m.claim_id === c.id).map((m) => ({ id: m.id, subject: m.subject, body: m.body, intent: m.intent, agent_draft: m.agent_draft, direction: m.direction, created_at: m.created_at })),
-    });
-  }
-  const kpis = {
-    leads_loaded: leadsTotal, mailed: counts.mailed ?? 0, page_views: views ?? 0,
-    opened: (counts.opened ?? 0) + (counts.claimed ?? 0), claimed: counts.claimed ?? 0,
-    ready_to_submit: claims.filter((c) => c.status === "ready_to_submit").length,
-    needs_dl_update: claims.filter((c) => c.status === "needs_dl_update").length,
-    needs_review: claims.filter((c) => c.status === "needs_review").length,
-  };
-  return json({ ok: true, kpis, claims });
+  return dashboard(sb, url);
 });
