@@ -26,7 +26,8 @@ import { extFor, followUpMode, isPageEvent, PAGE_EVENTS, parseInquiry, parseType
 
 type SB = ReturnType<typeof serviceClient>;
 
-const CODE_RE = /^TRD-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+const CODE_PREFIX = "CB";   // SPEC-08 A2 (B-19): codes are CB-XXXX-XXXX; TRD- codes are rejected (nothing was printed or mailed)
+const CODE_RE = /^CB-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 const MAX_BYTES = 15 * 1024 * 1024;
 const MIMES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);   // HEIC is converted client-side (SPEC-04b) — the extraction model does not accept it
 const CORS = {
@@ -44,8 +45,9 @@ function json(body: unknown, status = 200): Response {
 export function normCode(raw: string | null): string | null {
   if (!raw) return null;
   const c = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (c.length !== 11 || !c.startsWith("TRD")) return null;
-  const code = `TRD-${c.slice(3, 7)}-${c.slice(7, 11)}`;
+  const n = CODE_PREFIX.length;
+  if (c.length !== n + 8 || !c.startsWith(CODE_PREFIX)) return null;
+  const code = `${CODE_PREFIX}-${c.slice(n, n + 4)}-${c.slice(n + 4, n + 8)}`;
   return CODE_RE.test(code) ? code : null;
 }
 

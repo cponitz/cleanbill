@@ -6,7 +6,7 @@ export const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "https://letrfpwskj
 export const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
 
 /** The prefix printed on every letter and stored on every lead. Changing it is a backend + letter change, not a page change. */
-export const CODE_PREFIX = "TRD";
+export const CODE_PREFIX = "CB";   // SPEC-08 A2 (B-19)
 export const CODE_PLACEHOLDER = `${CODE_PREFIX}-XXXX-XXXX`;
 export const CODE_MASK = `${CODE_PREFIX}-____-____`;
 
@@ -105,18 +105,19 @@ export async function postInquiry(inq: Inquiry): Promise<{ ok: true; inquiry_id:
   return asJson(r);
 }
 
-/** Codes look like TRD-XXXX-XXXX; accept what people type (lowercase, no dashes, O for 0, I for 1) and normalise. */
+/** Codes look like CB-XXXX-XXXX; accept what people type (lowercase, no dashes, O for 0, I for 1) and normalise. */
 export function normalizeCode(raw: string): string | null {
   const c = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (c.length !== 11 || !c.startsWith(CODE_PREFIX)) return null;
-  const body = c.slice(3).replace(/O/g, "0").replace(/I/g, "1");   // letters O and I are never printed in a code (SPEC-07 "input mask")
+  if (c.length !== CODE_PREFIX.length + 8 || !c.startsWith(CODE_PREFIX)) return null;
+  const body = c.slice(CODE_PREFIX.length).replace(/O/g, "0").replace(/I/g, "1");   // letters O and I are never printed in a code (SPEC-07 "input mask")
   return `${CODE_PREFIX}-${body.slice(0, 4)}-${body.slice(4, 8)}`;
 }
 
 /** What the claim-code input shows while typing: uppercase, dashes inserted after the prefix and the 4th body character. */
 export function maskCode(raw: string): string {
-  const c = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 11);
-  if (c.length <= 3) return c;
-  if (c.length <= 7) return `${c.slice(0, 3)}-${c.slice(3)}`;
-  return `${c.slice(0, 3)}-${c.slice(3, 7)}-${c.slice(7)}`;
+  const n = CODE_PREFIX.length;
+  const c = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, n + 8);
+  if (c.length <= n) return c;
+  if (c.length <= n + 4) return `${c.slice(0, n)}-${c.slice(n)}`;
+  return `${c.slice(0, n)}-${c.slice(n, n + 4)}-${c.slice(n + 4)}`;
 }

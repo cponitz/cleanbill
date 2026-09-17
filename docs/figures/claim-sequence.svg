@@ -30,7 +30,7 @@
   </g>
   <g fill="#1F2733">
     <text x="118" y="36" text-anchor="middle">1 scans QR / types code</text>
-    <text x="245" y="54" text-anchor="middle">2 GET /claim?c=TRD-…</text>
+    <text x="245" y="54" text-anchor="middle">2 GET /claim?c=CB-…</text>
     <text x="375" y="72" text-anchor="middle">3 rate-limit check; load lead+property</text>
     <text x="375" y="90" text-anchor="middle">4 insert events(view); lead → opened</text>
     <text x="245" y="108" text-anchor="middle">5 JSON: estimate, situs, years, deadline</text>

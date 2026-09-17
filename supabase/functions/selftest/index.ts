@@ -8,13 +8,13 @@
 //                     packet; a further re-upload on the now-ready claim must be refused with 409.
 // Every scenario also probes GET /claim/precheck (SPEC-06 §3) with the situs (expect match) and another address (expect
 // mismatch) and reports the round-trip time.
-// Only ever touches the synthetic lead TRD-TEST-0001 / property 999000001. The photo-quality vision eval runs separately
+// Only ever touches the synthetic lead CB-TEST-0001 / property 999000001. The photo-quality vision eval runs separately
 // from the repo (eval/run_extraction_eval.py) against 30 synthetic JPEG photos.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { serviceClient } from "./db.ts";
 
-const TEST_CODE = "TRD-TEST-0001";
+const TEST_CODE = "CB-TEST-0001";
 const TEST_PROP = 999000001;
 const DUVAL = { situs_num: "3675", situs_street: "DUVAL ST", situs_zip: "78721", situs_full: "3675 DUVAL ST, AUSTIN, TX 78721", line1: "3675 DUVAL ST", line2: "AUSTIN, TX 78721" };
 const BRODIE = { situs_num: "1200", situs_street: "BRODIE LN", situs_zip: "78745", situs_full: "1200 BRODIE LN, AUSTIN, TX 78745", line1: "1200 BRODIE LN", line2: "AUSTIN, TX 78745" };

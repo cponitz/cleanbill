@@ -97,7 +97,7 @@ async function buildPacket(p: {
   const f = await doc.embedFont(StandardFonts.Helvetica), fb = await doc.embedFont(StandardFonts.HelveticaBold);
   let y = 740;
   const line = (t: string, bold = false, size = 11) => { page.drawText(t, { x: 54, y, size, font: bold ? fb : f, color: rgb(0.12, 0.15, 0.2) }); y -= size + 6; };
-  line("Texas Refund Desk — Residence Homestead Exemption Application Packet (data sheet)", true, 13);
+  line("Clean Bill — Residence Homestead Exemption Application Packet (data sheet)", true, 13);
   line("Prepared for signature on Comptroller Form 50-114. This sheet accompanies the official form.", false, 9);
   y -= 8;
   line("PROPERTY", true);

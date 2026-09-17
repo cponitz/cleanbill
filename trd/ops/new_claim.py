@@ -8,7 +8,7 @@ homestead exemption (it is flagged, so ops knows the "refund" is a test).
   python -m trd.ops.new_claim --prop-id 381397                          # by TCAD account number
   python -m trd.ops.new_claim --address "9209 BRADNER" --create         # actually create the lead (default: preview only)
   python -m trd.ops.new_claim --address "..." --create --owner-override "Jane Q Owner"   # if the roll owner differs (recent sale)
-Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Site base via SITE_BASE (default GitHub Pages URL).
+Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Site base via SITE_BASE (default https://cleanbillco.com; the link is /claim/<code>, SPEC-08 A3).
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from trd.estimator.refund import conservative_display, estimate_refund
 from trd.etl.leads import new_claim_code, property_units
 
 DB = Path(os.environ.get("TCAD_DB", "data/tcad.duckdb"))
-SITE_BASE = os.environ.get("SITE_BASE", "https://cponitz.github.io/texas-refund-desk")
+SITE_BASE = os.environ.get("SITE_BASE", "https://cleanbillco.com")
 
 
 def _norm(s: str) -> str:
@@ -145,7 +145,7 @@ def main() -> int:
     print(f"\n{'Existing' if res['existing'] else 'Created'} claim {res['claim_code']} (status {res['status']}) for #{prop['prop_id']} {prop['situs_full']}")
     print(f"Estimate: ${conservative_display(est.refund_total):,} shown (raw ${est.refund_total:,.2f}) for {est.refund_years}; forward ${est.forward_annual:,.0f}/yr"
           + ("  ** property already has a homestead exemption — test only **" if prop["hs_exempt"] else ""))
-    print(f"Link: {SITE_BASE}/claim.html?c={res['claim_code']}")
+    print(f"Link: {SITE_BASE}/claim/{res['claim_code']}")
     return 0
 
 

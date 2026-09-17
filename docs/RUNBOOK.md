@@ -1,4 +1,4 @@
-# Texas Refund Desk — Runbook
+# Clean Bill — Runbook
 
 *Operating the prototype: addresses, daily loop, commands, statuses, troubleshooting. Extracted from handbook v2.1 §9 (2026-09-12).*
 
@@ -10,11 +10,11 @@ Section 9
 
 |                        |                                                                                                                                                                                                                |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Landing (enter a code) | `https://cponitz.github.io/texas-refund-desk/index.html` (Pages serves `docs/` at the root; the old `homestead-refund` address does not redirect); after T-12: `https://texasrefunddesk.com`                                |
-| Claim page (test)      | Vercel preview `https://texas-refund-desk-<hash>-ponitz-development.vercel.app/claim/TRD-TEST-0001` (production URL after cut-over); fallback `…/texas-refund-desk/claim.html?c=TRD-TEST-0001`                                                                                                                                                                            |
-| Agreement              | `…/texas-refund-desk/agreement.html?c=TRD-TEST-0001`                                                                                                                                                                        |
-| Ops dashboard          | `…/texas-refund-desk/ops.html` — password rotated Sep 12 (in your password manager and `app_settings`; update the Mac `.env`). Never in a document.                                                                         |
-| Claim API              | `https://letrfpwskjbgnyacesgv.supabase.co/functions/v1/claim?c=TRD-TEST-0001`                                                                                                                                  |
+| Landing (enter a code) | `https://cponitz.github.io/texas-refund-desk/index.html` (Pages serves `docs/` at the root; the old `homestead-refund` address does not redirect); production (SPEC-08 R2, then cut-over): `https://cleanbillco.com`                                |
+| Claim page (test)      | Vercel preview `https://texas-refund-desk-<hash>-ponitz-development.vercel.app/claim/CB-TEST-0001` (production URL after cut-over); fallback `…/texas-refund-desk/claim.html?c=CB-TEST-0001`                                                                                                                                                                            |
+| Agreement              | `…/texas-refund-desk/agreement.html?c=CB-TEST-0001`                                                                                                                                                                        |
+| Ops dashboard          | `…/texas-refund-desk/ops.html` (becomes `https://cleanbillco.com/ops` when SPEC-09 lands) — password rotated Sep 12 (in your password manager and `app_settings`; update the Mac `.env`). Never in a document.                                                                         |
+| Claim API              | `https://letrfpwskjbgnyacesgv.supabase.co/functions/v1/claim?c=CB-TEST-0001`                                                                                                                                  |
 | Self-test              | `…/functions/v1/selftest?key=<OPS_PASSWORD>&scenario=match` (or `mismatch`, `mismatch_then_fix`) → expect `"pass": true` in ~10 s                                                                                                    |
 | Supabase dashboard     | `https://supabase.com/dashboard/project/letrfpwskjbgnyacesgv` — read-only by convention (§2)                                                                                                                   |
 | Actions                | `https://github.com/cponitz/texas-refund-desk/actions` — `claims-agent` schedule **disabled until test data exists** (run it manually with "Run workflow" or `gh workflow run agent.yml`); `tcad-etl` manual; `ci` on every push/PR; `deploy (main)` on merges touching `supabase/**` |
@@ -33,8 +33,8 @@ Section 9
 
 ### 9.3 Commands (from the repo folder on the Mac)
 
-    pip install -e .[dev] && python -m pytest -q                                     # Python tests (43 on main at 2026-09-14)
-    deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts   # Deno tests (31)
+    pip install -e .[dev] && python -m pytest -q                                     # Python tests (49 on main at 2026-09-17)
+    deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts   # Deno tests (33)
     python -m trd.findings --emit-ts --emit-snapshot            # regenerate _shared/findings.ts + the G-9 snapshot after editing trd/findings.py (CI checks with --check)
     python -m trd.etl.load --export data/raw/PROP_slim.txt --layout trd/etl/layouts/pacs_8_0_33_slim.json \
         --entities data/raw/PROP_ENT_slim.txt.gz --db data/tcad.duckdb        # roll + each property's taxing units (SPEC-01)
@@ -49,7 +49,7 @@ Section 9
     python eval/browser_smoke.py                                  # Playwright end-to-end against the static fallback pages
     python eval/web_smoke.py --base http://localhost:3000        # Playwright end-to-end against apps/web (local `npm run build && npm start`, or a Vercel preview URL)
     (cd apps/web && npm install && npm run build && npm start)   # the customer app locally; see apps/web/README.md
-    psql/SQL: eval/reset_test_lead.sql                            # reset TRD-TEST-0001 to a clean state
+    psql/SQL: eval/reset_test_lead.sql                            # reset CB-TEST-0001 to a clean state
     supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv   # manual fallback only; per-function verify_jwt in supabase/config.toml
     # schema + functions normally deploy from main via .github/workflows/deploy.yml (db push, functions deploy, db diff must be empty)
     supabase link --project-ref letrfpwskjbgnyacesgv                           # once per machine (needs the DB password)

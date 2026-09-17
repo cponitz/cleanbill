@@ -102,7 +102,7 @@ def test_etl_pipeline(tmp_path: Path):
     assert len(json.loads(r5["entities"])) == 6 and json.loads(r5["entities"])[0]["entity_cd"] == "19"   # ISD first, then city, county...
     assert r1["situs_full"] == "3675 DUVAL ST, AUSTIN, TX 78721"
     assert leads[leads["prop_id"] == 8].iloc[0]["situs_full"] == "800 W 5TH ST UNIT 12, AUSTIN, TX 78703"
-    assert all(leads["claim_code"].str.match(r"^TRD-[A-Z2-9]{4}-[A-Z2-9]{4}$"))
+    assert all(leads["claim_code"].str.match(r"^CB-[A-Z2-9]{4}-[A-Z2-9]{4}$"))
     s = summary(leads)
     assert s["n"] == 4 and s["by_tier"][1] == 2
 
@@ -110,4 +110,4 @@ def test_etl_pipeline(tmp_path: Path):
 def test_norm_addr_and_codes():
     assert norm_addr("3675 Duval Street") == norm_addr("3675 DUVAL ST")
     assert norm_addr("800 W 5th St Apt 12") == "800 W 5TH ST UNIT 12"
-    c = new_claim_code(); assert len(c) == 13 and "O" not in c and "0" not in c
+    c = new_claim_code(); assert len(c) == 12 and c.startswith("CB-") and "O" not in c and "0" not in c

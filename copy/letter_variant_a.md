@@ -32,10 +32,10 @@ Texas law lets you claim the exemption **retroactively** for {{refund_years_text
 Sincerely,
 
 Charlie Ponitz
-{{brand}} · Austin, Texas · hello@texasrefunddesk.com
+{{brand}} · Austin, Texas · hello@cleanbillco.com
 
 ---
 
 *{{brand}} is a private company. We are not affiliated with the Travis Central Appraisal District, the Travis County Tax Office, or any government agency. The refund described here would be paid by the Travis County Tax Office on behalf of the taxing units listed above, after approval by the Travis Central Appraisal District. Estimates are based on public appraisal data and current tax rates; the appraisal district makes all eligibility decisions. Refunds are issued to the person who paid the tax. This is not legal or tax advice.*
 
-*If you do not want to hear from us again, reply to hello@texasrefunddesk.com with "remove" and your address.*
+*If you do not want to hear from us again, reply to hello@cleanbillco.com with "remove" and your address.*

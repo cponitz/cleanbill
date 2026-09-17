@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Your property-tax refund claim — Texas Refund Desk</title>
+<title>Your property-tax refund claim — Clean Bill</title>
 <style>
 :root{--navy:#1F3864;--ink:#1F2733;--grey:#6B7686;--line:#C9D2DF;--tint:#F1F4F9;--accent:#2E5496;--amber:#C08A2E}
 *{box-sizing:border-box}body{margin:0;font:16px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#fff}
@@ -31,24 +31,24 @@ footer{margin-top:40px;font-size:12px;color:var(--grey);border-top:1px solid var
 </head>
 <body>
 <div class="wrap">
-<header><div class="b">Texas Refund Desk</div><div class="s">Private company · Not affiliated with any government agency</div></header>
+<header><div class="b">Clean Bill</div><div class="s">Private company · Not affiliated with any government agency</div></header>
 
 <div id="loading"><p class="note">Loading your claim…</p></div>
 
 <div id="notfound" hidden>
   <h1>We couldn't find that claim code.</h1>
-  <p>Check the code printed on your letter (it looks like <b>TRD-XXXX-XXXX</b>) and try again, or email <a href="mailto:hello@texasrefunddesk.com">hello@texasrefunddesk.com</a> with your property address.</p>
-  <form id="codeform"><label>Claim code</label><input type="text" id="codein" placeholder="TRD-XXXX-XXXX" autocomplete="off"><button type="submit">Open my claim</button></form>
+  <p>Check the code printed on your letter (it looks like <b>CB-XXXX-XXXX</b>) and try again, or email <a href="mailto:hello@cleanbillco.com">hello@cleanbillco.com</a> with your property address.</p>
+  <form id="codeform"><label>Claim code</label><input type="text" id="codein" placeholder="CB-XXXX-XXXX" autocomplete="off"><button type="submit">Open my claim</button></form>
 </div>
 
 <div id="offline" hidden>
   <h1>We couldn't load your claim.</h1>
-  <p>Your connection to our server didn't go through. Please check your internet connection and <a href="javascript:location.reload()">try again</a>, or email <a href="mailto:hello@texasrefunddesk.com">hello@texasrefunddesk.com</a> with your claim code.</p>
+  <p>Your connection to our server didn't go through. Please check your internet connection and <a href="javascript:location.reload()">try again</a>, or email <a href="mailto:hello@cleanbillco.com">hello@cleanbillco.com</a> with your claim code.</p>
 </div>
 
 <div id="closed" hidden>
   <h1>This claim is already in progress.</h1>
-  <p>Status: <b id="closedstatus"></b>. We've emailed you the next steps. Questions: hello@texasrefunddesk.com.</p>
+  <p>Status: <b id="closedstatus"></b>. We've emailed you the next steps. Questions: hello@cleanbillco.com.</p>
 </div>
 
 <div id="thanks" hidden>
@@ -58,7 +58,7 @@ footer{margin-top:40px;font-size:12px;color:var(--grey);border-top:1px solid var
     <li>Once you say "go," we submit it to the Travis Central Appraisal District. They typically take 30–90 days.</li>
     <li>If approved, the Travis County Tax Office issues your refund within about 60 days. We invoice 25% then — never before.</li>
   </ol></div>
-  <p>Questions? Reply to any of our emails or write hello@texasrefunddesk.com.</p>
+  <p>Questions? Reply to any of our emails or write hello@cleanbillco.com.</p>
 </div>
 
 <div id="claim" hidden>
@@ -127,7 +127,7 @@ footer{margin-top:40px;font-size:12px;color:var(--grey);border-top:1px solid var
     </div>
     <div class="chk"><input type="checkbox" name="agree_terms" required><span>I have read the <a id="agreementlink" href="agreement.html" target="_blank">Service Agreement</a> and agree to it.</span></div>
     <div class="chk"><input type="checkbox" name="agree_esign" required><span>I agree to sign electronically. My typed name below is my legal signature on the Service Agreement <b>and</b> on my Form 50-114 application, and I am the property owner named above.</span></div>
-    <div class="chk"><input type="checkbox" name="agree_free" required><span>I understand I can file for free myself and am choosing to use Texas Refund Desk.</span></div>
+    <div class="chk"><input type="checkbox" name="agree_free" required><span>I understand I can file for free myself and am choosing to use Clean Bill.</span></div>
     <label>Type your full legal name to sign</label>
     <input type="text" name="signature_name" class="sig" required autocomplete="off" placeholder="Your full name">
     <p class="note">Signature record: name, date/time, IP address, and device are recorded and stamped on your application.</p>
@@ -135,7 +135,7 @@ footer{margin-top:40px;font-size:12px;color:var(--grey);border-top:1px solid var
   </form>
 </div>
 
-<footer>Texas Refund Desk is a private company in Austin, Texas. We are not affiliated with the Travis Central Appraisal District, the Travis County Tax Office, or any government agency. Estimates are based on public appraisal data and current tax rates; the appraisal district decides eligibility. Refunds are issued by the Travis County Tax Office to the person who paid the tax. Not legal or tax advice. Questions: hello@texasrefunddesk.com</footer>
+<footer>Clean Bill is a private company in Austin, Texas. We are not affiliated with the Travis Central Appraisal District, the Travis County Tax Office, or any government agency. Estimates are based on public appraisal data and current tax rates; the appraisal district decides eligibility. Refunds are issued by the Travis County Tax Office to the person who paid the tax. Not legal or tax advice. Questions: hello@cleanbillco.com</footer>
 </div>
 
 <script src="config.js"></script>
@@ -165,7 +165,7 @@ footer{margin-top:40px;font-size:12px;color:var(--grey);border-top:1px solid var
     for (const el of document.querySelectorAll(".earliest")) el.textContent = j.earliest_year;
     $("deadline").textContent = j.deadline;
     $("agreementlink").href = `agreement.html?c=${encodeURIComponent(lead.claim_code)}`;
-    document.title = `Your property-tax refund claim — Texas Refund Desk`;
+    document.title = `Your property-tax refund claim — Clean Bill`;
     show("claim");
   }
 

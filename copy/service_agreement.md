@@ -1,8 +1,8 @@
-# Texas Refund Desk — Service Agreement (v0.1, draft for review)
+# Clean Bill — Service Agreement (v0.1, draft for review)
 
 *Plain-English draft for attorney review before any homeowner signs it. Glossary: TCAD = Travis Central Appraisal District; Tax Office = Travis County Tax Assessor-Collector; Form 50-114 = the Texas residence homestead exemption application.*
 
-**Parties.** This agreement is between you, the owner of the property at **{{situs_address}}** ("you"), and Texas Refund Desk, a private company based in Austin, Texas ("we"). We are not affiliated with TCAD, the Tax Office, or any government agency.
+**Parties.** This agreement is between you, the owner of the property at **{{situs_address}}** ("you"), and Clean Bill Co., a private company based in Austin, Texas ("we"). We are not affiliated with TCAD, the Tax Office, or any government agency.
 
 **1. What we do.** We prepare your Form 50-114 residence homestead exemption application, including the late-application request for tax years **{{refund_years_text}}** under Texas Tax Code §11.431, using the information and identification you provide. We assemble the application for your signature, submit it to TCAD as you direct (or provide it to you to submit), monitor its status, and respond to routine document requests from TCAD on your behalf. We do not represent you in a protest or hearing; if TCAD denies your application, we will tell you your options, and any protest representation would be a separate written engagement with a registered property tax consultant or attorney.
 
@@ -20,7 +20,7 @@
 
 **8. Your information.** We use your ID and personal information only to prepare and track your application. ID images are stored encrypted and deleted 30 days after your application is filed. We do not sell your information. ID numbers are confidential under Texas Tax Code §11.48.
 
-**9. Cancellation.** You may cancel at no cost at any time before your application is submitted to TCAD, by email to hello@texasrefunddesk.com. After submission, the fee in §4 still applies to any refund that results from the application we prepared.
+**9. Cancellation.** You may cancel at no cost at any time before your application is submitted to TCAD, by email to hello@cleanbillco.com. After submission, the fee in §4 still applies to any refund that results from the application we prepared.
 
 **10. Electronic signature.** You agree that typing your name on our claim page is your electronic signature on this agreement and on Form 50-114, with the same effect as a handwritten signature (federal ESIGN Act; Texas Business & Commerce Code ch. 322). We record the date, time, IP address, and device used.
 

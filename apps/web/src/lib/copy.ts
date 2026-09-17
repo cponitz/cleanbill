@@ -8,8 +8,8 @@
 //   copy/service_agreement.md → the agreement page (components/Agreement.tsx)
 //   docs/claim.html → the two eligibility questions the claim_page.md three-question list does not cover (previous homestead, household)
 
-// The brand is one token (SPEC-07 renames the customer-facing brand; the repo, Supabase and Vercel projects keep
-// their `texas-refund-desk` names per B-12). Flip these two lines and the whole site follows.
+// The brand is one token (B-19 / SPEC-08: Clean Bill everywhere; the repo, Supabase and Vercel slugs become `cleanbill` in
+// SPEC-08 Part B). Flip these two lines and the whole site follows.
 export const BRAND = "Clean Bill";
 export const SUPPORT_EMAIL = "hello@cleanbillco.com";
 
@@ -263,7 +263,7 @@ export const CODE_PAGE = {
 
 export const ERRORS = {
   notFound: "We couldn't find that claim code.",
-  notFoundHelp: `Check the code printed on your letter (it looks like TRD-XXXX-XXXX) and try again, or email ${SUPPORT_EMAIL} with your property address.`, // docs/claim.html
+  notFoundHelp: `Check the code printed on your letter (it looks like CB-XXXX-XXXX) and try again, or email ${SUPPORT_EMAIL} with your property address.`, // docs/claim.html
   offline: "We couldn't connect. Please check your connection and try again.", // docs/claim.html (adapted)
   generic: "Something went wrong saving your claim. Please try again.", // API error wording
   rateLimited: "This page has been opened many times from your connection in the last hour. Please wait a little while and try again.", // NEW

@@ -42,11 +42,11 @@ npm run lint && npx tsc --noEmit
 ```
 
 Smoke test (Playwright, from the repo root; needs `.env` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to reset the
-synthetic lead `TRD-TEST-0001`): `python eval/web_smoke.py --base http://localhost:3000` (or a Vercel preview URL; add
+synthetic lead `CB-TEST-0001`): `python eval/web_smoke.py --base http://localhost:3000` (or a Vercel preview URL; add
 `--stripe-on` when that deployment has the card step enabled, `--skip-inquiry` while the claim API it talks to predates
 `POST /claim/inquiry`).
 
-Lighthouse (mobile, production build): `npx lighthouse http://localhost:3000/claim/TRD-TEST-0001 --preset=perf --form-factor=mobile --only-categories=performance,accessibility --chrome-flags="--headless" --output=json --output-path=eval/out/web/lighthouse.json`. Scores are recorded in the PR that changes the page.
+Lighthouse (mobile, production build): `npx lighthouse http://localhost:3000/claim/CB-TEST-0001 --preset=perf --form-factor=mobile --only-categories=performance,accessibility --chrome-flags="--headless" --output=json --output-path=eval/out/web/lighthouse.json`. Scores are recorded in the PR that changes the page.
 
 ## Environment (the app reads only `NEXT_PUBLIC_*`)
 
@@ -63,7 +63,7 @@ Never set the service-role key, the ops password or any other server secret in V
 
 Project `texas-refund-desk` (team Ponitz Development, Hobby). Root Directory `apps/web`, framework preset Next.js,
 production branch `main`, a preview per branch push (`https://texas-refund-desk-<hash>-ponitz-development.vercel.app`).
-Domain `texasrefunddesk.com` is attached at cut-over (Task 6 of the Phase 1 plan). Builds on branches without `apps/web`
+Domain `cleanbillco.com` is attached at cut-over (Task 6 of the Phase 1 plan). Builds on branches without `apps/web`
 fail with "Root Directory does not exist" — expected.
 
 ## Where the words come from
