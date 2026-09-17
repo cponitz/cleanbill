@@ -77,3 +77,13 @@ for them.
 
 iPhone photos chosen from the library can be HEIC. The API rejects HEIC (the extraction model does not read it), so
 `src/lib/heic.ts` converts to JPEG in the browser with `heic2any`, loaded only when such a file is picked.
+
+## Design system (SPEC-08 Part C, ADR 0019)
+
+- Tokens: `src/styles/tokens.css` (semantic `--color-*`, `--shadow-*`, `--ring`, `--font-*`, spacing, radii, motion, type scale).
+  Primitives per theme: `src/styles/theme-handoff.css` (default) and `theme-brief.css`; `DEFAULT_THEME` in `src/app/layout.tsx`
+  picks one, `?theme=brief` (or the toggle on `/design-system`) overrides it for the browser.
+- Components read semantic tokens only (`src/app/globals.css`); `npm run lint:design` enforces it and checks every token
+  resolves in every theme. `python -m trd.brand --sync` (repo root) regenerates `src/styles/brand.generated.ts` and the
+  print / e-mail adapters; `python -m trd.brand --assets` re-renders `public/brand/*`.
+- `/design-system` — the living style guide (noindex, no nav link). Route group `(design)`.

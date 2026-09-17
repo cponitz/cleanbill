@@ -92,10 +92,14 @@ def fill_50114(claim: dict, ex: dict, over65: bool = False, signed_on: date | No
     c.showPage(); c.save(); overlay.seek(0)
     writer.pages[1].merge_page(PdfReader(overlay).pages[0])
 
+    from trd import brand
+    from trd import brand_tokens as T
+    F = brand.register_fonts()
     audit = BytesIO(); c = canvas.Canvas(audit, pagesize=LETTER); y = 740
-    def line(t, bold=False, size=10.5):
-        nonlocal y; c.setFont("Helvetica-Bold" if bold else "Helvetica", size); c.drawString(54, y, t); y -= size + 6
-    line("Electronic Signature and Preparation Record — attachment to Form 50-114", True, 13)
+    brand.draw_wordmark(c, 54, y - 2, 16, T.PRIMARY); y -= 30   # SPEC-08 Part C: wordmark + theme colours on the audit page
+    def line(t, bold=False, size=10.5, color=T.INK):
+        nonlocal y; c.setFillColorRGB(*color); c.setFont(F["bold"] if bold else F["regular"], size); c.drawString(54, y, t); y -= size + 6
+    line("Electronic Signature and Preparation Record — attachment to Form 50-114", True, 13, T.PRIMARY_STRONG)
     line(f"Property: TCAD account {claim['property']['prop_id']} — {claim['property']['situs_full']}")
     line(f"Applicant: {text['Name of Property Owner 1']}    Exemptions requested: General residence homestead{' + Age 65 or older' if over65 else ''}")
     line(f"Tax years: {text['Tax Years for Application']} (late application under Tax Code §11.431)")

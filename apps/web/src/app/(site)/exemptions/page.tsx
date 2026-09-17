@@ -30,8 +30,8 @@ export default function ExemptionsPage() {
       </div>
       <section className="card card-dark grid gap-8 md:grid-cols-2" style={{ padding: 48, borderRadius: 24 }}>
         <div className="flex flex-col gap-3"><h2 className="h2" style={{ fontSize: 32 }}>{EXEMPTIONS.needTitle}</h2><p className="body-lg">{EXEMPTIONS.needSub}</p></div>
-        <ul className="m-0 flex list-none flex-col gap-3 p-0 body-lg" style={{ color: "#fff" }}>
-          {EXEMPTIONS.need.map((n) => <li key={n} className="flex gap-4"><span style={{ color: "var(--teal-soft)" }}>—</span>{n}</li>)}
+        <ul className="m-0 flex list-none flex-col gap-3 p-0 body-lg" style={{ color: "var(--color-on-dark-strong)" }}>
+          {EXEMPTIONS.need.map((n) => <li key={n} className="flex gap-4"><span style={{ color: "var(--color-primary-soft)" }}>—</span>{n}</li>)}
         </ul>
       </section>
     </div>

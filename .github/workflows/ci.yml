@@ -17,6 +17,8 @@ jobs:
       - run: python -m pytest -q
       - name: generated findings.ts and G-9 snapshot must be current (SPEC-06, ADR 0016)
         run: python -m trd.findings --emit-ts --emit-snapshot --check
+      - name: generated brand files must be current and both themes must pass the contrast table (SPEC-08 Part C, ADR 0019)
+        run: python -m trd.brand --sync --check && python -m trd.brand --contrast > /dev/null
   deno:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +34,22 @@ jobs:
           for f in claim process-claim ops selftest; do sed '/edge-runtime.d.ts/d' supabase/functions/$f/index.ts > supabase/functions/$f/index.check.ts; done
           deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/claim/logic.ts supabase/functions/*/index.check.ts
           rm supabase/functions/*/index.check.ts
+  design-system:
+    # SPEC-08 Part C lint: no colour or font literal outside apps/web/src/styles, every semantic token resolves in every
+    # theme, and the web app type-checks (the Vercel build is the render check).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: apps/web/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+        working-directory: apps/web
+      - run: npm run lint:design
+        working-directory: apps/web
+      - run: npx tsc --noEmit
+        working-directory: apps/web
+      - run: npm run lint
+        working-directory: apps/web
   migrations:
     runs-on: ubuntu-latest
     services:

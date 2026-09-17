@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:design": "node scripts/design-lint.mjs"
   },
   "dependencies": {
     "heic2any": "^0.0.4",

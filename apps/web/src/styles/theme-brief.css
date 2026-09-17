@@ -1,0 +1,49 @@
+/* Clean Bill design system — theme "brief" (the alternate; O-13 open).
+   The palette and type pairing proposed in the brand brief of 2026-09-16 (docs/brand/brand-brief.md §10): clean white
+   ground with a cool paper tint for panels, deep green-black ink, forest primary, one warm amber accent, and Source
+   Serif 4 headlines over Inter Tight body. Same primitive names as theme-handoff.css; tokens.css maps them to the
+   semantic tokens. View it at /design-system?theme=brief. Values not in the brief (hover, tints, feedback colours,
+   text-on-amber) are derived so every pairing in docs/DESIGN-SYSTEM.md's contrast table meets WCAG 2.2 AA. */
+:root[data-theme="brief"] {
+  /* brand */
+  --brand: #1E5B45;            /* forest — headlines, buttons, table header */
+  --brand-deep: #164536;       /* hover / text on tint (derived) */
+  --brand-dark: #1E5B45;       /* the point-of-view panel is the primary green with white text (brief §10) */
+  --brand-tint: #E7F0EB;       /* light forest tint (derived) */
+  --brand-soft: #9CC7B3;       /* eyebrows / step numbers on the green band (derived) */
+  --brand-on-dark: #D3E4DA;    /* body text on the green band (derived) */
+  /* accent — warm amber, used once per screen (brief §10) */
+  --accent: #F8EEDC;           /* amber tint for the "You keep" row / accent cards (derived) */
+  --accent-ink: #7A5410;       /* text on the amber tint (derived; AA) */
+  --accent-body: #5C4620;
+  --amount: #9A6B12;           /* the refund number: amber, darkened so 48px text passes 3:1 and body text 4.5:1 */
+  /* neutrals */
+  --ground: #FFFFFF;           /* clean white */
+  --surface: #FFFFFF;
+  --panel: #F3F6F4;            /* cool paper tint for panels */
+  --ink: #12261F;              /* deep green-black */
+  --body: #2F473D;
+  --muted: #5B6F66;
+  --placeholder: #7F908A;   /* 3.3:1 on white */
+  --line: #D7DED9;             /* rule / borders */
+  --hairline: #E5EBE7;
+  --white: #FFFFFF;
+  /* feedback (no red for urgency; error stays the muted brick of the handoff) */
+  --success: #1E7B4F;
+  --success-bg: #E3F3EA;
+  --error: #B4453A;
+  --error-bg: #FBF3F2;
+  --disabled: #A9C6B8;
+  /* translucent */
+  --scrim: rgba(18, 38, 31, .35);
+  --line-on-dark: rgba(255, 255, 255, .16);
+  --photo-a: #E3EAE5;
+  --photo-b: #EDF2EE;
+  --elevation-hero: 0 20px 60px rgba(18, 38, 31, .10);
+  --elevation-pill: 0 12px 40px rgba(30, 91, 69, .12);
+  --ring-color: #DDEBE3;
+  /* type pairing: Source Serif 4 headlines, Inter Tight body and UI (next/font variables), tabular figures on amounts */
+  --font-sans: var(--font-inter-tight), "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-source-serif), "Source Serif 4", Georgia, "Times New Roman", serif;
+  --numeric: tabular-nums;
+}

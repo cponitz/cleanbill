@@ -191,6 +191,14 @@ run.py · validate.py · packet.py<br />
 <td>Emailing the packet to TCAD (decision O-01 → email); watching TCAD's roll supplement and property portal for approval; watching the Tax Office account for the refund; notice, then charge. Designed in §5.7 / SPEC-05. <strong>No code exists</strong> beyond the table shapes.</td>
 <td class="c">**Gap**</td>
 </tr>
+<tr class="odd">
+<td class="c">19</td>
+<td>Design system (SPEC-08 Part C)</td>
+<td>CSS custom properties · generated Python / TS constants · Node lint</td>
+<td class="mono">apps/web/src/styles/{tokens,theme-handoff,theme-brief}.css<br />apps/web/src/app/globals.css (component sheet)<br />apps/web/src/app/(design)/design-system/ + components/DesignSystem.tsx<br />apps/web/public/brand/*<br />apps/web/scripts/design-lint.mjs<br />trd/brand.py · trd/brand_tokens.py (generated) · trd/brand_assets.py · trd/fonts/ · trd/email/<br />supabase/functions/_shared/brand.ts (generated)<br />docs/DESIGN-SYSTEM.md</td>
+<td><strong>One brand definition, every surface reads it</strong> (ADR 0019). <code>tokens.css</code> holds the semantic tokens and the theme-independent primitives; the colour / type primitives live in two theme files with identical names (<code>handoff</code> = the SPEC-07 set, the default; <code>brief</code> = the brand brief's palette and type pairing — O-13 is a one-line switch, <code>DEFAULT_THEME</code> in <code>layout.tsx</code>; <code>?theme=</code> overrides per browser). Components and JSX read semantic tokens only; the lint (CI job <code>design-system</code>) fails on any colour or font literal outside <code>src/styles/</code> and on a token that does not resolve in every theme. <code>python -m trd.brand --sync</code> generates the print (reportlab / Pillow), edge-function (pdf-lib) and web constants from the same file (CI-checked like <code>findings.ts</code>): letters, the packet data sheet, both Form 50-114 audit pages and the e-mail template (<code>trd/email/base.html</code>, wrapped around every outbound message from Task 4 on) carry the wordmark and the theme's colours; DM Sans is vendored (OFL). <code>/design-system</code> is the living style guide (tokens from the live CSS, every component state, the status map, assets, the e-mail template, the theme toggle) — the Sep 26 design review looks at it. <code>docs/DESIGN-SYSTEM.md</code> is the written guide with the WCAG contrast table for both themes (<code>python -m trd.brand --contrast</code>; <code>tests/test_brand.py</code> fails if a pairing drops below its minimum).</td>
+<td class="c">**Built**</td>
+</tr>
 </tbody>
 </table>
 

@@ -1,0 +1,108 @@
+/* Clean Bill design system — tokens (SPEC-08 Part C, C1). ONE source of truth for every design value.
+   Two layers:
+     primitives — raw values, defined per theme in theme-handoff.css / theme-brief.css (colour, type pairing);
+                  the theme-independent primitives (spacing, radii, motion, type scale, breakpoints) live here.
+     semantics  — purpose-named aliases (`--color-primary`, `--color-line`, `--shadow-hero`, `--ring` …). Every
+                  component class in src/app/globals.css and every inline style in src/ reads a semantic token only;
+                  the design lint (apps/web/scripts/design-lint.mjs) fails on a hex literal, rgb( or font-family
+                  outside src/styles/.
+   `python -m trd.brand --sync` generates trd/brand_tokens.py and supabase/functions/_shared/brand.ts from this file
+   plus the default theme, so letters, the packet, the audit page and the e-mail template carry the same values. */
+
+:root {
+  /* ---- primitives: spacing scale (4/8/12/16/24/32/48/64) -------------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --gutter: 64px;                 /* page gutter; 24px under 768px (below) */
+
+  /* ---- primitives: radii ------------------------------------------------------------------------------------------ */
+  --radius-pill: 999px;           /* buttons, pills, search pill */
+  --radius-input: 12px;           /* inputs, choice buttons */
+  --radius-card-sm: 16px;         /* small cards, accordion, tables */
+  --radius-card: 20px;            /* standard cards */
+  --radius-callout: 24px;         /* section callouts, photo slots */
+  --radius-check: 5px;            /* checkbox */
+
+  /* ---- primitives: motion ----------------------------------------------------------------------------------------- */
+  --duration-fast: 150ms;         /* colour / border transitions */
+  --duration-base: 200ms;         /* accordion, icon rotation */
+  --duration-slow: 250ms;         /* sheets */
+  --ease: ease;
+
+  /* ---- primitives: type scale (px) and line heights ------------------------------------------------------------ */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-md: 16px;
+  --text-lg: 17px;
+  --text-xl: 19px;
+  --text-2xl: 20px;
+  --text-h3: 20px;
+  --text-h2: 36px;
+  --text-h1: 52px;
+  --text-display: 68px;
+  --text-stat: 32px;
+  --text-amount: 48px;
+  --leading-tight: 1.05;
+  --leading-snug: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.55;
+  --tracking-tight: -.02em;
+  --tracking-eyebrow: .08em;
+  --tracking-mono: .12em;
+
+  /* ---- primitives: breakpoints (documentation only — custom properties cannot drive @media) --------------------- */
+  --bp-sm: 768px;
+  --bp-lg: 1024px;
+
+  /* ---- primitives: fonts that do not change with the theme ----------------------------------------------------- */
+  --font-mono: ui-monospace, Menlo, Monaco, "SF Mono", Consolas, monospace;
+
+  /* ---- semantics: colour ------------------------------------------------------------------------------------------ */
+  --color-bg: var(--ground);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-placeholder: var(--placeholder);
+  --color-primary: var(--brand);
+  --color-primary-strong: var(--brand-deep);
+  --color-primary-tint: var(--brand-tint);
+  --color-primary-soft: var(--brand-soft);
+  --color-on-primary: var(--white);
+  --color-dark: var(--brand-dark);            /* dark bands */
+  --color-on-dark: var(--brand-on-dark);      /* body text on dark bands */
+  --color-on-dark-strong: var(--white);       /* headings / buttons text on dark bands */
+  --color-accent: var(--accent);              /* secondary tint background */
+  --color-accent-text: var(--accent-ink);
+  --color-accent-body: var(--accent-body);
+  --color-amount: var(--amount);              /* the refund number */
+  --color-line: var(--line);
+  --color-hairline: var(--hairline);
+  --color-row-tint: var(--panel);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-disabled: var(--disabled);
+  --color-scrim: var(--scrim);
+  --color-line-on-dark: var(--line-on-dark);
+  --color-photo-a: var(--photo-a);
+  --color-photo-b: var(--photo-b);
+
+  /* ---- semantics: elevation, focus, type ------------------------------------------------------------------------ */
+  --shadow-hero: var(--elevation-hero);      /* elevated hero card, nav menu */
+  --shadow-pill: var(--elevation-pill);      /* search pill */
+  --ring: 0 0 0 4px var(--ring-color);        /* focus-visible ring on every interactive element */
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-display);
+  --font-code: var(--font-mono);
+  --numeric-amount: var(--numeric);           /* tabular figures where a dollar sign appears (brief theme) */
+}
+@media (max-width: 767px) { :root { --gutter: 24px; } }

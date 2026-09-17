@@ -76,7 +76,7 @@ export function ReplyBox({ code, claimId, compact = false }: { code: string; cla
       <Field id="reply" label={RESULT.replyLabel}>
         <textarea id="reply" className="input" style={{ minHeight: compact ? 88 : 112 }} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} disabled={state === "sent"} />
       </Field>
-      {state === "sent" ? <p className="text-[14px] font-semibold" style={{ color: "var(--success)" }} role="status">{RESULT.replySent}</p> : (
+      {state === "sent" ? <p className="text-[14px] font-semibold" style={{ color: "var(--color-success)" }} role="status">{RESULT.replySent}</p> : (
         <button className="btn self-start" disabled={!text.trim() || state === "busy"} onClick={async () => {
           setState("busy");
           const r = await sendReply(code, claimId, text.trim()).catch(() => null);
@@ -132,15 +132,15 @@ export function CardStep({ code, claimId, onDone }: { code: string; claimId: str
 
 export function DoneScreen({ code, firstName }: { code: string; firstName: string | null }) {
   return (
-    <section data-testid="done" className="flex flex-col gap-5 pb-8" style={{ color: "#fff", minHeight: "70vh" }}>
+    <section data-testid="done" className="flex flex-col gap-5 pb-8" style={{ color: "var(--color-on-dark-strong)", minHeight: "70vh" }}>
       <span className="check-circle" aria-hidden="true">✓</span>
       <div className="eyebrow eyebrow-sm eyebrow-soft">{DONE.eyebrow}</div>
-      <h1 className="flow-title" style={{ fontSize: 28, color: "#fff" }}>{DONE.title(firstName)}</h1>
-      <p style={{ color: "var(--on-dark)" }}>{DONE.intro}</p>
+      <h1 className="flow-title" style={{ fontSize: 28, color: "var(--color-on-dark-strong)" }}>{DONE.title(firstName)}</h1>
+      <p style={{ color: "var(--color-on-dark)" }}>{DONE.intro}</p>
       <ol className="m-0 flex list-none flex-col gap-4 p-0">
-        {DONE.steps.map((s, i) => <li key={s} className="grid grid-cols-[20px_1fr] gap-2 text-[15px]"><span className="font-bold" style={{ color: "var(--teal-soft)" }}>{i + 1}</span><span>{s}</span></li>)}
+        {DONE.steps.map((s, i) => <li key={s} className="grid grid-cols-[20px_1fr] gap-2 text-[15px]"><span className="font-bold" style={{ color: "var(--color-primary-soft)" }}>{i + 1}</span><span>{s}</span></li>)}
       </ol>
-      <p className="fine" style={{ color: "var(--on-dark)" }}>{DONE.questions}</p>
+      <p className="fine" style={{ color: "var(--color-on-dark)" }}>{DONE.questions}</p>
       <div className="flow-cta"><div className="flow-cta-inner"><Link className="btn btn-l btn-block btn-white" href={`/claim/${code}/status`}>{DONE.status}</Link></div></div>
     </section>
   );

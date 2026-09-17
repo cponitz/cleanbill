@@ -36,6 +36,10 @@ Section 9
     pip install -e .[dev] && python -m pytest -q                                     # Python tests (49 on main at 2026-09-17)
     deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts   # Deno tests (33)
     python -m trd.findings --emit-ts --emit-snapshot            # regenerate _shared/findings.ts + the G-9 snapshot after editing trd/findings.py (CI checks with --check)
+    python -m trd.brand --sync                                    # regenerate brand_tokens.py / _shared/brand.ts / brand.generated.ts from apps/web/src/styles/tokens.css (CI checks with --check)
+    python -m trd.brand --assets                                  # re-render apps/web/public/brand/* after a token change (needs `pip install fonttools` for the wordmark SVG)
+    python -m trd.brand --contrast                                # the WCAG contrast table for both themes (paste into docs/DESIGN-SYSTEM.md)
+    (cd apps/web && npm run lint:design)                          # design-system lint: no colour/font literal outside src/styles, every token resolves in every theme
     python -m trd.etl.load --export data/raw/PROP_slim.txt --layout trd/etl/layouts/pacs_8_0_33_slim.json \
         --entities data/raw/PROP_ENT_slim.txt.gz --db data/tcad.duckdb        # roll + each property's taxing units (SPEC-01)
     python -m trd.estimator.build_units --rates data/raw/qryJurisRateWeb2026.xls --listing data/raw/2026_listing.txt \

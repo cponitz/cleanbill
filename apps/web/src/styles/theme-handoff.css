@@ -1,0 +1,50 @@
+/* Clean Bill design system — theme "handoff" (the default; O-13 open).
+   The SPEC-07 design-handoff palette exactly as built (docs/specs/SPEC-07-website-redesign.md "Design tokens"), the
+   teal / navy set with DM Sans. A theme is a file of PRIMITIVE values only: the semantic tokens every component reads
+   (`--color-*`, `--shadow-*`, `--font-*`) are defined once in tokens.css on top of these names, so the two theme files
+   have the same shape and the site switches whole. The SPEC-07 names are noted next to each value.
+   `python -m trd.brand --sync` reads this file (for the default theme) to generate trd/brand_tokens.py and
+   supabase/functions/_shared/brand.ts; the design lint checks every primitive below exists in every theme. */
+:root[data-theme="handoff"] {
+  /* brand */
+  --brand: #157A8A;            /* teal — primary buttons, links, active nav, eyebrows, step markers */
+  --brand-deep: #0E5661;       /* teal-deep — hover on primary, text on tint, estimate amounts */
+  --brand-dark: #0F3A44;       /* navy — dark bands, done screen */
+  --brand-tint: #E6F3F5;       /* teal-tint — callouts, selected choice, estimate box, focus ring */
+  --brand-soft: #7FC4CF;       /* teal-soft — eyebrows / step numbers on dark */
+  --brand-on-dark: #C7DCE0;    /* teal-text-on-dark — body text on dark bands */
+  /* accent (secondary tint) */
+  --accent: #F2E9DA;           /* sand */
+  --accent-ink: #6B4E1E;       /* sand-text */
+  --accent-body: #5A4A33;      /* sand body */
+  --amount: #0E5661;           /* the refund number (teal-deep in this theme) */
+  /* neutrals */
+  --ground: #F7FAFA;           /* page */
+  --surface: #FFFFFF;          /* card */
+  --panel: #F1F6F7;            /* row-tint — table headers, neutral pills */
+  --ink: #172026;
+  --body: #33454D;
+  --muted: #5A6B72;
+  --placeholder: #8A9AA1;
+  --line: #D4E0E3;             /* border */
+  --hairline: #E1EAEC;
+  --white: #FFFFFF;
+  /* feedback */
+  --success: #1E7B4F;
+  --success-bg: #E3F3EA;
+  --error: #B4453A;
+  --error-bg: #FBF3F2;
+  --disabled: #9FC7CE;
+  /* translucent */
+  --scrim: rgba(15, 58, 68, .35);
+  --line-on-dark: rgba(255, 255, 255, .14);
+  --photo-a: #DCE7EA;
+  --photo-b: #E6EEF0;
+  --elevation-hero: 0 20px 60px rgba(15, 58, 68, .10);
+  --elevation-pill: 0 12px 40px rgba(21, 122, 138, .12);
+  --ring-color: #E6F3F5;
+  /* type pairing: DM Sans for everything (next/font variable `--font-dm`) */
+  --font-sans: var(--font-dm), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-sans);
+  --numeric: normal;
+}
