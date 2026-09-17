@@ -1,4 +1,4 @@
-// GENERATED FILE — do not edit. Source: trd/findings.py (python -m trd.findings --emit-ts); CI fails if this is stale.
+// GENERATED FILE — do not edit. Source: cleanbill/findings.py (python -m cleanbill.findings --emit-ts); CI fails if this is stale.
 // The findings rule table (ADR 0013 / ADR 0016 / SPEC-06 §1): code -> severity, field, ops sentence, customer sentence, next action.
 
 export type Severity = "blocking" | "warning" | "info";
@@ -111,7 +111,7 @@ export const CODES = Object.keys(RULES) as Code[];
 /** A structured finding: code is the contract; message is the rendered ops sentence; detail holds the facts. */
 export type Finding = { code: Code; severity: Severity; field: string; message: string; detail?: Record<string, unknown> };
 
-/** Fill `{key}` placeholders from detail; missing/null -> "". Mirrors trd.findings.render byte-for-byte. */
+/** Fill `{key}` placeholders from detail; missing/null -> "". Mirrors cleanbill.findings.render byte-for-byte. */
 export function render(template: string, detail?: Record<string, unknown> | null): string {
   const d = detail ?? {};
   return template.replace(/\{(\w+)\}/g, (_m, k: string) => { const v = d[k]; return v == null ? "" : String(v); });

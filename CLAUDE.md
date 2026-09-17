@@ -10,7 +10,7 @@ before touching anything; it defines every module, table, column and flow.
 - Code, schema, deploys, technical decisions: THIS REPO (docs/ARCHITECTURE.md, docs/adr/, CHANGELOG.md).
 - Naming (B-19, SPEC-08): the product is **Clean Bill** (legal line: Clean Bill Co.), domain cleanbillco.com, support
   hello@cleanbillco.com, claim codes `CB-XXXX-XXXX`. The repo (`cponitz/cleanbill`), Vercel project, Supabase display name and
-  Mac folder are `cleanbill` (SPEC-08 R2, 2026-09-17); the Python package becomes `cleanbill` in Part B3 (until then `trd`). Do not introduce other names;
+  Mac folder are `cleanbill` (SPEC-08 R2, 2026-09-17); the Python package becomes `cleanbill` in Part B3 (until then `cleanbill`). Do not introduce other names;
   "Texas Refund Desk" is retired except in history (CHANGELOG entries, ADRs, SPEC-01…07).
 - Business decisions, specs, plans, research: the Cowork project "Clean Bill"
   (claude/decisions.md, claude/specs/). Never make a business decision here — if a task needs one
@@ -20,17 +20,17 @@ before touching anything; it defines every module, table, column and flow.
 ## Hard rules
 - Supabase is deployed only from main. Never edit the dashboard by hand. Every schema change is a
   migration file in supabase/migrations/ AND an update to docs/ARCHITECTURE.md §4 in the same PR.
-- The agent (trd/agent) stays in shadow mode: no tool may send, file, charge or delete. Adding such a
+- The agent (cleanbill/agent) stays in shadow mode: no tool may send, file, charge or delete. Adding such a
   tool requires a decision ID from claude/decisions.md in the PR description.
 - Fees: a charge happens only after an observed refund in an official record + notice (B-13, SPEC-05).
   Never write code that charges on approval or on a customer's reply.
 - Data model v2 (SPEC-04): `customers` = person/account, `claims` = engagement, `filings` = packet.
   Findings are structured (`claims.findings` jsonb); never build prose status strings.
 - Never log, print or store an unmasked driver's-license number. Images live only in the private
-  `ids` bucket and are purged by trd/jobs/purge_ids.py.
+  `ids` bucket and are purged by cleanbill/jobs/purge_ids.py.
 - Refund figures shown to a homeowner are rounded DOWN (estimator.conservative_display). Letters keep
   the §41.0051 14-pt bold disclaimer and name the taxing units. Do not touch those lines.
-- Validation rules exist twice (supabase/functions/process-claim/validate.ts and trd/agent/validate.py);
+- Validation rules exist twice (supabase/functions/process-claim/validate.ts and cleanbill/agent/validate.py);
   change both from the shared fixture, run both test suites.
 - Secrets: .env (git-ignored), GitHub Actions secrets, app_settings. Never in code or docs.
 
@@ -43,7 +43,7 @@ before touching anything; it defines every module, table, column and flow.
    apply a migration from a branch. Manual fallback: `supabase functions deploy <name> --use-api --project-ref letrfpwskjbgnyacesgv`.
 4. Every PR: entry in CHANGELOG.md (what shipped; data-model changes called out); ADR in docs/adr/ for any
    technical decision; ARCHITECTURE.md updated if a module, table, flow or status changed.
-5. The ETL (trd/etl) runs on Charlie's Mac only (17 GB export). Do not schedule it on hosted runners.
+5. The ETL (cleanbill/etl) runs on Charlie's Mac only (17 GB export). Do not schedule it on hosted runners.
 
 ## Environment
 Supabase project cleanbill (ref letrfpwskjbgnyacesgv). Front-end: Next.js on Vercel (apps/web) once SPEC-04b

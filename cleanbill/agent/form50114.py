@@ -92,8 +92,8 @@ def fill_50114(claim: dict, ex: dict, over65: bool = False, signed_on: date | No
     c.showPage(); c.save(); overlay.seek(0)
     writer.pages[1].merge_page(PdfReader(overlay).pages[0])
 
-    from trd import brand
-    from trd import brand_tokens as T
+    from cleanbill import brand
+    from cleanbill import brand_tokens as T
     F = brand.register_fonts()
     audit = BytesIO(); c = canvas.Canvas(audit, pagesize=LETTER); y = 740
     brand.draw_wordmark(c, 54, y - 2, 16, T.PRIMARY); y -= 30   # SPEC-08 Part C: wordmark + theme colours on the audit page

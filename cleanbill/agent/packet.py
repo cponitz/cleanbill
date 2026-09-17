@@ -10,8 +10,8 @@ from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
-from trd import brand
-from trd import brand_tokens as T
+from cleanbill import brand
+from cleanbill import brand_tokens as T
 
 
 def build_packet(claim: dict, extracted: dict, over65: bool = False, today: date | None = None) -> bytes:

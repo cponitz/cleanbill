@@ -1,7 +1,7 @@
 """Publish a leads CSV into Supabase (properties + leads + property_entities). Idempotent on prop_id: existing leads are left alone.
 
-    python -m trd.etl.publish --leads data/out/leads.csv [--limit 500] [--dry-run]
-    python -m trd.etl.publish --leads data/out/leads.csv --update-estimates   # also refresh the estimate columns of EXISTING leads
+    python -m cleanbill.etl.publish --leads data/out/leads.csv [--limit 500] [--dry-run]
+    python -m cleanbill.etl.publish --leads data/out/leads.csv --update-estimates   # also refresh the estimate columns of EXISTING leads
                                                                              # (SPEC-01 re-estimate); never touches claim_code or status
 
 Also used from the sandbox via `--sql-out` to emit batched INSERT statements when direct network access isn't available.
@@ -15,14 +15,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from trd.estimator.rates import unit
+from cleanbill.estimator.rates import unit
 
 
 PUBLISH_TIERS = (1, 2)   # Tier 3 (bought this year: bill reduction only, never mailed) is never published
 
 
 def rows_from_csv(path: Path, limit: int | None = None, tax_year: int = 2026, tiers: tuple[int, ...] = PUBLISH_TIERS) -> tuple[list[dict], list[dict], list[dict]]:
-    """-> (properties, leads, property_entities) rows for the CSV written by trd.etl.leads, restricted to `tiers`."""
+    """-> (properties, leads, property_entities) rows for the CSV written by cleanbill.etl.leads, restricted to `tiers`."""
     df = pd.read_csv(path, dtype={"situs_zip": str, "owner_zip": str, "situs_num": str, "situs_unit": str})
     if "tier" in df: df = df[df["tier"].astype(int).isin(tiers)]
     if limit: df = df.head(limit)

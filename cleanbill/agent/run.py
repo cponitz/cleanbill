@@ -1,8 +1,8 @@
 """CLI runner for the claims agent.
 
-  python -m trd.agent.run --store fixtures                       # dry run over tests/fixtures/cases.json (needs ANTHROPIC_API_KEY)
-  python -m trd.agent.run --store supabase --statuses submitted,needs_dl_update,needs_review,ready_to_submit
-  python -m trd.agent.run --store supabase --claim <uuid>
+  python -m cleanbill.agent.run --store fixtures                       # dry run over tests/fixtures/cases.json (needs ANTHROPIC_API_KEY)
+  python -m cleanbill.agent.run --store supabase --statuses submitted,needs_dl_update,needs_review,ready_to_submit
+  python -m cleanbill.agent.run --store supabase --claim <uuid>
 
 Shadow mode always: the agent drafts and routes; nothing is sent.
 """
@@ -17,9 +17,9 @@ from pathlib import Path
 
 import anthropic
 
-from trd.agent.loop import DEFAULT_MODEL, run_agent, task_for_claim
-from trd.agent.store import FixtureStore, SupabaseStore
-from trd.agent.tools import Tools
+from cleanbill.agent.loop import DEFAULT_MODEL, run_agent, task_for_claim
+from cleanbill.agent.store import FixtureStore, SupabaseStore
+from cleanbill.agent.tools import Tools
 
 
 def main() -> int:

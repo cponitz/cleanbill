@@ -4,8 +4,8 @@ import zipfile
 from datetime import date
 from pathlib import Path
 
-from trd.etl.leads import build_leads, new_claim_code, norm_addr, summary
-from trd.etl.load import load_export
+from cleanbill.etl.leads import build_leads, new_claim_code, norm_addr, summary
+from cleanbill.etl.load import load_export
 
 MINI = [  # name, length, type — starts computed below
     ("prop_id", 12, "int"), ("prop_type_cd", 5, "str"), ("py_owner_name", 70, "str"),

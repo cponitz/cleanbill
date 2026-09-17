@@ -75,6 +75,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
   `supabase/ci/check_schema.sql` checks the table and the function. ARCHITECTURE §3.1 row 10, §4.1, §5.8.
 
 ### Changed
+- **SPEC-08 Part B3: the Python package is `cleanbill`** (R4; `git mv trd cleanbill`). Every `from trd` / `import trd` /
+  `python -m trd.…` in the package, tests, workflows (`ci.yml`, `agent.yml`, `etl.yml`), `pyproject.toml` (`cleanbill*`),
+  RUNBOOK, README, CLAUDE.md, ARCHITECTURE, DESIGN-SYSTEM, the figures and the edge-function comments now says
+  `cleanbill`. The generated files (`_shared/findings.ts`, `tests/fixtures/findings_snapshot.json`, `_shared/brand.ts`,
+  `brand.generated.ts`, `cleanbill/brand_tokens.py`) were regenerated: the snapshot is byte-identical and the only
+  change in the others is the header line naming the generator command. CI's scratch database keeps its name. **SPEC-08
+  complete** (Parts A, B1–B3, C).
 - **SPEC-08 Part B2: repo-internal names** (R3, after Charlie's R2 renames on 2026-09-17: GitHub `cponitz/cleanbill`,
   Vercel project `cleanbill`, Supabase display name `cleanbill`, Mac folder `~/Desktop/ClaudeCowork/cleanbill`,
   cleanbillco.com attached with `texasrefunddesk.com` redirecting). `supabase/config.toml` `project_id`, `pyproject.toml`

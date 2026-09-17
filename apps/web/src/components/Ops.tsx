@@ -299,7 +299,7 @@ function NewClaim({ keyValue, onCreated }: { keyValue: string; onCreated: () => 
       )}
       {matches && (
         <div className="table-wrap" data-testid="newclaim-matches">
-          {matches.length === 0 ? <div className="table-empty">No published property matches. The Mac CLI (`python -m trd.ops.new_claim`) searches the full roll.</div> : (
+          {matches.length === 0 ? <div className="table-empty">No published property matches. The Mac CLI (`python -m cleanbill.ops.new_claim`) searches the full roll.</div> : (
             <table className="table table-dense">
               <thead><tr><th>Account</th><th>Situs</th><th>Owner</th><th>Flags</th><th>Lead</th><th className="num">Estimate</th><th></th></tr></thead>
               <tbody>{matches.map((m) => (

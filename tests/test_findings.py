@@ -1,12 +1,12 @@
-"""The findings rule table (trd/findings.py): completeness, rendering, and the two generated artefacts — findings.ts for
+"""The findings rule table (cleanbill/findings.py): completeness, rendering, and the two generated artefacts — findings.ts for
 the edge functions and the G-9 snapshot both validators are pinned to. Mirrors supabase/functions/_shared/findings_test.ts."""
 import json
 from datetime import date
 from pathlib import Path
 
-from trd import findings as F
-from trd.agent.store import FixtureStore
-from trd.agent.validate import validate
+from cleanbill import findings as F
+from cleanbill.agent.store import FixtureStore
+from cleanbill.agent.validate import validate
 
 FIX = Path(__file__).parent / "fixtures" / "cases.json"
 
@@ -32,11 +32,11 @@ def test_render_and_make_finding():
 
 
 def test_generated_findings_ts_is_current():
-    assert F.TS_PATH.read_text() == F.emit_ts(), "run: python -m trd.findings --emit-ts"
+    assert F.TS_PATH.read_text() == F.emit_ts(), "run: python -m cleanbill.findings --emit-ts"
 
 
 def test_snapshot_is_current_and_matches_the_python_validator():
-    assert json.loads(F.SNAPSHOT_PATH.read_text()) == F.emit_snapshot(), "run: python -m trd.findings --emit-snapshot"
+    assert json.loads(F.SNAPSHOT_PATH.read_text()) == F.emit_snapshot(), "run: python -m cleanbill.findings --emit-snapshot"
 
 
 def test_validators_emit_codes_only_and_sentences_come_from_the_table():

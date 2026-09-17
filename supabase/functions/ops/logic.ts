@@ -1,11 +1,11 @@
 // ops logic (SPEC-09 D1): the pure parts of the operator API, tested in logic_test.ts.
-//   • the claim status transitions the operator may trigger (mirror of trd/agent/store.py ALLOWED_TRANSITIONS)
+//   • the claim status transitions the operator may trigger (mirror of cleanbill/agent/store.py ALLOWED_TRANSITIONS)
 //   • the guard for each mutating action
 //   • the "we submitted" draft (copy/followups.md "filed — confirmation", verbatim with the placeholders filled)
 //   • address matching for the walkthrough "new claim" search over the published properties
 //   • the funnel step strip and the masking of the selftest result
 
-/** Mirror of trd/agent/store.py ALLOWED_TRANSITIONS — change both. */
+/** Mirror of cleanbill/agent/store.py ALLOWED_TRANSITIONS — change both. */
 export const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   submitted: ["processing", "needs_review", "withdrawn"],
   processing: ["ready_to_submit", "needs_dl_update", "needs_review", "withdrawn"],

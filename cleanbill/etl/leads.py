@@ -23,8 +23,8 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from trd.estimator import estimate_refund, refundable_tax_years
-from trd.estimator.rates import taxing_units, unit
+from cleanbill.estimator import estimate_refund, refundable_tax_years
+from cleanbill.estimator.rates import taxing_units, unit
 
 TYPE_ORDER = {"isd": 0, "city": 1, "county": 2, "college": 3, "hospital": 4, "esd": 5}   # the order units are listed on the letter
 

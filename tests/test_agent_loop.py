@@ -3,9 +3,9 @@ from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 
-from trd.agent.loop import run_agent, task_for_claim
-from trd.agent.store import FixtureStore
-from trd.agent.tools import Tools
+from cleanbill.agent.loop import run_agent, task_for_claim
+from cleanbill.agent.store import FixtureStore
+from cleanbill.agent.tools import Tools
 
 FIX = Path(__file__).parent / "fixtures" / "cases.json"
 TODAY = date(2026, 9, 7)

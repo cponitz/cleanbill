@@ -1,6 +1,6 @@
 // G-9 parity gate: the TypeScript validator, rendered through the generated rule table, must produce byte-identical
 // findings (codes, severity, field, ops sentence, detail, customer sentence, next action) to the Python validator for
-// every case in tests/fixtures/cases.json. The snapshot is written by `python -m trd.findings --emit-snapshot`.
+// every case in tests/fixtures/cases.json. The snapshot is written by `python -m cleanbill.findings --emit-snapshot`.
 import { CODES, makeFinding, render, renderForCustomer, RULES } from "./findings.ts";
 import { type Extracted, type PropertyRec, reasonText, validate } from "./validate.ts";
 

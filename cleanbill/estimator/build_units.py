@@ -1,4 +1,4 @@
-"""Build trd/estimator/rates/units.json — one entry per Travis County taxing unit and tax year — from primary sources.
+"""Build cleanbill/estimator/rates/units.json — one entry per Travis County taxing unit and tax year — from primary sources.
 
 Inputs (all public):
   --rates    Travis County Tax Office truth-in-taxation summary (qryJurisRateWeb<year>.xls): adopted total rate per $100
@@ -18,8 +18,8 @@ unconfirmed until a source for that year is added to RESEARCHED below. Leads tou
 leads.estimate_unconfirmed = true and are excluded from batch selection (SPEC-01 §4).
 
 Usage:
-  python -m trd.estimator.build_units --rates data/raw/qryJurisRateWeb2026.xls --listing data/raw/2026_listing.txt \
-      --listing-year 2026 --db data/tcad.duckdb --out trd/estimator/rates/units.json
+  python -m cleanbill.estimator.build_units --rates data/raw/qryJurisRateWeb2026.xls --listing data/raw/2026_listing.txt \
+      --listing-year 2026 --db data/tcad.duckdb --out cleanbill/estimator/rates/units.json
 """
 from __future__ import annotations
 

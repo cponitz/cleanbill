@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from trd.etl.publish import rows_from_csv, to_sql
+from cleanbill.etl.publish import rows_from_csv, to_sql
 
 
 def _csv(tmp_path: Path) -> Path:

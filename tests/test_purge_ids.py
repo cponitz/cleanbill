@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from trd.jobs.purge_ids import select_purgeable
+from cleanbill.jobs.purge_ids import select_purgeable
 
 NOW = datetime(2026, 9, 8, tzinfo=timezone.utc)
 

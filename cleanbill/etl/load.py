@@ -5,8 +5,8 @@ The layout spec is a JSON file: {"APPRAISAL_INFO": [{"name": "prop_id", "start":
 the 8.0.33 zip is on hand; until then a spec can be hand-written from the document.
 
 Usage:
-    python -m trd.etl.load --export data/raw/2026_Certified_Appraisal_Export.zip --layout trd/etl/layouts/pacs_8_0_33.json --db data/tcad.duckdb
-    python -m trd.etl.load --export data/raw/PROP_slim.txt --layout trd/etl/layouts/pacs_8_0_33_slim.json \
+    python -m cleanbill.etl.load --export data/raw/2026_Certified_Appraisal_Export.zip --layout cleanbill/etl/layouts/pacs_8_0_33.json --db data/tcad.duckdb
+    python -m cleanbill.etl.load --export data/raw/PROP_slim.txt --layout cleanbill/etl/layouts/pacs_8_0_33_slim.json \
         --entities data/raw/PROP_ENT_slim.txt.gz --db data/tcad.duckdb      # slim cuts (see layouts/*.cut) + taxing units
 """
 from __future__ import annotations

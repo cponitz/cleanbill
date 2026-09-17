@@ -2,9 +2,9 @@ from datetime import date
 
 import pytest
 
-from trd.estimator import estimate_refund, refundable_tax_years, savings_by_entity
-from trd.estimator.rates import TCAD_AVG_HS_SAVINGS_2025
-from trd.estimator.refund import conservative_display, late_filing_deadline
+from cleanbill.estimator import estimate_refund, refundable_tax_years, savings_by_entity
+from cleanbill.estimator.rates import TCAD_AVG_HS_SAVINGS_2025
+from cleanbill.estimator.refund import conservative_display, late_filing_deadline
 
 
 def test_late_filing_deadline_two_years_after_delinquency():
@@ -86,7 +86,7 @@ def test_units_default_is_flagged_unconfirmed():
 
 
 def test_explicit_austin_units_match_default_and_are_confirmed():
-    from trd.estimator.rates import DEFAULT_UNITS
+    from cleanbill.estimator.rates import DEFAULT_UNITS
     a = savings_by_entity(600_000, 2025); b = savings_by_entity(600_000, 2025, units=list(DEFAULT_UNITS))
     assert a["total"] == b["total"] and set(a["entities"]) == {"AISD", "CITY", "COUNTY", "ACC", "CENTRAL_HEALTH"}
     assert b["unconfirmed_entities"] == []
@@ -148,7 +148,7 @@ def test_units_by_year_breakdown_and_unit_names():
 
 
 def test_every_unit_with_a_rate_has_a_rule_and_the_five_are_confirmed():
-    from trd.estimator.rates import load_units
+    from cleanbill.estimator.rates import load_units
     units = load_units()["units"]
     assert len(units) > 200 and sum(u["taxing"] for u in units.values()) > 130
     for cd in ("01", "02", "03", "68", "2J"):
@@ -157,7 +157,7 @@ def test_every_unit_with_a_rate_has_a_rule_and_the_five_are_confirmed():
 
 
 def test_letter_names_the_property_units():
-    from trd.letters.generate import unit_display, units_text
+    from cleanbill.letters.generate import unit_display, units_text
     assert unit_display("CITY OF PFLUGERVILLE") == "the City of Pflugerville"
     assert unit_display("PFLUGERVILLE ISD") == "Pflugerville ISD"
     assert unit_display("TRAVIS CO ESD NO 2") == "Travis County ESD No. 2"
@@ -166,7 +166,7 @@ def test_letter_names_the_property_units():
 
 
 def test_build_units_parses_listing_and_merges_duplicate_rows():
-    from trd.estimator.build_units import build, parse_listing
+    from cleanbill.estimator.build_units import build, parse_listing
     text = """ID #   Code    PTD Number      Name & Address
 1038   38      105-904-02      DRIPPING SPRINGS ISD             Type: School      FrzC: Yes
                                EXEMPTIONS: Type              State Amt    Local Option Pct   Local Opt Min    Local Opt Amt   Freeze Ceiling

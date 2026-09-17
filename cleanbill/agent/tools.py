@@ -14,8 +14,8 @@ from datetime import date
 from io import BytesIO
 from typing import Any, Callable
 
-from trd.agent.store import Store
-from trd.agent.validate import validate
+from cleanbill.agent.store import Store
+from cleanbill.agent.validate import validate
 
 EXTRACTION_MODEL = "claude-haiku-4-5"
 PRICE_IN, PRICE_OUT = 1.0, 5.0
@@ -127,7 +127,7 @@ class Tools:
         return v.as_dict()
 
     def t_generate_form_50114(self, claim_id: str, over65: bool = False) -> dict:
-        from trd.agent.packet import build_packet  # local import keeps reportlab optional for tests
+        from cleanbill.agent.packet import build_packet  # local import keeps reportlab optional for tests
         claim = self.store.get_claim(claim_id)
         front = next((d for d in claim["documents"] if d["kind"] == "dl_front" and d.get("extracted")), None)
         if not front:

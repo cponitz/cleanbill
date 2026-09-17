@@ -15,22 +15,22 @@
 
     <rect x="150" y="40" width="120" height="50" rx="3" fill="#fff" stroke="#1F3864"/>
     <text x="210" y="57" text-anchor="middle" font-weight="700" fill="#1F3864">2 · ETL loader</text>
-    <text x="210" y="70" text-anchor="middle">trd/etl/load.py</text>
+    <text x="210" y="70" text-anchor="middle">cleanbill/etl/load.py</text>
     <text x="210" y="82" text-anchor="middle">→ data/tcad.duckdb</text>
 
     <rect x="295" y="40" width="130" height="50" rx="3" fill="#fff" stroke="#1F3864"/>
     <text x="360" y="57" text-anchor="middle" font-weight="700" fill="#1F3864">3 · Lead engine + 4 · Estimator</text>
-    <text x="360" y="70" text-anchor="middle">trd/etl/leads.py · trd/estimator/</text>
+    <text x="360" y="70" text-anchor="middle">cleanbill/etl/leads.py · cleanbill/estimator/</text>
     <text x="360" y="82" text-anchor="middle">→ data/out/leads.csv (22,889)</text>
 
     <rect x="450" y="40" width="100" height="50" rx="3" fill="#fff" stroke="#1F3864"/>
     <text x="500" y="57" text-anchor="middle" font-weight="700" fill="#1F3864">5 · Publisher</text>
-    <text x="500" y="70" text-anchor="middle">trd/etl/publish.py</text>
+    <text x="500" y="70" text-anchor="middle">cleanbill/etl/publish.py</text>
     <text x="500" y="82" text-anchor="middle">→ properties + leads</text>
 
     <rect x="295" y="102" width="130" height="36" rx="3" fill="#fff" stroke="#1F3864"/>
     <text x="360" y="117" text-anchor="middle" font-weight="700" fill="#1F3864">6 · Letter generator</text>
-    <text x="360" y="129" text-anchor="middle">trd/letters/ → PDF + QR + §41.0051</text>
+    <text x="360" y="129" text-anchor="middle">cleanbill/letters/ → PDF + QR + §41.0051</text>
 
     <rect x="450" y="102" width="100" height="36" rx="3" fill="#fff" stroke="#C08A2E" stroke-dasharray="4 3"/>
     <text x="500" y="117" text-anchor="middle" font-weight="700" fill="#C08A2E">Lob (not built)</text>

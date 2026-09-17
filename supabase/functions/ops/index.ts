@@ -4,7 +4,7 @@
 //   POST /ops {action, …}      -> approve | discard {message_id} · mark_filed {claim_id, channel} · reprocess {claim_id}
 //                                 · withdraw {claim_id} · inquiry_handled {inquiry_id, notes} · new_claim {prop_id | address, create}
 //                                 · run_selftest {scenario} · system_status {key, value} (workflows report their last run)
-// Every mutating action writes audit_log (actor 'ops'); the status guards are in logic.ts (mirror of trd/agent/store.py).
+// Every mutating action writes audit_log (actor 'ops'); the status guards are in logic.ts (mirror of cleanbill/agent/store.py).
 // Nothing here sends, files with TCAD or charges (shadow mode; B-13).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { clientIp, serviceClient } from "./db.ts";
@@ -126,7 +126,7 @@ async function newClaim(sb: SB, body: Record<string, unknown>): Promise<Response
   if (!(Number.isFinite(propId) && propId > 0)) return json({ ok: false, error: "bad_request", hint: "create needs prop_id (pick one match)" }, 400);
   const m = matches[0];
   if (!m) return json({ ok: false, error: "not_found" }, 404);
-  if (!m.lead) return json({ ok: false, error: "no_lead_for_property", hint: "not in the published lead list — use python -m trd.ops.new_claim on the Mac" }, 409);
+  if (!m.lead) return json({ ok: false, error: "no_lead_for_property", hint: "not in the published lead list — use python -m cleanbill.ops.new_claim on the Mac" }, 409);
   if (["suppressed", "closed"].includes(m.lead.status)) return json({ ok: false, error: `lead_${m.lead.status}`, status: m.lead.status }, 409);
   await audit(sb, "new_claim", "leads", m.lead.claim_code, { prop_id: m.prop_id, hs_exempt: m.hs_exempt, lead_status: m.lead.status });
   return json({ ok: true, claim_code: m.lead.claim_code, link: m.lead.link, status: m.lead.status, hs_exempt: m.hs_exempt, match: m });

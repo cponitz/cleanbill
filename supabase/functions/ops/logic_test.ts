@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 import { addressKey, ALLOWED_TRANSITIONS, canTransition, claimLink, filedDraft, funnelSteps, guardAction, maskSelftest, parseChannel, parseLimit, scoreMatch } from "./logic.ts";
 
-Deno.test("transitions mirror trd/agent/store.py: withdraw from every open status, file only from ready_to_submit", () => {
+Deno.test("transitions mirror cleanbill/agent/store.py: withdraw from every open status, file only from ready_to_submit", () => {
   for (const s of ["submitted", "processing", "needs_dl_update", "needs_review", "ready_to_submit"]) assert(canTransition(s, "withdrawn"), s);
   assert(!canTransition("filed", "withdrawn"));
   assert(canTransition("ready_to_submit", "filed") && !canTransition("needs_review", "filed"));

@@ -4,10 +4,10 @@ Searches the full TCAD roll in the local DuckDB (all 493K accounts, not just the
 inserts the property + lead into Supabase, and prints the claim link. Works even if the property already has a
 homestead exemption (it is flagged, so ops knows the "refund" is a test).
 
-  python -m trd.ops.new_claim --address "3675 DUVAL ST"                 # search by street address (partial ok)
-  python -m trd.ops.new_claim --prop-id 381397                          # by TCAD account number
-  python -m trd.ops.new_claim --address "9209 BRADNER" --create         # actually create the lead (default: preview only)
-  python -m trd.ops.new_claim --address "..." --create --owner-override "Jane Q Owner"   # if the roll owner differs (recent sale)
+  python -m cleanbill.ops.new_claim --address "3675 DUVAL ST"                 # search by street address (partial ok)
+  python -m cleanbill.ops.new_claim --prop-id 381397                          # by TCAD account number
+  python -m cleanbill.ops.new_claim --address "9209 BRADNER" --create         # actually create the lead (default: preview only)
+  python -m cleanbill.ops.new_claim --address "..." --create --owner-override "Jane Q Owner"   # if the roll owner differs (recent sale)
 Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Site base via SITE_BASE (default https://cleanbillco.com; the link is /claim/<code>, SPEC-08 A3).
 """
 from __future__ import annotations
@@ -22,9 +22,9 @@ from pathlib import Path
 
 import duckdb
 
-from trd.estimator.rates import taxing_units, unit
-from trd.estimator.refund import conservative_display, estimate_refund
-from trd.etl.leads import new_claim_code, property_units
+from cleanbill.estimator.rates import taxing_units, unit
+from cleanbill.estimator.refund import conservative_display, estimate_refund
+from cleanbill.etl.leads import new_claim_code, property_units
 
 DB = Path(os.environ.get("TCAD_DB", "data/tcad.duckdb"))
 SITE_BASE = os.environ.get("SITE_BASE", "https://cleanbillco.com")

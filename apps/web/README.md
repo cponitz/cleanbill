@@ -70,7 +70,7 @@ fail with "Root Directory does not exist" — expected.
 
 Every customer-facing string is in `src/lib/copy.ts`, transcribed from `copy/*.md` (compliance-reviewed) with the source
 section named; strings marked `NEW` there are not yet in the copy files and are listed in the PR for review. Validation
-findings are rendered by the API from the shared rule table (`trd/findings.py`), so the page never carries its own wording
+findings are rendered by the API from the shared rule table (`cleanbill/findings.py`), so the page never carries its own wording
 for them.
 
 ## HEIC
@@ -84,8 +84,8 @@ iPhone photos chosen from the library can be HEIC. The API rejects HEIC (the ext
   Primitives per theme: `src/styles/theme-handoff.css` (default) and `theme-brief.css`; `DEFAULT_THEME` in `src/app/layout.tsx`
   picks one, `?theme=brief` (or the toggle on `/design-system`) overrides it for the browser.
 - Components read semantic tokens only (`src/app/globals.css`); `npm run lint:design` enforces it and checks every token
-  resolves in every theme. `python -m trd.brand --sync` (repo root) regenerates `src/styles/brand.generated.ts` and the
-  print / e-mail adapters; `python -m trd.brand --assets` re-renders `public/brand/*`.
+  resolves in every theme. `python -m cleanbill.brand --sync` (repo root) regenerates `src/styles/brand.generated.ts` and the
+  print / e-mail adapters; `python -m cleanbill.brand --assets` re-renders `public/brand/*`.
 - `/design-system` — the living style guide (noindex, no nav link). Route group `(design)`.
 
 ## Operator console `/ops` (SPEC-09 D2, ADR 0020)
