@@ -23,15 +23,19 @@ jobs:
         with: { version: latest }
       - run: supabase link --project-ref "$PROJECT_REF"
       - name: apply pending migrations
+        id: migrate
         run: supabase db push
       - name: deploy edge functions (verify_jwt per supabase/config.toml)
+        id: functions
         run: supabase functions deploy --use-api --project-ref "$PROJECT_REF"
       - name: schema parity — migrations must equal the live schema
+        id: parity
         run: |
           supabase db diff --linked --schema public > diff.sql
           if grep -v -E '^\s*(--.*)?$' diff.sql | grep -q .; then echo "::error::schema drift between migrations and the hosted database"; cat diff.sql; exit 1; fi
           echo "no drift"
       - name: end-to-end selftest (match, mismatch, mismatch_then_fix)
+        id: selftest
         if: env.OPS_PASSWORD != ''   # the secrets context is not allowed in step conditions; env is
         run: |
           set -e
@@ -39,3 +43,11 @@ jobs:
             curl -sf -m 120 "https://$PROJECT_REF.supabase.co/functions/v1/selftest?key=$OPS_PASSWORD&scenario=$s" > selftest.json
             if grep -q '"pass":true' selftest.json; then echo "selftest $s passed"; else echo "::error::selftest $s did not pass"; sed 's/"signature_ip":"[^"]*"/"signature_ip":"…"/' selftest.json; exit 1; fi
           done
+      - name: record this run for /ops (system_status, SPEC-09)
+        if: always() && env.OPS_PASSWORD != ''
+        run: |
+          VALUE=$(jq -nc --arg sha "$GITHUB_SHA" --arg run "$GITHUB_RUN_ID" --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --arg result "${{ job.status }}" --arg migrate "${{ steps.migrate.outcome }}" --arg functions "${{ steps.functions.outcome }}" --arg parity "${{ steps.parity.outcome }}" --arg selftest "${{ steps.selftest.outcome }}" \
+            '{commit: $sha, run_id: $run, url: $url, result: $result, at: (now | todate), migrations: $migrate, functions: $functions, parity: $parity, selftest: $selftest}')
+          curl -sf -m 30 -X POST "https://$PROJECT_REF.supabase.co/functions/v1/ops" -H "x-ops-key: $OPS_PASSWORD" -H "content-type: application/json" \
+            -d "$(jq -nc --arg key "deploy" --argjson value "$VALUE" '{action: "system_status", key: $key, value: $value}')" > /dev/null \
+            || echo "::warning::could not record deploy status in system_status"

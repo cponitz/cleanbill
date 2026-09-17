@@ -18,9 +18,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
+# Mirrored in supabase/functions/ops/logic.ts (ALLOWED_TRANSITIONS) — change both.
 ALLOWED_TRANSITIONS = {
-    "submitted": {"processing", "needs_review"},
-    "processing": {"ready_to_submit", "needs_dl_update", "needs_review"},
+    "submitted": {"processing", "needs_review", "withdrawn"},          # withdrawn: SPEC-09 ops "Withdraw" from any open status
+    "processing": {"ready_to_submit", "needs_dl_update", "needs_review", "withdrawn"},
     "needs_dl_update": {"processing", "ready_to_submit", "needs_review", "withdrawn"},
     "needs_review": {"processing", "ready_to_submit", "needs_dl_update", "withdrawn"},
     "ready_to_submit": {"filed", "needs_review", "withdrawn"},

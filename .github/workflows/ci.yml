@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with: { deno-version: v2.x }
-      - run: deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts
+      - run: deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts supabase/functions/ops/logic_test.ts
       - name: edge functions type-check
         # The jsr edge-runtime type shim references npm packages that are not installed here, so each entrypoint is
         # checked from a copy with that one import line removed (the runtime provides those globals in production).

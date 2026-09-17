@@ -35,6 +35,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
   font unchanged). No wording change; no data-model change; no new runtime dependency (fontTools is a dev-only tool
   for the wordmark SVG).
 
+- **SPEC-09 D1: the ops API** (branch `ops-api` work on the session branch; ADR 0020). `supabase/functions/ops` is now
+  the operator console's whole backend. `GET /ops?status=&limit=` returns `kpis` (+ `filed`, `approved`, `refunded`,
+  `inquiries_open`), `funnel` (`by_kind_7d`, `by_kind_all`, `by_day_30d` aggregated by the new SQL functions
+  `ops_events_by_kind` / `ops_events_by_day`, plus the views → claimed → ready → filed strip), `claims` (filter by
+  status, limit ≤ 500; extraction without the DL number; packet links signed in one batch; filing `submitted_at` /
+  `channel`), `inquiries` (unhandled first) and `system`. `POST /ops` gains `mark_filed {claim_id, channel}` (SPEC-05
+  task 1: only from `ready_to_submit`; `filings.submitted_at` + `channel`, claim and lead → `filed`, the followups.md
+  "filed" draft, audit row), `reprocess` (re-kicks `process-claim` from `submitted` / `processing`), `withdraw` (any
+  open status), `inquiry_handled`, `new_claim {prop_id | address, create}` (walkthrough claims over the published
+  properties, preview then confirm → `CB-` code + `https://cleanbillco.com/claim/<code>`), `run_selftest {scenario}`
+  (server-side, IPs masked) and `system_status {key, value}`. Failed ops passwords are counted per IP as `events` of
+  kind `ops_auth_fail` (20/hour → 429). Guards live in `ops/logic.ts` (mirror of `trd/agent/store.py`, both extended so
+  `withdrawn` is reachable from `submitted` and `processing`) with 7 Deno tests (40 total). **Data model:** migration
+  `20260917210000_system_status.sql` — new table `system_status (key, value jsonb, updated_at)` (RLS on) and the two
+  funnel SQL functions; `deploy.yml`, `agent.yml`, `etl.yml` post their last run (`deploy`: commit + step outcomes;
+  `agent_run`: outcome, claims processed, cost; `etl`: outcome, leads) through `POST /ops` with the ops password.
+  `supabase/ci/check_schema.sql` checks the table and the function. ARCHITECTURE §3.1 row 10, §4.1, §5.8.
+
 ### Changed
 - **SPEC-08 Part A: rebrand to Clean Bill** (R1; B-19; `docs/specs/SPEC-08-rebrand-clean-bill.md`, `SPEC-09-admin-dashboard.md`,
   `docs/brand/brand-brief.md` and `docs/plans/phase1-v3.2.md` copied in). "Texas Refund Desk" → "Clean Bill" (legal Parties

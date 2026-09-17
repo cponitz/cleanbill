@@ -7,7 +7,7 @@ begin
     'claims.customer_id', 'claims.findings', 'claims.service_type', 'customers.email', 'customers.card_on_file',
     'documents.claim_id', 'filings.claim_id', 'messages.claim_id', 'property_entities.entity_cd',
     'property_values.tax_year', 'record_checks.source', 'refunds.dispute_status', 'refunds.record_check_id',
-    'inquiries.kind', 'inquiries.email'
+    'inquiries.kind', 'inquiries.email', 'system_status.value'
   ]) x
   where not exists (select 1 from information_schema.columns c
                     where c.table_schema = 'public' and c.table_name = split_part(x, '.', 1) and c.column_name = split_part(x, '.', 2));
@@ -23,6 +23,9 @@ begin
   end if;
   if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname='public' and p.proname='bulk_load_leads') then
     raise exception 'bulk_load_leads should be dropped';
+  end if;
+  if not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname='public' and p.proname='ops_events_by_kind') then
+    raise exception 'ops_events_by_kind() missing (SPEC-09)';
   end if;
   raise notice 'schema check passed';
 end $$;
