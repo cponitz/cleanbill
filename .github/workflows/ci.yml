@@ -16,9 +16,9 @@ jobs:
       - run: pip install -e .[dev]
       - run: python -m pytest -q
       - name: generated findings.ts and G-9 snapshot must be current (SPEC-06, ADR 0016)
-        run: python -m trd.findings --emit-ts --emit-snapshot --check
+        run: python -m cleanbill.findings --emit-ts --emit-snapshot --check
       - name: generated brand files must be current and both themes must pass the contrast table (SPEC-08 Part C, ADR 0019)
-        run: python -m trd.brand --sync --check && python -m trd.brand --contrast > /dev/null
+        run: python -m cleanbill.brand --sync --check && python -m cleanbill.brand --contrast > /dev/null
   deno:
     runs-on: ubuntu-latest
     steps:

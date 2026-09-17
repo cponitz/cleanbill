@@ -2,7 +2,7 @@
 The shared fixture cases (tests/fixtures/cases.json) are pinned by tests/test_findings.py and _shared/findings_test.ts."""
 from datetime import date
 
-from trd.agent.validate import address_matches, age_on, name_matches, validate
+from cleanbill.agent.validate import address_matches, age_on, name_matches, validate
 
 PROP = {"prop_id": 1, "owner_name": "GARCIA RICHARD L", "situs_num": "3675", "situs_street": "DUVAL ST", "situs_city": "AUSTIN",
         "situs_zip": "78721", "situs_full": "3675 DUVAL ST, AUSTIN, TX 78721", "deed_date": "2019-05-14"}
@@ -51,7 +51,7 @@ def test_validate_routing():
 
 
 def test_findings_are_structured_and_mirror_the_deno_case():
-    from trd.agent.validate import reason_text
+    from cleanbill.agent.validate import reason_text
     v = validate({**BASE, "address_line1": "900 CONGRESS AVE", "zip": "78701"}, PROP, "Richard Garcia", TODAY)
     assert [f["code"] for f in v.findings] == ["address_mismatch", "name_match"]
     assert v.findings[0]["severity"] == "blocking" and v.findings[0]["detail"]["situs"] == PROP["situs_full"]

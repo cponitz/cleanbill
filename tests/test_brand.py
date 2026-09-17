@@ -7,13 +7,13 @@ from datetime import date
 import pytest
 from pypdf import PdfReader
 
-from trd import brand
-from trd import brand_tokens as T
+from cleanbill import brand
+from cleanbill import brand_tokens as T
 
 
 def test_generated_files_are_current():
     for key, content in brand.generated_contents().items():
-        assert brand.GENERATED[key].read_text() == content, f"{brand.GENERATED[key].name} is stale — run python -m trd.brand --sync"
+        assert brand.GENERATED[key].read_text() == content, f"{brand.GENERATED[key].name} is stale — run python -m cleanbill.brand --sync"
 
 
 def test_default_theme_matches_tokens():
@@ -51,7 +51,7 @@ def test_fonts_are_vendored_with_licence():
 
 
 def test_email_template_wraps_a_message():
-    from trd.email import render_email
+    from cleanbill.email import render_email
     html, text = render_email("Your application is ready", "Hi Pat,\n\nThe packet is attached. See https://cleanbillco.com/claim/CB-TEST-0001\n\nClean Bill")
     assert "{{" not in html                                   # every placeholder filled
     assert T.HEX["primary"] in html and T.HEX["bg"] in html   # colours come from the tokens
@@ -62,7 +62,7 @@ def test_email_template_wraps_a_message():
 
 
 def test_letter_carries_the_wordmark_and_theme_colour(tmp_path):
-    from trd.letters.generate import DISCLAIMER, LetterData, render_letter
+    from cleanbill.letters.generate import DISCLAIMER, LetterData, render_letter
     out = tmp_path / "a.pdf"
     render_letter(LetterData(owner_name="PAT OWNER", owner_first="Pat", situs_address="3675 DUVAL ST, AUSTIN, TX 78721",
                              mail_lines=["3675 DUVAL ST", "AUSTIN TX 78721"], refund_total=3712.4, forward_annual=1850,

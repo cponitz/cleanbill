@@ -40,5 +40,5 @@
   <rect x="10" y="284" width="740" height="44" fill="#F1F4F9" stroke="#C9D2DF"/>
   <text x="16" y="295" fill="#1F2733" font-size="8">Address normalisation: uppercase, strip punctuation, STREET→ST etc., APT/UNIT/STE/#→unit; a suffix or direction missing on the license still matches.</text>
   <text x="16" y="305" fill="#1F2733" font-size="8">Name match tolerates TCAD's "LAST FIRST M" order, joint owners with "&amp;", and 3-letter nickname prefixes (Rich/Richard). Blocking findings become claims.findings (structured, SPEC-06).</text>
-  <text x="16" y="315" fill="#1F2733" font-size="8">Review beats DL-update when both fail. Same rules in TypeScript (validate.ts, 22 tests) and Python (trd/agent/validate.py), generated from one shared fixture (G-9).</text>
+  <text x="16" y="315" fill="#1F2733" font-size="8">Review beats DL-update when both fail. Same rules in TypeScript (validate.ts, 22 tests) and Python (cleanbill/agent/validate.py), generated from one shared fixture (G-9).</text>
 </svg>

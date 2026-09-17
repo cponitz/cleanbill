@@ -10,8 +10,8 @@ The extracted fields stay (with the DL number already masked to ***1234); only t
 `documents.purged_at` is stamped. Every purge is written to audit_log.
 
 Usage:
-  python -m trd.jobs.purge_ids            # dry run: prints what would be purged
-  python -m trd.jobs.purge_ids --apply    # actually delete
+  python -m cleanbill.jobs.purge_ids            # dry run: prints what would be purged
+  python -m cleanbill.jobs.purge_ids --apply    # actually delete
 Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 """
 from __future__ import annotations

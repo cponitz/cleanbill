@@ -1,4 +1,4 @@
-"""Brand assets rendered from the tokens (SPEC-08 Part C, C4): `python -m trd.brand --assets`.
+"""Brand assets rendered from the tokens (SPEC-08 Part C, C4): `python -m cleanbill.brand --assets`.
 
 Writes apps/web/public/brand/:
   wordmark.svg           the mark + "Clean Bill" as glyph outlines from the vendored DM Sans Bold (needs fontTools, dev only)
@@ -10,14 +10,14 @@ Writes apps/web/public/brand/:
   og.png                 1200 × 630 Open Graph image: wordmark, the promise line, the domain
   email-header.png       600 × 96 e-mail header: wordmark on the page colour
   email-sample.html      the e-mail template rendered with sample text, for the /design-system iframe
-Every colour comes from trd/brand_tokens.py (generated from tokens.css); the geometry from trd.brand.MARK.
+Every colour comes from cleanbill/brand_tokens.py (generated from tokens.css); the geometry from cleanbill.brand.MARK.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from trd import brand
-from trd import brand_tokens as T
+from cleanbill import brand
+from cleanbill import brand_tokens as T
 
 OUT = brand.ROOT / "apps" / "web" / "public" / "brand"
 
@@ -182,7 +182,7 @@ def email_header_png(path: Path) -> None:
 
 
 def email_sample_html() -> str:
-    from trd.email import render_email
+    from cleanbill.email import render_email
     body = ("Hi Richard,\n\nYour Form 50-114 is prepared and attached for your review. It lists the 2024 and 2025 tax years as "
             "late applications under Tax Code §11.431 and carries your typed signature.\n\nReply \"go\" and we submit it to the "
             "Travis Central Appraisal District the same day. Nothing is filed until you say so.\n\nClean Bill")

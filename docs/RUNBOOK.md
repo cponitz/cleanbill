@@ -31,26 +31,26 @@ Section 9
 | 5   | When a customer replies "go": forward the packet to TCAD (channel per O-01), then **Mark filed** in the drawer (pick the channel). That sets the filing date, moves the claim and lead to `filed`, and drafts the "submitted" e-mail — approve, copy, send. | e-mail + /ops     |
 | 6   | **Inquiries**: answer each new address / business form by e-mail, then **Mark handled** with a one-line note.                                                                                                  | /ops → Inquiries  |
 | 7   | While the schedule is disabled, run `claims-agent` by hand (Actions → claims-agent → Run workflow) after any new claim; **Health** shows the run's result, claims processed and cost when it finishes.          | GitHub Actions, /ops |
-| 8   | Friend / walkthrough test: **New claim** → type the address → **Create** → send the link. (A property outside the published lead list still needs `python -m trd.ops.new_claim` on the Mac.)                  | /ops → New claim  |
+| 8   | Friend / walkthrough test: **New claim** → type the address → **Create** → send the link. (A property outside the published lead list still needs `python -m cleanbill.ops.new_claim` on the Mac.)                  | /ops → New claim  |
 
 ### 9.3 Commands (from the repo folder on the Mac)
 
     pip install -e .[dev] && python -m pytest -q                                     # Python tests (49 on main at 2026-09-17)
     deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts supabase/functions/ops/logic_test.ts   # Deno tests (40)
-    python -m trd.findings --emit-ts --emit-snapshot            # regenerate _shared/findings.ts + the G-9 snapshot after editing trd/findings.py (CI checks with --check)
-    python -m trd.brand --sync                                    # regenerate brand_tokens.py / _shared/brand.ts / brand.generated.ts from apps/web/src/styles/tokens.css (CI checks with --check)
-    python -m trd.brand --assets                                  # re-render apps/web/public/brand/* after a token change (needs `pip install fonttools` for the wordmark SVG)
-    python -m trd.brand --contrast                                # the WCAG contrast table for both themes (paste into docs/DESIGN-SYSTEM.md)
+    python -m cleanbill.findings --emit-ts --emit-snapshot            # regenerate _shared/findings.ts + the G-9 snapshot after editing cleanbill/findings.py (CI checks with --check)
+    python -m cleanbill.brand --sync                                    # regenerate brand_tokens.py / _shared/brand.ts / brand.generated.ts from apps/web/src/styles/tokens.css (CI checks with --check)
+    python -m cleanbill.brand --assets                                  # re-render apps/web/public/brand/* after a token change (needs `pip install fonttools` for the wordmark SVG)
+    python -m cleanbill.brand --contrast                                # the WCAG contrast table for both themes (paste into docs/DESIGN-SYSTEM.md)
     (cd apps/web && npm run lint:design)                          # design-system lint: no colour/font literal outside src/styles, every token resolves in every theme
-    python -m trd.etl.load --export data/raw/PROP_slim.txt --layout trd/etl/layouts/pacs_8_0_33_slim.json \
+    python -m cleanbill.etl.load --export data/raw/PROP_slim.txt --layout cleanbill/etl/layouts/pacs_8_0_33_slim.json \
         --entities data/raw/PROP_ENT_slim.txt.gz --db data/tcad.duckdb        # roll + each property's taxing units (SPEC-01)
-    python -m trd.estimator.build_units --rates data/raw/qryJurisRateWeb2026.xls --listing data/raw/2026_listing.txt \
-        --db data/tcad.duckdb                                                  # regenerate trd/estimator/rates/units.json (rates + exemptions)
-    python -m trd.etl.leads --db data/tcad.duckdb --as-of 2026-09-09 --out data/out/leads.csv   # prints summary JSON
-    python -m trd.etl.publish --leads data/out/leads.csv --dry-run                    # then without --dry-run
-    python -m trd.ops.new_claim --address "3675 DUVAL ST"        # preview; add --create to mint a code + link
-    python -m trd.agent.run --store supabase --claim <uuid>      # run the agent on one claim, see the trace
-    python -m trd.agent.run --store fixtures                      # dry run over 5 fixture claims (needs API key)
+    python -m cleanbill.estimator.build_units --rates data/raw/qryJurisRateWeb2026.xls --listing data/raw/2026_listing.txt \
+        --db data/tcad.duckdb                                                  # regenerate cleanbill/estimator/rates/units.json (rates + exemptions)
+    python -m cleanbill.etl.leads --db data/tcad.duckdb --as-of 2026-09-09 --out data/out/leads.csv   # prints summary JSON
+    python -m cleanbill.etl.publish --leads data/out/leads.csv --dry-run                    # then without --dry-run
+    python -m cleanbill.ops.new_claim --address "3675 DUVAL ST"        # preview; add --create to mint a code + link
+    python -m cleanbill.agent.run --store supabase --claim <uuid>      # run the agent on one claim, see the trace
+    python -m cleanbill.agent.run --store fixtures                      # dry run over 5 fixture claims (needs API key)
     ANTHROPIC_API_KEY=… python eval/run_extraction_eval.py        # 30-image eval, ≥ 95% gate
     python eval/browser_smoke.py                                  # Playwright end-to-end against the static fallback pages
     python eval/web_smoke.py --base http://localhost:3000        # Playwright end-to-end against apps/web (local `npm run build && npm start`, or a Vercel preview URL)

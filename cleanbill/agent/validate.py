@@ -1,6 +1,6 @@
 """Python mirror of supabase/functions/_shared/validate.ts — same rules, same outputs.
 Keep the two in sync: both read tests/fixtures/cases.json and tests/fixtures/findings_snapshot.json pins identical rendered
-findings (G-9). Validators emit CODES + facts; every sentence comes from the rule table in trd/findings.py (ADR 0016).
+findings (G-9). Validators emit CODES + facts; every sentence comes from the rule table in cleanbill/findings.py (ADR 0016).
 """
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import date
 
-from trd.findings import blocking, make_finding, reason_text  # noqa: F401  (re-exported for callers)
+from cleanbill.findings import blocking, make_finding, reason_text  # noqa: F401  (re-exported for callers)
 
 SUFFIX = {
     "STREET": "ST", "ST": "ST", "AVENUE": "AVE", "AV": "AVE", "AVE": "AVE", "BOULEVARD": "BLVD", "BLVD": "BLVD", "DRIVE": "DR", "DR": "DR",

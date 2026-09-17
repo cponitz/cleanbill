@@ -1,10 +1,10 @@
 """The findings rule table — the ONE place that maps a finding code to its severity, field, sentences and next action
 (ADR 0013, ADR 0016, SPEC-06 §1). Validators emit a code plus facts (`detail`); everything a person reads is rendered here.
 
-  * `supabase/functions/_shared/findings.ts` is GENERATED from this file:  python -m trd.findings --emit-ts
-    CI fails when it is stale:                                             python -m trd.findings --emit-ts --check
+  * `supabase/functions/_shared/findings.ts` is GENERATED from this file:  python -m cleanbill.findings --emit-ts
+    CI fails when it is stale:                                             python -m cleanbill.findings --emit-ts --check
   * `tests/fixtures/findings_snapshot.json` pins the rendered output of both validators for the shared cases (G-9):
-                                                                            python -m trd.findings --emit-snapshot
+                                                                            python -m cleanbill.findings --emit-snapshot
 
 Two sentences per code: `ops` is what the operator and the agent see (facts first, terse); `customer` is what the homeowner
 sees on the page and in drafts (plain English, no urgency). `next_action` tells the page which control to show.
@@ -164,7 +164,7 @@ def reason_text(findings: list[dict]) -> str | None:
 def emit_ts() -> str:
     rules_json = json.dumps({c: asdict(r) for c, r in RULES.items()}, indent=2, ensure_ascii=False)
     codes_union = " | ".join(f'"{c}"' for c in CODES)
-    return f'''// GENERATED FILE — do not edit. Source: trd/findings.py (python -m trd.findings --emit-ts); CI fails if this is stale.
+    return f'''// GENERATED FILE — do not edit. Source: cleanbill/findings.py (python -m cleanbill.findings --emit-ts); CI fails if this is stale.
 // The findings rule table (ADR 0013 / ADR 0016 / SPEC-06 §1): code -> severity, field, ops sentence, customer sentence, next action.
 
 export type Severity = "blocking" | "warning" | "info";
@@ -178,7 +178,7 @@ export const CODES = Object.keys(RULES) as Code[];
 /** A structured finding: code is the contract; message is the rendered ops sentence; detail holds the facts. */
 export type Finding = {{ code: Code; severity: Severity; field: string; message: string; detail?: Record<string, unknown> }};
 
-/** Fill `{{key}}` placeholders from detail; missing/null -> "". Mirrors trd.findings.render byte-for-byte. */
+/** Fill `{{key}}` placeholders from detail; missing/null -> "". Mirrors cleanbill.findings.render byte-for-byte. */
 export function render(template: string, detail?: Record<string, unknown> | null): string {{
   const d = detail ?? {{}};
   return template.replace(/\\{{(\\w+)\\}}/g, (_m, k: string) => {{ const v = d[k]; return v == null ? "" : String(v); }});
@@ -215,7 +215,7 @@ def emit_snapshot() -> dict:
     """Render every validation case in tests/fixtures/cases.json through the Python validator (G-9 snapshot)."""
     from datetime import date
 
-    from trd.agent.validate import validate
+    from cleanbill.agent.validate import validate
 
     cases = json.loads(CASES_PATH.read_text())
     props = {p["prop_id"]: p for p in cases["properties"]}
@@ -249,7 +249,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             SNAPSHOT_PATH.write_text(want_s); print(f"wrote {SNAPSHOT_PATH.relative_to(REPO)}")
     if stale:
-        print("STALE — regenerate with: python -m trd.findings --emit-ts --emit-snapshot\n  " + "\n  ".join(stale), file=sys.stderr)
+        print("STALE — regenerate with: python -m cleanbill.findings --emit-ts --emit-snapshot\n  " + "\n  ".join(stale), file=sys.stderr)
         return 1
     if a.check: print("generated files are current")
     return 0

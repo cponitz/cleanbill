@@ -250,7 +250,7 @@ export function DesignSystem() {
         </div>
       </Section>
 
-      <Section id="email" title="E-mail template" sub="trd/email/base.html rendered with a sample message (public/brand/email-sample.html). Every outbound e-mail is wrapped in it from Task 4 on.">
+      <Section id="email" title="E-mail template" sub="cleanbill/email/base.html rendered with a sample message (public/brand/email-sample.html). Every outbound e-mail is wrapped in it from Task 4 on.">
         <iframe className="ds-frame" src="/brand/email-sample.html" title="E-mail template sample" />
       </Section>
 

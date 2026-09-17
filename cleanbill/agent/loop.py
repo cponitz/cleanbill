@@ -17,7 +17,7 @@ from pathlib import Path
 
 import anthropic
 
-from trd.agent.tools import Tools
+from cleanbill.agent.tools import Tools
 
 DEFAULT_MODEL = "claude-sonnet-5"
 SYSTEM_PROMPT = (Path(__file__).parent / "system_prompt.md").read_text()

@@ -22,11 +22,11 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-from trd import brand
-from trd import brand_tokens as T
-from trd.estimator.refund import conservative_display, late_filing_deadline
+from cleanbill import brand
+from cleanbill import brand_tokens as T
+from cleanbill.estimator.refund import conservative_display, late_filing_deadline
 
-# Brand values come from the design system (SPEC-08 Part C): trd/brand_tokens.py is generated from tokens.css.
+# Brand values come from the design system (SPEC-08 Part C): cleanbill/brand_tokens.py is generated from tokens.css.
 BRAND = T.BRAND_NAME
 SUPPORT = T.SUPPORT_EMAIL
 DISCLAIMER = brand.DISCLAIMER

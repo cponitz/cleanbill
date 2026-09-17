@@ -1,5 +1,5 @@
 // Fill the official Comptroller Form 50-114 (Rev. 02-26/39) with pdf-lib, stamp the typed e-signature, append an audit page,
-// and flatten. Mirrors trd/agent/form50114.py — keep the two field maps in sync.
+// and flatten. Mirrors cleanbill/agent/form50114.py — keep the two field maps in sync.
 import { LineCapStyle, PDFButton, PDFDocument, PDFSignature, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import type { Extracted, PropertyRec } from "./validate.ts";
 import { BRAND_NAME, MARK_PATH, MARK_STROKE, RGB } from "../_shared/brand.ts";   // generated from the design tokens (SPEC-08 Part C)

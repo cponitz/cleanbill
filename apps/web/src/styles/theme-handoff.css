@@ -3,7 +3,7 @@
    teal / navy set with DM Sans. A theme is a file of PRIMITIVE values only: the semantic tokens every component reads
    (`--color-*`, `--shadow-*`, `--font-*`) are defined once in tokens.css on top of these names, so the two theme files
    have the same shape and the site switches whole. The SPEC-07 names are noted next to each value.
-   `python -m trd.brand --sync` reads this file (for the default theme) to generate trd/brand_tokens.py and
+   `python -m cleanbill.brand --sync` reads this file (for the default theme) to generate cleanbill/brand_tokens.py and
    supabase/functions/_shared/brand.ts; the design lint checks every primitive below exists in every theme. */
 :root[data-theme="handoff"] {
   /* brand */

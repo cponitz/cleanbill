@@ -6,7 +6,7 @@
                   component class in src/app/globals.css and every inline style in src/ reads a semantic token only;
                   the design lint (apps/web/scripts/design-lint.mjs) fails on a hex literal, rgb( or font-family
                   outside src/styles/.
-   `python -m trd.brand --sync` generates trd/brand_tokens.py and supabase/functions/_shared/brand.ts from this file
+   `python -m cleanbill.brand --sync` generates cleanbill/brand_tokens.py and supabase/functions/_shared/brand.ts from this file
    plus the default theme, so letters, the packet, the audit page and the e-mail template carry the same values. */
 
 :root {

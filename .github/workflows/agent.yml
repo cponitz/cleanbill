@@ -29,16 +29,16 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           if [ -n "${{ github.event.inputs.claim }}" ]; then
-            python -m trd.agent.run --store supabase --claim "${{ github.event.inputs.claim }}"
+            python -m cleanbill.agent.run --store supabase --claim "${{ github.event.inputs.claim }}"
           else
-            python -m trd.agent.run --store supabase --statuses submitted,needs_dl_update,needs_review
+            python -m cleanbill.agent.run --store supabase --statuses submitted,needs_dl_update,needs_review
           fi
       - name: purge ID images no longer needed (Tax Code §11.48 retention policy)
         if: always()
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python -m trd.jobs.purge_ids --apply
+        run: python -m cleanbill.jobs.purge_ids --apply
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: agent-trace, path: data/out/agent_run.json, if-no-files-found: ignore }

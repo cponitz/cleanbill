@@ -1,5 +1,5 @@
 // Validation of extracted ID fields against the TCAD property record. Pure functions — unit-tested in Deno
-// (process-claim/validate_test.ts) and mirrored in Python (trd/agent/validate.py). Both read tests/fixtures/cases.json and
+// (process-claim/validate_test.ts) and mirrored in Python (cleanbill/agent/validate.py). Both read tests/fixtures/cases.json and
 // the snapshot tests/fixtures/findings_snapshot.json pins identical output (G-9).
 // Validators emit CODES + facts; every sentence comes from the generated rule table (findings.ts, ADR 0016).
 import { blocking, type Finding, makeFinding, reasonText } from "./findings.ts";
