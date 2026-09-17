@@ -10,7 +10,7 @@ before touching anything; it defines every module, table, column and flow.
 - Code, schema, deploys, technical decisions: THIS REPO (docs/ARCHITECTURE.md, docs/adr/, CHANGELOG.md).
 - Naming (B-19, SPEC-08): the product is **Clean Bill** (legal line: Clean Bill Co.), domain cleanbillco.com, support
   hello@cleanbillco.com, claim codes `CB-XXXX-XXXX`. The repo (`cponitz/cleanbill`), Vercel project, Supabase display name and
-  Mac folder are `cleanbill` (SPEC-08 R2, 2026-09-17); the Python package becomes `cleanbill` in Part B3 (until then `cleanbill`). Do not introduce other names;
+  Mac folder are `cleanbill` (SPEC-08 R2, 2026-09-17); the Python package is `cleanbill` (SPEC-08 Part B3, 2026-09-17). Do not introduce other names;
   "Texas Refund Desk" is retired except in history (CHANGELOG entries, ADRs, SPEC-01…07).
 - Business decisions, specs, plans, research: the Cowork project "Clean Bill"
   (claude/decisions.md, claude/specs/). Never make a business decision here — if a task needs one
