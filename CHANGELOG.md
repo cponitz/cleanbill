@@ -35,6 +35,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
   font unchanged). No wording change; no data-model change; no new runtime dependency (fontTools is a dev-only tool
   for the wordmark SVG).
 
+- **SPEC-09 D2: the operator console `/ops`** (`apps/web`; ADR 0020). One page, five anchored sections on the design
+  system: **Funnel** (12 KPI tiles incl. filed / approved / refunded / open inquiries, the views → claimed → ready →
+  filed strip, events by kind for 7 days and all time, the last 7 days by day), **Claims** (status filter, search,
+  dense table with findings counts and a draft marker; a drawer per claim with property / customer / estimate, the ID
+  summary — never the DL number —, findings by severity with the code, the 10-minute packet link, drafts with Approve /
+  Discard / Copy text, sent or approved messages with Copy, and Mark filed (channel) / Reprocess / Withdraw enabled by
+  the same guards as the API), **Inquiries** (every row, unhandled first, Mark handled with a note), **New claim**
+  (address or account → preview matches with exemption flags and the lead's estimate → Create → code + link + copy),
+  **Health** (deploy / agent run / ETL rows with age and details, Run selftest per scenario with pass / fail and
+  seconds). Login card; the ops password lives in `sessionStorage` for the tab and travels as `x-ops-key`
+  (`src/lib/ops.ts`); wrong password → error, 429 → its own message, three consecutive 403s → login again. `robots`
+  noindex, no link from the site. `eval/web_smoke.py` gains scenario E (wrong then right password → KPIs → approve the
+  synthetic claim's draft → mark an inquiry handled → preview `3675 Duval St` → health renders → grep test for the DL
+  number / card data on the page and in the API response → three bad keys show the login again; skipped without
+  `OPS_PASSWORD` in `.env`). `apps/web/README.md`, ARCHITECTURE §3.1 row 7.
 - **SPEC-09 D1: the ops API** (branch `ops-api` work on the session branch; ADR 0020). `supabase/functions/ops` is now
   the operator console's whole backend. `GET /ops?status=&limit=` returns `kpis` (+ `filed`, `approved`, `refunded`,
   `inquiries_open`), `funnel` (`by_kind_7d`, `by_kind_all`, `by_day_30d` aggregated by the new SQL functions

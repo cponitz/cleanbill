@@ -9,6 +9,7 @@ Drives headless Chromium (phone viewport) through:
   C. agreement    /agreement/<code> fills the situs from the API
   D. site         every SPEC-07 marketing page renders without a page error; /claim opens a code into the confirm state;
                   the home hero's address form posts an inquiry (skipped with --skip-inquiry until the API is deployed)
+Scenario E (SPEC-09) drives /ops with OPS_PASSWORD from .env (skipped without it).
 Only ever touches the synthetic lead CB-TEST-0001 / property 999000001 (reset here with the service-role key, mirroring
 eval/reset_test_lead.sql). Screenshots land in eval/out/web/.
 
@@ -165,6 +166,79 @@ def site_pages(page: Page, base: str, results: dict, skip_inquiry: bool) -> bool
     return ok
 
 
+def ops_console(page: Page, base: str, results: dict) -> bool:
+    """Scenario E (SPEC-09 D2): the operator console at /ops — login, KPIs, approve a draft on the synthetic claim,
+    mark an inquiry handled, preview a walkthrough claim, health renders; and the grep test: no DL number and no card
+    data anywhere on the page or in the API response. Needs OPS_PASSWORD in .env; skipped (reported) without it."""
+    key = os.environ.get("OPS_PASSWORD")
+    if not key:
+        results["E_skipped"] = "OPS_PASSWORD not set"
+        return True
+    ok = True
+    page.goto(f"{base}/ops")
+    page.wait_for_selector("[data-testid=ops-login]", timeout=20000)
+    page.fill("[data-testid=ops-key]", "wrong-password")
+    page.click("[data-testid=ops-login] button[type=submit]")
+    page.wait_for_selector("[data-testid=ops-login-error]", timeout=20000)
+    results["E_wrong_password"] = page.text_content("[data-testid=ops-login-error]")
+    page.fill("[data-testid=ops-key]", key)
+    page.click("[data-testid=ops-login] button[type=submit]")
+    page.wait_for_selector("[data-testid=ops-kpis]", timeout=30000)
+    shot(page, "E_01_funnel")
+    leads = page.text_content("[data-testid=kpi-leads_loaded] .kpi-value") or "0"
+    results["E_leads_loaded"] = leads
+    ok &= int(leads.replace(",", "")) > 0
+    # the synthetic claim from scenario A carries a draft: open it, approve the draft
+    row = page.locator(f"[data-testid=claim-row][data-code={TEST_CODE}]").first
+    row.wait_for(timeout=20000)
+    row.click()
+    page.wait_for_selector("[data-testid=claim-drawer][data-open=true]", timeout=10000)
+    shot(page, "E_02_claim")
+    results["E_drafts_before"] = page.locator("[data-testid=draft]").count()
+    if results["E_drafts_before"]:
+        page.click("[data-testid=btn-approve]")
+        page.wait_for_function("document.querySelectorAll('[data-testid=draft]').length === " + str(results["E_drafts_before"] - 1), timeout=20000)
+    results["E_drafts_after"] = page.locator("[data-testid=draft]").count()
+    ok &= results["E_drafts_before"] >= 1 and results["E_drafts_after"] == results["E_drafts_before"] - 1
+    page.click("[data-testid=claim-drawer] .drawer-close")
+    # inquiries: mark the newest unhandled one handled (scenario D posted one)
+    pending = page.locator("[data-testid=inquiry-row][data-handled=false]")
+    results["E_inquiries_pending"] = pending.count()
+    if pending.count():
+        pending.first.locator("[data-testid=btn-inquiry-handled]").click()
+        page.fill("[data-testid=inquiry-notes]", "web smoke: answered")
+        page.click("[data-testid=btn-inquiry-confirm]")
+        page.wait_for_function("document.querySelectorAll('[data-testid=inquiry-row][data-handled=false]').length < " + str(results["E_inquiries_pending"]), timeout=20000)
+        shot(page, "E_03_inquiries")
+    # new claim: preview the synthetic property
+    page.fill("[data-testid=newclaim-q]", "3675 Duval St")
+    page.click("[data-testid=btn-newclaim-preview]")
+    page.wait_for_selector("[data-testid=newclaim-matches]", timeout=20000)
+    results["E_newclaim_has_test"] = TEST_CODE in (page.text_content("[data-testid=newclaim-matches]") or "")
+    ok &= bool(results["E_newclaim_has_test"])
+    shot(page, "E_04_new_claim")
+    # health renders (the rows appear once the workflows have run)
+    results["E_health"] = page.is_visible("[data-testid=health]") and page.is_visible("[data-testid=selftest]")
+    ok &= bool(results["E_health"])
+    # grep test: no DL number (the synthetic ID's is 17912728) and no card data on the page or in the API response
+    body = page.inner_text("body")
+    api = page.request.get(f"{os.environ.get('NEXT_PUBLIC_API_BASE', 'https://letrfpwskjbgnyacesgv.supabase.co/functions/v1')}/ops?limit=50", headers={"x-ops-key": key}).text()
+    results["E_grep_clean"] = not any(x in body or x in api for x in ("17912728", "dl_number", "4242 4242", "card_number", "pan"))
+    ok &= bool(results["E_grep_clean"])
+    # three wrong keys → login again (sessionStorage cleared by the page)
+    page.evaluate("sessionStorage.setItem('cb-ops-key', 'nope')")
+    page.reload()
+    page.wait_for_selector("[data-testid=ops-login], [data-testid=ops-kpis]", timeout=20000)
+    for _ in range(2):
+        if page.is_visible("[data-testid=ops-login]"):
+            break
+        page.click("[data-testid=btn-refresh]")
+        page.wait_for_timeout(1500)
+    results["E_relogin_after_403s"] = page.is_visible("[data-testid=ops-login]")
+    ok &= bool(results["E_relogin_after_403s"])
+    return ok
+
+
 def run(base: str, stripe_on: bool, skip_inquiry: bool = False) -> int:
     load_env()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -229,6 +303,9 @@ def _scenarios(page: Page, base: str, data: TestData, results: dict, stripe_on: 
         results["A_status_packet"] = page.is_visible("[data-testid=packet-link]")
         ok &= "ready" in str(results["A_status_title"]).lower()
         shot(page, "A_09_status")
+
+        # ---- E. the operator console (SPEC-09) — after A so the synthetic claim carries a draft --------------------
+        ok &= ops_console(page, base, results)
 
         # ---- B. fix screen (SPEC-02 §1/§2) ---------------------------------------------------------------------------
         data.reset(BRODIE)

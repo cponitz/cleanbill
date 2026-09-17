@@ -87,3 +87,12 @@ iPhone photos chosen from the library can be HEIC. The API rejects HEIC (the ext
   resolves in every theme. `python -m trd.brand --sync` (repo root) regenerates `src/styles/brand.generated.ts` and the
   print / e-mail adapters; `python -m trd.brand --assets` re-renders `public/brand/*`.
 - `/design-system` — the living style guide (noindex, no nav link). Route group `(design)`.
+
+## Operator console `/ops` (SPEC-09 D2, ADR 0020)
+
+Route group `(ops)`, `robots: noindex`, no link from the site. The ops password is typed into the login card, kept in
+`sessionStorage` for the tab and sent as `x-ops-key` on every call to `GET/POST /ops` (`src/lib/ops.ts`); three
+consecutive 403s clear it and show the login again. Sections: Funnel (KPI tiles, step strip, events by kind and by day),
+Claims (filter / search, drawer with packet link, findings, drafts with Approve / Discard / Copy, Mark filed / Reprocess /
+Withdraw), Inquiries (Mark handled with a note), New claim (preview → Create → code + link), Health (last deploy / agent
+run / ETL, Run selftest). Smoke: scenario E in `eval/web_smoke.py` (needs `OPS_PASSWORD` in `.env`).
