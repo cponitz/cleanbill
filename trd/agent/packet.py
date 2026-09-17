@@ -20,7 +20,7 @@ def build_packet(claim: dict, extracted: dict, over65: bool = False, today: date
     def line(t: str, bold=False, size=10.5):
         nonlocal y
         pdf.setFont("Helvetica-Bold" if bold else "Helvetica", size); pdf.drawString(0.9 * inch, y, t); y -= size + 6
-    line("Texas Refund Desk — Residence Homestead Exemption Application Packet (data sheet)", True, 13)
+    line("Clean Bill — Residence Homestead Exemption Application Packet (data sheet)", True, 13)
     line("Accompanies Comptroller Form 50-114. Prepared for the applicant's electronic signature.", False, 9)
     y -= 8; line("PROPERTY", True)
     line(f"TCAD account: {prop['prop_id']}    Situs: {prop['situs_full']}")
@@ -36,6 +36,6 @@ def build_packet(claim: dict, extracted: dict, over65: bool = False, today: date
     line(f"Signed by: {cust.get('signature_name')}    At: {cust.get('agreement_signed_at')}    IP: {cust.get('signature_ip')}")
     line(f"Device: {str(cust.get('signature_ua') or '')[:90]}", False, 9)
     line("The applicant typed their name as an electronic signature after consenting to ESIGN; this record is stamped on the application.", False, 9)
-    line(f"Generated {(today or date.today()).isoformat()} by the Texas Refund Desk agent.", False, 8)
+    line(f"Generated {(today or date.today()).isoformat()} by the Clean Bill agent.", False, 8)
     pdf.showPage(); pdf.save()
     return buf.getvalue()

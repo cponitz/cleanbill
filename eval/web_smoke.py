@@ -9,7 +9,7 @@ Drives headless Chromium (phone viewport) through:
   C. agreement    /agreement/<code> fills the situs from the API
   D. site         every SPEC-07 marketing page renders without a page error; /claim opens a code into the confirm state;
                   the home hero's address form posts an inquiry (skipped with --skip-inquiry until the API is deployed)
-Only ever touches the synthetic lead TRD-TEST-0001 / property 999000001 (reset here with the service-role key, mirroring
+Only ever touches the synthetic lead CB-TEST-0001 / property 999000001 (reset here with the service-role key, mirroring
 eval/reset_test_lead.sql). Screenshots land in eval/out/web/.
 
 Run:  python eval/web_smoke.py --base http://localhost:3000            (after `npm run build && npm start` in apps/web)
@@ -32,7 +32,7 @@ from playwright.sync_api import Page, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "eval" / "out" / "web"
-TEST_CODE = "TRD-TEST-0001"
+TEST_CODE = "CB-TEST-0001"
 TEST_PROP = 999000001
 ID_IMG = ROOT / "eval" / "ids" / "id_03.jpg"   # Richard L Garcia, 3675 DUVAL ST 78721 — matches the synthetic property
 DUVAL = {"situs_num": "3675", "situs_street": "DUVAL ST", "situs_zip": "78721", "situs_full": "3675 DUVAL ST, AUSTIN, TX 78721"}
@@ -144,7 +144,7 @@ def site_pages(page: Page, base: str, results: dict, skip_inquiry: bool) -> bool
     ok &= results["D_faq_open"] == 1
     # /claim: a real code opens the confirm card, a bad one the error
     page.goto(f"{base}/claim")
-    page.fill("#code", "trd-nope-0000")
+    page.fill("#code", "cb-nope-0000")
     page.click("button[type=submit]")
     page.wait_for_selector("[data-testid=code-entry] [role=alert]", timeout=15000)
     page.fill("#code", TEST_CODE.lower())

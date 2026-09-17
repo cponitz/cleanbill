@@ -38,7 +38,7 @@ CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I
 
 def new_claim_code() -> str:
     s = "".join(secrets.choice(CODE_ALPHABET) for _ in range(8))
-    return f"TRD-{s[:4]}-{s[4:]}"
+    return f"CB-{s[:4]}-{s[4:]}"
 
 
 def norm_addr(s: str) -> str:

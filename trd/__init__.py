@@ -1,4 +1,4 @@
-"""Texas Refund Desk — core package.
+"""Clean Bill — core package.
 
 Sub-packages:
   etl        — loads the TCAD (Travis Central Appraisal District) appraisal export and builds the lead list

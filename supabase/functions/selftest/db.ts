@@ -28,5 +28,5 @@ export function html(body: string, status = 200): Response {
   return new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8" } });
 }
 
-export const BRAND = Deno.env.get("BRAND_NAME") ?? "Texas Refund Desk";
-export const SUPPORT_EMAIL = Deno.env.get("SUPPORT_EMAIL") ?? "hello@texasrefunddesk.com";
+export const BRAND = Deno.env.get("BRAND_NAME") ?? "Clean Bill";
+export const SUPPORT_EMAIL = Deno.env.get("SUPPORT_EMAIL") ?? "hello@cleanbillco.com";

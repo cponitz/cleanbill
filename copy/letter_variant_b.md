@@ -28,7 +28,7 @@ The {{earliest_year}} refund year expires **{{deadline_text}}**.
 Sincerely,
 
 Charlie Ponitz
-{{brand}} · Austin, Texas · hello@texasrefunddesk.com
+{{brand}} · Austin, Texas · hello@cleanbillco.com
 
 ---
 

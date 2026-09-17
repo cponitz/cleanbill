@@ -1,9 +1,26 @@
 # Changelog
 
-All notable changes to Texas Refund Desk. Dates are the commit dates on `main`.
+All notable changes to Clean Bill (named Texas Refund Desk until SPEC-08, 2026-09-17; earlier entries keep that name). Dates are the commit dates on `main`.
 Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git tags.
 
 ## [Unreleased]
+
+### Changed
+- **SPEC-08 Part A: rebrand to Clean Bill** (R1; B-19; `docs/specs/SPEC-08-rebrand-clean-bill.md`, `SPEC-09-admin-dashboard.md`,
+  `docs/brand/brand-brief.md` and `docs/plans/phase1-v3.2.md` copied in). "Texas Refund Desk" → "Clean Bill" (legal Parties
+  line: "Clean Bill Co."), `hello@texasrefunddesk.com` → `hello@cleanbillco.com`, `texasrefunddesk.com` → `cleanbillco.com`
+  in the compliance copy (name / e-mail / domain substitution only), the letters (`trd/letters/generate.py`), the packet data
+  sheet and the Form 50-114 audit page (Python and TS), the agent system prompt, the edge-function `BRAND` / `SUPPORT_EMAIL`
+  defaults, the frozen `docs/` pages and `config.js`, `apps/web` (`notFoundHelp`, README; `metadataBase` / canonical
+  `https://cleanbillco.com`), README, CLAUDE.md naming rule, ARCHITECTURE, RUNBOOK (also the stale test counts → 49 / 33),
+  `.env.example`, `pyproject.toml` description, `samples/README.md` (`samples/system-map.html` removed — the Cowork project
+  keeps the system map). **Claim codes are `CB-XXXX-XXXX`:** generator (`trd/etl/leads.py`), `CODE_RE` and the normaliser in
+  `claim/index.ts`, `CODE_PREFIX` / `normalizeCode` / `maskCode` in `apps/web/src/lib/api.ts` (prefix-length aware), the
+  selftest and smoke-test code `CB-TEST-0001`, fixtures, eval scripts, figures; the API rejects `TRD-` codes. `SITE_BASE` in
+  `trd/ops/new_claim.py` defaults to `https://cleanbillco.com` and links `/claim/<code>`. **Data model:** migration
+  `20260917190625_cb_claim_codes.sql` rewrites `leads.claim_code` and `events.claim_code` from `TRD-` to `CB-` (body
+  preserved; asserts none remain). ADR 0008 gains a note; no other schema change. Infrastructure slugs
+  (`texas-refund-desk`, `trd`) are unchanged until Parts B1–B3.
 
 ### Added
 - **SPEC-07: the website redesign ("Clean Bill", Ownwell-inspired)** (branch `website-redesign`; ADR 0018; the design

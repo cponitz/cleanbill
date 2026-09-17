@@ -5,7 +5,7 @@ Serves docs/ on a local port, drives headless Chromium through:
   2. claim.html  -> fill eligibility, upload a synthetic ID, sign -> "thanks" state
   3. ops.html    -> log in with OPS_PASSWORD -> claims table renders, the new claim is listed
   4. agreement.html?c=... -> situs + years filled from the API
-Only ever touches the synthetic lead TRD-TEST-0001 (reset it first with eval/reset_test_lead.sql). Screenshots land in eval/out/.
+Only ever touches the synthetic lead CB-TEST-0001 (reset it first with eval/reset_test_lead.sql). Screenshots land in eval/out/.
 Run: python eval/browser_smoke.py   (needs .env: SUPABASE_URL, OPS_PASSWORD)
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 OUT = ROOT / "eval" / "out"
-TEST_CODE = "TRD-TEST-0001"
+TEST_CODE = "CB-TEST-0001"
 RELAY_FILES: dict[str, Path] = {}
 
 

@@ -24,8 +24,8 @@ from reportlab.platypus import Paragraph
 
 from trd.estimator.refund import conservative_display, late_filing_deadline
 
-BRAND = "Texas Refund Desk"
-SUPPORT = "hello@texasrefunddesk.com"
+BRAND = "Clean Bill"
+SUPPORT = "hello@cleanbillco.com"
 DISCLAIMER = "THIS DOCUMENT IS AN ADVERTISEMENT OF SERVICES. IT IS NOT AN OFFICIAL DOCUMENT OF THE STATE OF TEXAS."
 NAVY = (0x1F / 255, 0x38 / 255, 0x64 / 255)
 GREY = (0x6B / 255, 0x76 / 255, 0x86 / 255)

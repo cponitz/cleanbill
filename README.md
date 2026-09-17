@@ -1,4 +1,4 @@
-# Texas Refund Desk
+# Clean Bill
 
 Finds Austin homeowners who never claimed their residence homestead exemption, tells them what they're owed, and prepares the late application so they can claim a 2-year retroactive refund. Fee: 25% of the refund actually received, $0 otherwise.
 
@@ -25,7 +25,7 @@ TCAD export ─▶ [1] ETL + lead engine ─▶ [2] letters ─▶ [3] claim pag
 ## Run
 
 ```
-pip install -e . pytest && python -m pytest -q                 # 28 tests
+pip install -e . pytest && python -m pytest -q                 # 49 tests
 python eval/make_ids.py && ANTHROPIC_API_KEY=... python eval/run_extraction_eval.py
 python -m trd.etl.load --export data/raw/export.zip --layout trd/etl/layouts/pacs_8_0_33.json
 python -m trd.etl.leads --as-of 2026-09-07
@@ -34,7 +34,7 @@ ANTHROPIC_API_KEY=... python -m trd.agent.run --store fixtures   # dry run over 
 
 Edge functions are deployed from the repo root with the Supabase CLI: `supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv` (per-function `verify_jwt` settings are in `supabase/config.toml`). Secrets `ANTHROPIC_API_KEY` and `OPS_PASSWORD` live in the function environment (fallback: `app_settings` table).
 
-The public pages are served by GitHub Pages from `docs/` at `https://cponitz.github.io/texas-refund-desk/` (custom domain: texasrefunddesk.com, not yet pointed). Hosted Supabase project: `letrfpwskjbgnyacesgv`.
+The customer app is `apps/web` on Vercel (production domain `https://cleanbillco.com`, attached by SPEC-08 Part B1; `texasrefunddesk.com` redirects to it). The static fallback pages are served by GitHub Pages from `docs/` at `https://cponitz.github.io/texas-refund-desk/` until cut-over. Hosted Supabase project: `letrfpwskjbgnyacesgv`.
 
 ## Working on this repo
 

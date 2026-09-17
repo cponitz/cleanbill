@@ -30,12 +30,12 @@ def main() -> int:
 
     sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
     # Sample by random offsets over the Tier-1 population (ordered by prop_id for a stable frame).
-    total = sb.table("leads").select("id", count="exact").eq("tier", 1).neq("claim_code", "TRD-TEST-0001").execute().count
+    total = sb.table("leads").select("id", count="exact").eq("tier", 1).neq("claim_code", "CB-TEST-0001").execute().count
     rnd = random.Random(a.seed)
     offsets = sorted(rnd.sample(range(total), a.n))
     rows = []
     for off in offsets:
-        lead = sb.table("leads").select("*").eq("tier", 1).neq("claim_code", "TRD-TEST-0001").order("prop_id").range(off, off).execute().data[0]
+        lead = sb.table("leads").select("*").eq("tier", 1).neq("claim_code", "CB-TEST-0001").order("prop_id").range(off, off).execute().data[0]
         p = sb.table("properties").select("*").eq("prop_id", lead["prop_id"]).single().execute().data
         mail = ", ".join(x for x in [p.get("owner_addr1"), p.get("owner_addr2"), f"{p.get('owner_city') or ''} {p.get('owner_state') or ''} {p.get('owner_zip') or ''}".strip()] if x)
         rows.append({
@@ -65,7 +65,7 @@ def main() -> int:
     ws.freeze_panes = "A2"
     readme = wb.create_sheet("Read Me", 0)
     for line in [
-        "Texas Refund Desk — Lead verification pack", "",
+        "Clean Bill — Lead verification pack", "",
         f"{a.n} Tier-1 leads sampled at random (seed {a.seed}) from {total:,} Tier-1 leads in Supabase.",
         "Tier 1 = owner-occupied residential (state code A1/A3/A4), no homestead/over-65/disability flags on the 2026 roll, mailing address = property address, not an entity, appraised value >= $100K, deed dated on/before Jan 1, 2024 (both refund years available).",
         "For each row: open the TCAD detail link (or paste the account number into TCAD search) and confirm (1) no homestead exemption shown, (2) the owner name and situs match, (3) the deed date is plausible. Open Google Maps to confirm it is a house/condo, not a lot or a business.",

@@ -54,7 +54,7 @@ export function formValues(p: FillInput): { text: Record<string, string>; checks
     "Property OwnerAuthorized Representative Name": name,
     "TitleAuthorization": "Property Owner",
     "Date 1": mdy(signedOn),
-    "Additional Information": `Late application under Tax Code Sec. 11.431 for tax years ${years.slice(0, -1).join(", ")}. Prepared with Texas Refund Desk; applicant signed electronically.`,
+    "Additional Information": `Late application under Tax Code Sec. 11.431 for tax years ${years.slice(0, -1).join(", ")}. Prepared with Clean Bill; applicant signed electronically.`,
   };
   if (prevHs && p.cust.prev_homestead_address) text["Previous County"] = String(p.cust.prev_homestead_county ?? "");
   const checks = ["General Residence Homestead Exemption", ...(p.over65 ? ["Person Age 65 or Older or Surviving Spouse"] : [])];
@@ -127,7 +127,7 @@ export async function fill50114(blank: Uint8Array, p: FillInput): Promise<Uint8A
   line("The applicant consented to sign electronically (ESIGN; Tex. Bus. & Com. Code ch. 322) and typed their name as their signature on this application.", false, 9);
   line("A copy of the applicant's Texas driver's license/ID accompanies this application (Tax Code Sec. 11.43(j)).", false, 9);
   y -= 6; line("PREPARER", true);
-  line("Prepared by Texas Refund Desk (a private company; not affiliated with any government agency) at the applicant's direction.", false, 9);
+  line("Prepared by Clean Bill (a private company; not affiliated with any government agency) at the applicant's direction.", false, 9);
   line(`Generated ${new Date().toISOString().slice(0, 19)}Z`, false, 8);
 
   return await doc.save();

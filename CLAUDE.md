@@ -1,4 +1,4 @@
-# Texas Refund Desk — instructions for Claude Code
+# Clean Bill — instructions for Claude Code
 
 ## What this is
 Finds Travis County homeowners who never claimed the residence homestead exemption, tells them
@@ -8,9 +8,11 @@ before touching anything; it defines every module, table, column and flow.
 
 ## Sources of truth
 - Code, schema, deploys, technical decisions: THIS REPO (docs/ARCHITECTURE.md, docs/adr/, CHANGELOG.md).
-- Naming: the product, repo, Supabase project, Vercel project and Mac folder are all `texas-refund-desk`;
-  the Python package is `trd`. Do not introduce other names.
-- Business decisions, specs, plans, research: the Cowork project "Texas Refund Desk"
+- Naming (B-19, SPEC-08): the product is **Clean Bill** (legal line: Clean Bill Co.), domain cleanbillco.com, support
+  hello@cleanbillco.com, claim codes `CB-XXXX-XXXX`. The repo, Vercel project, Supabase display name, Mac folder and Python
+  package become `cleanbill` in SPEC-08 Part B (until then: `texas-refund-desk` / `trd`). Do not introduce other names;
+  "Texas Refund Desk" is retired except in history (CHANGELOG entries, ADRs, SPEC-01…07).
+- Business decisions, specs, plans, research: the Cowork project "Clean Bill"
   (claude/decisions.md, claude/specs/). Never make a business decision here — if a task needs one
   and no decision exists, stop and ask; do not guess.
 - Copy in copy/*.md is compliance-reviewed; change wording only from an approved spec.

@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-One file per technical decision (T-nn in the handbook). Business decisions (B-nn, O-nn) live in the Cowork project `claude/decisions.md`. Add a new ADR in the same PR as the change it justifies; never edit an accepted ADR — supersede it.
+One file per technical decision (T-nn in the handbook). The product was renamed Texas Refund Desk → Clean Bill by SPEC-08 (B-19, 2026-09-17); ADRs written before that keep the old name. Business decisions (B-nn, O-nn) live in the Cowork project `claude/decisions.md`. Add a new ADR in the same PR as the change it justifies; never edit an accepted ADR — supersede it.
 
 - [0001](./0001-anthropic-api-direct-hand-written-tool-loop.md) — anthropic api direct hand written tool loop (2026-08-22)
 - [0002](./0002-model-mix-haiku-extraction-sonnet-agent.md) — model mix haiku extraction sonnet agent (2026-08-22)

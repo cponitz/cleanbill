@@ -9,6 +9,8 @@ import { BRAND, META_DESCRIPTION } from "@/lib/copy";
 const dmSans = DM_Sans({ subsets: ["latin"], weight: "variable", axes: ["opsz"], variable: "--font-dm", display: "swap" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cleanbillco.com"),   // SPEC-08 A3 (B-19): canonical URL base
+  alternates: { canonical: "./" },
   title: { default: BRAND, template: `%s — ${BRAND}` },
   description: META_DESCRIPTION,
   robots: { index: true, follow: false },

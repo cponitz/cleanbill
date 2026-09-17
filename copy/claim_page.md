@@ -1,11 +1,11 @@
-# Claim page copy — texasrefunddesk.com/claim/{{claim_code}}
+# Claim page copy — cleanbillco.com/claim/{{claim_code}}
 
 Mobile-first, single page, five steps. Every step is one screen on a phone.
 
 ---
 
 ## Header
-**Texas Refund Desk**
+**Clean Bill**
 Private company · Not affiliated with any government agency
 
 ## Step 1 — Your property (pre-filled from the claim code)
@@ -56,7 +56,7 @@ Email: [__________] · Mobile (optional, for status updates): [__________]
 
 ☐ I have read the [Service Agreement] and agree to it.
 ☐ I agree to sign electronically. I understand my typed name below is my legal signature on the Service Agreement **and** on my Form 50-114 application, and that I am the property owner named above.
-☐ I understand I can file for free myself and am choosing to use Texas Refund Desk.
+☐ I understand I can file for free myself and am choosing to use Clean Bill.
 
 Type your full legal name to sign: [__________________]
 
@@ -71,4 +71,4 @@ Type your full legal name to sign: [__________________]
 2. Once you say "go," we submit it to the Travis Central Appraisal District. They typically take 30–90 days.
 3. If approved, the Travis County Tax Office mails your refund check (or applies it to your account) within about 60 days. We invoice 25% then — never before.
 
-Questions? Reply to any of our emails or write hello@texasrefunddesk.com.
+Questions? Reply to any of our emails or write hello@cleanbillco.com.
