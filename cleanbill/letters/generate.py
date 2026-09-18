@@ -34,6 +34,15 @@ NAVY = T.PRIMARY_STRONG      # headline / letterhead colour (the theme's strong 
 GREY = T.MUTED
 INK = T.INK
 
+# Recipient block position (SPEC-11 §4.1 "address-window compliance"). Lob prints letters with
+# address_placement=top_first_page: the recipient address must sit inside the #10 double-window envelope's lower window
+# and nothing else may be in that zone. These inches from the page's top-left corner are the one place to move the block
+# after the Lob test-mode render (docs/reports/2026-09-18-lob-proof.md); the disclaimer above it is not moved.
+RECIPIENT_TOP_IN = 2.125      # top of the owner-name line
+RECIPIENT_LEFT_IN = 0.75      # = the page margin
+RECIPIENT_ZONE_H_IN = 1.125   # height kept free of other content below RECIPIENT_TOP_IN (name + up to 3 address lines)
+RECIPIENT_LINE_PT = 13
+
 
 @dataclass
 class LetterData:
@@ -105,11 +114,14 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
     c.drawRightString(W - m, y, (d.mail_date or date.today()).strftime("%B %d, %Y"))
     y -= 16; c.drawString(m, y, "Private company · Austin, Texas · Not affiliated with any government agency"); y -= 26
 
-    # recipient block (window-envelope position)
+    # recipient block (window-envelope position: a fixed zone, see RECIPIENT_TOP_IN; the letterhead ends above it)
+    zone_top = H - RECIPIENT_TOP_IN * inch
+    y = min(y, zone_top)
     c.setFillColorRGB(*INK); c.setFont(SANS, 10.5)
-    for line in [d.owner_name] + d.mail_lines:
-        c.drawString(m, y, line); y -= 13
-    y -= 14
+    ry = zone_top - 10.5
+    for line in ([d.owner_name] + d.mail_lines)[:4]:
+        c.drawString(RECIPIENT_LEFT_IN * inch, ry, line); ry -= RECIPIENT_LINE_PT
+    y = zone_top - RECIPIENT_ZONE_H_IN * inch - 6
 
     refund = conservative_display(d.refund_total)
     forward = conservative_display(d.forward_annual)
@@ -168,11 +180,23 @@ def render_letter(d: LetterData, out_path: Path) -> Path:
             f"or any government agency. The refund described here would be paid by the Travis County Tax Office on behalf of {ut}, "
             f"after approval by the Travis Central Appraisal District. Estimates are based "
             f"on public appraisal data and current tax rates; the appraisal district makes all eligibility decisions. Refunds are issued to the person who paid the tax. "
-            f"This is not legal or tax advice. To stop receiving mail from us, email {SUPPORT} with \"remove\" and your address.")
+            f"This is not legal or tax advice. To stop receiving mail from us, email {SUPPORT} with \"remove\" and your address. "
+            f"{return_address_line()}")
     style = ParagraphStyle("f", fontName=SANS, fontSize=7.5, leading=9.5, textColor=GREY)
-    p = Paragraph(foot, style); _, ph = p.wrap(W - 2 * m, 2 * inch); p.drawOn(c, m, m - 0.25 * inch + ph - ph)  # sits at bottom margin
+    p = Paragraph(foot, style); _, ph = p.wrap(W - 2 * m, 2 * inch)
+    foot_top = m - 0.25 * inch + ph
+    if y < foot_top + 4:
+        raise ValueError(f"letter body overruns the footer by {foot_top + 4 - y:.0f}pt ({d.claim_code})")   # never a second page
+    p.drawOn(c, m, m - 0.25 * inch)  # sits at bottom margin
     c.showPage(); c.save()
     return out_path
+
+
+def return_address_line() -> str:
+    """The entity line of the footer (SPEC-11 §5): brand.LEGAL_NAME and the return address the envelope carries."""
+    a = brand.RETURN_ADDRESS
+    parts = [a["line1"]] + ([a["line2"]] if a.get("line2") else []) + [f"{a['city']}, {a['state']} {a['zip']}"]
+    return f"{brand.LEGAL_NAME} · {', '.join(parts)}."
 
 
 def _wrap(c: canvas.Canvas, text: str, font: str, size: float, width: float) -> list[str]:

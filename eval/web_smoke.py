@@ -200,6 +200,12 @@ def ops_console(page: Page, base: str, results: dict, data: "TestData | None" = 
     leads = page.text_content("[data-testid=kpi-leads_loaded] .kpi-value") or "0"
     results["E_leads_loaded"] = leads
     ok &= int(leads.replace(",", "")) > 0
+    # SPEC-11: the mail tiles (from mail_pieces) and the batch table under Health render, with or without letters sent
+    for tile in ("mailed", "delivered", "returned"):
+        results[f"E_kpi_{tile}"] = page.text_content(f"[data-testid=kpi-{tile}] .kpi-value") or ""
+        ok &= results[f"E_kpi_{tile}"].replace(",", "").isdigit()
+    ok &= page.locator("[data-testid=mail-batches]").count() == 1 and page.locator("[data-testid=health-letters]").count() == 1
+    results["E_mail_batches"] = page.locator("[data-testid=mail-batch]").count()
     # the synthetic claim from scenario A carries a draft: open it, approve the draft
     row = page.locator(f"[data-testid=claim-row][data-code={TEST_CODE}]").first
     row.wait_for(timeout=20000)

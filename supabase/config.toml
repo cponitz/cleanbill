@@ -1,7 +1,7 @@
 # Supabase CLI config. Only what the hosted project needs; the local stack is not used.
 # Per-function JWT settings mirror what is deployed: claim/ops/selftest are reachable without a Supabase JWT
-# (the claim code / ops password is the secret); webhooks is called by providers (Resend) that cannot send a Supabase JWT —
-# the Svix signature is its credential (SPEC-10); process-claim is called service-to-service with the service-role key.
+# (the claim code / ops password is the secret); webhooks is called by providers (Resend, Lob) that cannot send a Supabase JWT —
+# the Svix / Lob-Signature signature is its credential (SPEC-10, SPEC-11); process-claim is called service-to-service with the service-role key.
 # Deploy from the repo root, no Docker needed:
 #   supabase functions deploy --use-api --project-ref letrfpwskjbgnyacesgv
 project_id = "cleanbill"

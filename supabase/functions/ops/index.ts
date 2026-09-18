@@ -1,6 +1,6 @@
 // ops API (JSON) — the operator console's only backend (SPEC-09 D1, ADR 0020). Password-gated via the x-ops-key
 // header or ?key=; 20 failed keys per IP per hour → 429 (counted as events of kind ops_auth_fail).
-//   GET  /ops?status=&limit=   -> {ok, kpis, funnel, claims, inquiries, system, features}
+//   GET  /ops?status=&limit=   -> {ok, kpis, funnel, claims, inquiries, system, features, mail}   (mail: SPEC-11 batches)
 //   POST /ops {action, …}      -> approve | discard | send {message_id} · mark_filed {claim_id, channel} · reprocess {claim_id}
 //                                 · withdraw {claim_id} · inquiry_handled {inquiry_id, notes} · new_claim {prop_id | address, create}
 //                                 · run_selftest {scenario} · system_status {key, value} (workflows report their last run)
@@ -252,26 +252,33 @@ async function dashboard(sb: SB, url: URL): Promise<Response> {
   const toMap = (rows: Array<{ kind: string; n: number }> | null) => Object.fromEntries(FUNNEL_KINDS.map((k) => [k, Number((rows ?? []).find((r) => r.kind === k)?.n ?? 0)]));
   const byKindAll = toMap(kAll as Array<{ kind: string; n: number }> | null);
 
+  // SPEC-11: mailed / delivered / returned come from mail_pieces (the record); the lead count stays in funnel as a cross-check.
+  const [{ data: mailKpis }, { data: mailBatches }] = await Promise.all([sb.rpc("ops_mail_kpis"), sb.rpc("ops_mail_by_batch")]);
+  const mk = ((mailKpis as Array<Record<string, number>> | null)?.[0]) ?? { mailed: 0, delivered: 0, returned: 0, rejected: 0 };
   const kpis = {
-    leads_loaded: leadsTotal, mailed: leadCounts.mailed, page_views: byKindAll.view, opened: leadCounts.opened + leadCounts.claimed + leadCounts.filed, claimed: leadCounts.claimed + leadCounts.filed,
+    leads_loaded: leadsTotal, mailed: Number(mk.mailed ?? 0), delivered: Number(mk.delivered ?? 0), returned: Number(mk.returned ?? 0),
+    page_views: byKindAll.view, opened: leadCounts.opened + leadCounts.claimed + leadCounts.filed, claimed: leadCounts.claimed + leadCounts.filed,
     ready_to_submit: claimCounts.ready_to_submit, needs_dl_update: claimCounts.needs_dl_update, needs_review: claimCounts.needs_review,
     filed: claimCounts.filed, approved: claimCounts.approved, refunded: claimCounts.refunded + claimCounts.paid,
     inquiries_open: 0,
   };
-  const funnel = { by_kind_7d: toMap(k7 as Array<{ kind: string; n: number }> | null), by_kind_all: byKindAll, by_day_30d: (byDay ?? []) as Array<{ day: string; kind: string; n: number }>, steps: funnelSteps(kpis) };
+  const funnel = { by_kind_7d: toMap(k7 as Array<{ kind: string; n: number }> | null), by_kind_all: byKindAll, by_day_30d: (byDay ?? []) as Array<{ day: string; kind: string; n: number }>, steps: funnelSteps(kpis), leads_mailed: leadCounts.mailed };
+  const mail = { batches: ((mailBatches ?? []) as Array<{ batch: string; n: number; sent_at: string | null; delivered: number; returned: number; rejected: number; proof: boolean }>).map((b) => ({ ...b, n: Number(b.n), delivered: Number(b.delivered), returned: Number(b.returned), rejected: Number(b.rejected) })), rejected: Number(mk.rejected ?? 0) };
 
   // v2: `claims` is the engagement (joined to its lead, property and account); findings are structured on the claim.
-  let q = sb.from("claims").select("*, leads(claim_code, est_refund_total, prop_id, properties(situs_full, owner_name)), customers(id, email, card_on_file)").order("created_at", { ascending: false }).limit(limit);
+  let q = sb.from("claims").select("*, leads(id, claim_code, est_refund_total, prop_id, letter_variant, mailed_at, properties(situs_full, owner_name)), customers(id, email, card_on_file)").order("created_at", { ascending: false }).limit(limit);
   if (statusFilter && CLAIM_STATUSES.includes(statusFilter)) q = q.eq("status", statusFilter);
   const { data: custs } = await q;
   const ids = (custs ?? []).map((c) => c.id);
-  const [{ data: docs }, { data: filings }, { data: msgs }] = ids.length
+  const leadIds = (custs ?? []).map((c) => c.leads?.id).filter((x): x is string => !!x);
+  const [{ data: docs }, { data: filings }, { data: msgs }, { data: pieces }] = ids.length
     ? await Promise.all([
       sb.from("documents").select("claim_id, kind, extracted, validation, extraction_cost_usd").in("claim_id", ids),
       sb.from("filings").select("claim_id, packet_path, generated_at, submitted_at, channel, form_version").in("claim_id", ids),
       sb.from("messages").select("*").in("claim_id", ids).order("created_at", { ascending: false }),
+      leadIds.length ? sb.from("mail_pieces").select("lead_id, batch, variant, status, delivered_at, created_at, to_override").in("lead_id", leadIds).eq("to_override", false).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
     ])
-    : [{ data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
   const latestFiling = new Map<string, { claim_id: string; packet_path: string | null; generated_at: string; submitted_at: string | null; channel: string | null; form_version: string | null }>();
   for (const f of (filings ?? [])) { const cur = latestFiling.get(f.claim_id); if (!cur || f.generated_at > cur.generated_at) latestFiling.set(f.claim_id, f); }
   const paths = [...latestFiling.values()].map((f) => f.packet_path).filter((p): p is string => !!p);
@@ -282,12 +289,14 @@ async function dashboard(sb: SB, url: URL): Promise<Response> {
     const lead = c.leads ?? {}; const prop = lead.properties ?? {};
     const d = (docs ?? []).find((x) => x.claim_id === c.id && x.kind === "dl_front");
     const fil = latestFiling.get(c.id);
+    const piece = (pieces ?? []).find((p) => p.lead_id === lead.id) ?? null;   // the latest real letter to this lead (SPEC-11): its origin
     const ex = d?.extracted as Record<string, unknown> | null;
     const extracted = ex ? Object.fromEntries(Object.entries(ex).filter(([k]) => k !== "dl_number")) : null;   // never the DL number, masked or not
     return {
       id: c.id, customer_id: c.customer_id, account: c.customers ?? null, status: c.status, status_reason: c.status_reason, full_name: c.full_name, email: c.email, phone: c.phone,
       signed_at: c.agreement_signed_at, created_at: c.created_at, updated_at: c.updated_at,
       claim_code: lead.claim_code, est_refund_total: lead.est_refund_total, prop_id: lead.prop_id, situs_full: prop.situs_full, owner_name: prop.owner_name,
+      letter: lead.mailed_at || piece ? { variant: lead.letter_variant ?? piece?.variant ?? null, mailed_at: lead.mailed_at ?? piece?.created_at ?? null, delivered_at: piece?.delivered_at ?? null, status: piece?.status ?? null, batch: piece?.batch ?? null } : null,
       extracted,
       findings: Array.isArray(c.findings) && c.findings.length ? c.findings : ((d?.validation as { findings?: unknown[] } | null)?.findings ?? []),
       extraction_cost_usd: d?.extraction_cost_usd ?? null,
@@ -299,7 +308,7 @@ async function dashboard(sb: SB, url: URL): Promise<Response> {
   const { data: inquiries } = await sb.from("inquiries").select("id, created_at, kind, address, email, company, properties, bills, source_path, handled_at, notes").order("handled_at", { ascending: true, nullsFirst: true }).order("created_at", { ascending: false }).limit(200);
   kpis.inquiries_open = (inquiries ?? []).filter((i) => !i.handled_at).length;
   const { data: system } = await sb.from("system_status").select("key, value, updated_at").order("key");
-  return json({ ok: true, kpis, funnel, claims, inquiries: inquiries ?? [], system: system ?? [], features: features(), generated_at: new Date().toISOString() });
+  return json({ ok: true, kpis, funnel, claims, inquiries: inquiries ?? [], system: system ?? [], features: features(), mail, generated_at: new Date().toISOString() });
 }
 
 Deno.serve(async (req: Request) => {

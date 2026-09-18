@@ -51,3 +51,37 @@ export async function verifySvix(headers: SvixHeaders, body: string, secret: str
   const offered = sig.split(/\s+/).filter((s) => s.startsWith("v1,"));
   return offered.some((s) => constantTimeEqual(s, expected)) ? { ok: true, id, timestamp } : { ok: false, error: "bad_signature" };
 }
+
+// ---- Lob (SPEC-11 §4.2) ----------------------------------------------------------------------------------------------
+// Lob signs each delivery with two headers: `Lob-Signature-Timestamp` (the send time; Lob documents it as a unix
+// timestamp — seconds or milliseconds are both accepted here) and `Lob-Signature`, the lower-case hex HMAC-SHA256 of
+// `${timestamp}.${rawBody}` keyed with the webhook's secret (the string shown in the Lob dashboard, used as-is — no
+// base64 step, unlike Svix). Pinned from Lob's "Webhook security" page as SPEC-11 read it on 2026-09-18; the test-mode
+// proof (L2/L5) is the first end-to-end confirmation. Same five-minute skew and constant-time compare as Svix.
+export type LobVerification = { ok: true; timestamp: number } | { ok: false; error: "missing_headers" | "bad_timestamp" | "stale_timestamp" | "bad_signature" };
+
+function hex(bytes: ArrayBuffer): string {
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export async function signLob(secret: string, timestamp: number | string, body: string): Promise<string> {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return hex(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${timestamp}.${body}`)));
+}
+
+/** Seconds since the epoch from a header that may carry seconds or milliseconds. */
+export function lobTimestampSeconds(ts: string): number | null {
+  if (!/^\d+$/.test(ts)) return null;
+  const n = Number(ts);
+  return n > 1e11 ? Math.floor(n / 1000) : n;
+}
+
+export async function verifyLob(headers: SvixHeaders, body: string, secret: string, now: number = Math.floor(Date.now() / 1000)): Promise<LobVerification> {
+  const ts = headers.get("lob-signature-timestamp"), sig = headers.get("lob-signature");
+  if (!ts || !sig) return { ok: false, error: "missing_headers" };
+  const seconds = lobTimestampSeconds(ts);
+  if (seconds === null) return { ok: false, error: "bad_timestamp" };
+  if (Math.abs(now - seconds) > TOLERANCE_SECONDS) return { ok: false, error: "stale_timestamp" };
+  const expected = await signLob(secret, ts, body);
+  return constantTimeEqual(sig.trim().toLowerCase(), expected) ? { ok: true, timestamp: seconds } : { ok: false, error: "bad_signature" };
+}

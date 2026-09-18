@@ -8,7 +8,9 @@ begin
     'documents.claim_id', 'filings.claim_id', 'messages.claim_id', 'property_entities.entity_cd',
     'property_values.tax_year', 'record_checks.source', 'refunds.dispute_status', 'refunds.record_check_id',
     'inquiries.kind', 'inquiries.email', 'system_status.value',
-    'messages.provider', 'messages.provider_message_id', 'messages.delivery_status', 'messages.delivery_detail'
+    'messages.provider', 'messages.provider_message_id', 'messages.delivery_status', 'messages.delivery_detail',
+    'mail_pieces.lob_id', 'mail_pieces.batch', 'mail_pieces.status', 'mail_pieces.to_override', 'mail_pieces.address_verification',
+    'mail_pieces.pdf_sha256', 'mail_pieces.delivered_at', 'mail_pieces.events'
   ]) x
   where not exists (select 1 from information_schema.columns c
                     where c.table_schema = 'public' and c.table_name = split_part(x, '.', 1) and c.column_name = split_part(x, '.', 2));
@@ -30,6 +32,13 @@ begin
   end if;
   if not exists (select 1 from pg_constraint where conname = 'messages_provider_message_id_key') then
     raise exception 'messages.provider_message_id must be unique (SPEC-10)';
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'mail_pieces_lob_id_key') then
+    raise exception 'mail_pieces.lob_id must be unique (SPEC-11)';
+  end if;
+  if not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname='public' and p.proname in ('ops_mail_kpis') )
+     or not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname='public' and p.proname in ('ops_mail_by_batch')) then
+    raise exception 'ops_mail_kpis() / ops_mail_by_batch() missing (SPEC-11)';
   end if;
   raise notice 'schema check passed';
 end $$;

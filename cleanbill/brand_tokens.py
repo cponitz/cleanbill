@@ -9,6 +9,8 @@ BRAND_NAME = "Clean Bill"
 LEGAL_NAME = "Clean Bill Co."
 SUPPORT_EMAIL = "hello@cleanbillco.com"
 SITE = "https://cleanbillco.com"
+# the envelope return address (SPEC-11); the letter footer and the Lob `from` read cleanbill.brand.RETURN_ADDRESS
+RETURN_ADDRESS = {'name': 'Clean Bill Co.', 'line1': 'RETURN ADDRESS NOT SET', 'line2': '', 'city': 'Austin', 'state': 'TX', 'zip': '00000'}
 
 # semantic colours, hex
 HEX = {

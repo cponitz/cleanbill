@@ -6,6 +6,52 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 ## [Unreleased]
 
 ### Added
+- **SPEC-11 L1–L3: the letter batch and Lob send** (ADR 0023; closes G-7 once L4–L6 run). **Batch (Mac):**
+  `python -m cleanbill.letters.batch --batch <name> --tier 1 --n 1000 --variant-split 50 --seed <n> --dry-run` reads the
+  published `leads` ⋈ `properties`, applies guard rails no flag can switch off (never `estimate_unconfirmed` (B-18), a
+  lead not `new` with `mailed_at` null, `hs_exempt`, `address_suppressed`, the synthetic account / `CB-TEST-`, an
+  incomplete Texas address, or a `prop_id` in `data/out/exclude.csv`), draws a stratified sample by market-value band
+  (`100–200k … 750k+`, proportional to the eligible population, largest-remainder rounding, `--cap-per-band`) shuffled
+  by `--seed` after a sort by claim code (the same seed = the same leads, whatever the row order), interleaves A/B so
+  every band is within one letter of the split, verifies every address with Lob (`us_verifications`; only `deliverable` /
+  `deliverable_unnecessary_unit` are mailed, with Lob's components on the envelope; the rest become
+  `mail_pieces.status='address_rejected'` and the lead stays `new`), prints a counts-only summary (bands with eligible vs.
+  sample share, A/B, median estimate, cities, taxing units, excluded by reason, rejected, `--unit-cost` × mailable) and
+  writes `data/out/batches/<batch>/<batch>.csv` + 10 sample PDFs (git-ignored). `--send` renders every letter, posts it
+  to `POST /v1/letters` (multipart PDF, `to` = verified components, `from` = `brand.RETURN_ADDRESS`, `top_first_page`,
+  `usps_first_class`, `use_type=marketing`, `color=false`, `metadata[claim_code|batch|variant|tier]`, `Idempotency-Key
+  <batch>:<code>`, 5 req/s, 429 `Retry-After` + 5xx retries ×3), inserts the `mail_pieces` row only after Lob's 200 and
+  then sets `leads.status='mailed'`, `mailed_at`, `letter_variant`; re-running the same `--batch` skips leads already in
+  it; an error stops the run and prints the resume command. `--to-override "Name|L1|L2|City|ST|ZIP"` mails every letter
+  to that address (the proof) with `to_override=true` and never touches a lead. A live key refuses without
+  `LOB_ENABLED=true`, `--send`, `--confirm-footer "Clean Bill Co."` (= `brand.LEGAL_NAME`) and a real
+  `brand.RETURN_ADDRESS` (new; the placeholder's zip is `00000`; mirrored into `brand_tokens.py` by `--sync`); a test key
+  needs only `--send`. `--window-check` renders one synthetic letter through Lob test mode and downloads the render and
+  thumbnails for the address-window check. `cleanbill/letters/lob.py` is the client; `generate.py` pins the recipient
+  block at `RECIPIENT_TOP_IN = 2.125 in` (the one constant to move after the check), adds the entity / return-address
+  line to the footer, and raises rather than spill to a second page. **Data model:** migration
+  `20260918220224_mail_pieces.sql` — table `mail_pieces` (lead, claim code, batch, variant, unique `lob_id`, status check
+  `address_rejected | created | rendered | mailed | in_transit | in_local_area | processed_for_delivery | re_routed |
+  returned_to_sender | deleted`, `to_override`, `to_address`, `address_verification`, `pdf_sha256`,
+  `expected_delivery_date`, `delivered_at`, `events`, `last_event_at`), RLS on; SQL functions `ops_mail_kpis()` and
+  `ops_mail_by_batch()`; `events.kind` + `mail_returned`; `system_status` key `lob_webhook`; `check_schema.sql` asserts
+  them; `eval/reset_mail_batch.sql` resets a test-mode batch. **Webhooks:** `POST /webhooks/lob` in the `webhooks`
+  function — `Lob-Signature` / `Lob-Signature-Timestamp` verified in `_shared/webhook_sig.ts` (hex HMAC-SHA256 of
+  `timestamp.body` with `LOB_WEBHOOK_SECRET`, seconds or milliseconds, 5-minute skew, constant-time; 401 otherwise),
+  `mail_pieces` looked up by `lob_id = reference_id`, status moved forward only (terminal states always apply),
+  `{type, at, detail}` appended (capped at 50, never an address), `delivered_at` on `processed_for_delivery`,
+  `returned_to_sender` → lead `suppressed` + `events` `mail_returned`; unknown ids → 200. **`/ops`:** `kpis.mailed` now
+  counts `mail_pieces` (proofs and rejected excluded) with the lead count as a sub-line cross-check
+  (`funnel.leads_mailed`); new **Delivered** and **Returned** tiles; Health gains a **letters** tile (Lob on/off, last
+  batch, last webhook) and a **Mail batch** table (pieces, sent, delivered, returned, address rejected, proof badge);
+  the drawer's property line shows "Letter B · mailed Oct 5 · delivered Oct 9" from `claim.letter`. Smoke E asserts the
+  three tiles, the table and the letters tile render. **Docs:** `docs/specs/SPEC-11`, ADR 0023, ARCHITECTURE (module 6,
+  17, 20 rows, §3.3 outbound-mail row, §4.1 `mail_pieces` + leads columns + events / system_status, §4.3 caption, §5.2
+  rewritten as the mailing flow, §5.8 GET /ops, glossary), the state-machine figure (`mailed` now written), RUNBOOK §9.3
+  (dry run, window check, proof, send, reset) and §9.5, `docs/reports/2026-09-18-lob-proof.md` (what the build verified
+  and the L2 / L5 steps still pending Charlie's key). CI runs `webhooks/lob_test.ts` and type-checks `lob.ts`. Tests:
+  Python +14 (73), Deno +5 (61). No wording change to the disclaimer or the taxing-unit lines; nothing is printed or
+  charged until Charlie's L4 (Lob account, keys, return address, entity name, exclude file) and L5 (webhook, proof).
 - **SPEC-10 E1–E3: outbound e-mail from `/ops` through Resend** (ADR 0022; closes G-5 once E4/E5 wire the account).
   **E1 — one template, two renderers, one parity test:** `python -m cleanbill.brand --sync` also generates
   `supabase/functions/_shared/email_template.ts` (the contents of `cleanbill/email/base.html` plus the footer strings —
