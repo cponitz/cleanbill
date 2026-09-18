@@ -85,3 +85,14 @@ def test_mark_geometry_is_one_definition():
     path = brand.mark_svg_path()
     assert path.count("M ") == len(brand.MARK)
     assert path in brand.GENERATED["ts"].read_text() and path in brand.GENERATED["web"].read_text()
+
+
+def test_email_parity_snapshot_is_current():
+    """SPEC-10 E1: the fixture the Deno renderer (_shared/email_test.ts) is checked against is what Python renders today."""
+    from cleanbill import email
+    assert email.SNAPSHOT.exists()
+    assert email.SNAPSHOT.read_text() == email.snapshot_text(), "run python -m cleanbill.email --emit-snapshot"
+    snap = email.snapshot()
+    assert len(snap["cases"]) == len(snap["rendered"]) >= 5
+    for r in snap["rendered"]:
+        assert "{{" not in r["html"] and brand.DISCLAIMER in r["text"]

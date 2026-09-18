@@ -121,7 +121,7 @@ index.ts · form50114.ts<br />_shared/validate.ts · _shared/findings.ts</td>
 <td>ops API</td>
 <td>Supabase Edge Function · Deno/TS</td>
 <td class="mono">supabase/functions/ops/{index,logic,logic_test}.ts</td>
-<td><strong>The operator console's only backend (SPEC-09 D1, ADR 0020).</strong> Password check (<code>x-ops-key</code> header or <code>?key=</code>; 20 failed keys per IP per hour → 429, counted as <code>events</code> of kind <code>ops_auth_fail</code>). <strong>GET</strong> <code>?status=&amp;limit=</code> (default 200, max 500): <code>kpis</code> (lead counts per status via head queries, page views, ready / needs-DL / needs-review / filed / approved / refunded, open inquiries), <code>funnel</code> (<code>by_kind_7d</code>, <code>by_kind_all</code>, <code>by_day_30d</code> from the SQL functions <code>ops_events_by_kind</code> / <code>ops_events_by_day</code>, plus the step strip views → claimed → ready → filed), <code>claims</code> (joined to lead + property + account, front-document extraction <em>without</em> the DL number, findings, latest filing with a 10-minute signed packet URL — signed in one batch — and every message), <code>inquiries</code> (unhandled first), <code>system</code> (the <code>system_status</code> rows). <strong>POST</strong> <code>{action, …}</code>: <code>approve</code> / <code>discard</code> a draft; <code>mark_filed {claim_id, channel}</code> (SPEC-05 task 1: only from <code>ready_to_submit</code>; sets <code>filings.submitted_at</code> + <code>channel</code>, claim and lead → <code>filed</code>, drafts the followups.md "filed" message); <code>reprocess {claim_id}</code> (re-kicks <code>process-claim</code> for a claim stuck in <code>submitted</code> / <code>processing</code>); <code>withdraw {claim_id}</code> (any open status → <code>withdrawn</code>); <code>inquiry_handled {inquiry_id, notes}</code>; <code>new_claim {prop_id | address, create}</code> (walkthrough claims over the published properties: preview, then confirm → code + link); <code>run_selftest {scenario}</code> (server-side call, IPs masked); <code>system_status {key, value}</code> (the workflows' last-run rows). Guards in <code>logic.ts</code> mirror <code>cleanbill/agent/store.py</code>; every mutating action writes <code>audit_log</code> (<code>actor='ops'</code>). Nothing sends, files or charges.</td>
+<td><strong>The operator console's only backend (SPEC-09 D1, ADR 0020).</strong> Password check (<code>x-ops-key</code> header or <code>?key=</code>; 20 failed keys per IP per hour → 429, counted as <code>events</code> of kind <code>ops_auth_fail</code>). <strong>GET</strong> <code>?status=&amp;limit=</code> (default 200, max 500): <code>kpis</code> (lead counts per status via head queries, page views, ready / needs-DL / needs-review / filed / approved / refunded, open inquiries), <code>funnel</code> (<code>by_kind_7d</code>, <code>by_kind_all</code>, <code>by_day_30d</code> from the SQL functions <code>ops_events_by_kind</code> / <code>ops_events_by_day</code>, plus the step strip views → claimed → ready → filed), <code>claims</code> (joined to lead + property + account, front-document extraction <em>without</em> the DL number, findings, latest filing with a 10-minute signed packet URL — signed in one batch — and every message), <code>inquiries</code> (unhandled first), <code>system</code> (the <code>system_status</code> rows). <strong>POST</strong> <code>{action, …}</code>: <code>approve</code> / <code>discard</code> a draft; <code>mark_filed {claim_id, channel}</code> (SPEC-05 task 1: only from <code>ready_to_submit</code>; sets <code>filings.submitted_at</code> + <code>channel</code>, claim and lead → <code>filed</code>, drafts the followups.md "filed" message); <code>reprocess {claim_id}</code> (re-kicks <code>process-claim</code> for a claim stuck in <code>submitted</code> / <code>processing</code>); <code>withdraw {claim_id}</code> (any open status → <code>withdrawn</code>); <code>inquiry_handled {inquiry_id, notes}</code>; <code>new_claim {prop_id | address, create}</code> (walkthrough claims over the published properties: preview, then confirm → code + link); <code>run_selftest {scenario}</code> (server-side call, IPs masked); <code>system_status {key, value}</code> (the workflows' last-run rows); <strong><code>send {message_id}</code> (SPEC-10, ADR 0022)</strong> — the one place that e-mails a customer: an approved, unsent outbound e-mail is wrapped in the Clean Bill template (<code>_shared/email.ts</code>), the packet attached for <code>ready_to_submit</code> / <code>filed</code>, and posted to Resend with <code>Idempotency-Key: msg-&lt;id&gt;</code>; on 2xx <code>sent_at</code>, <code>provider</code>, <code>provider_message_id</code>, <code>delivery_status='sent'</code> are set with <code>update … where sent_at is null</code> (a concurrent click gets <code>already_sent</code>); only while the secret <code>RESEND_ENABLED</code> is <code>"true"</code> (else 409 <code>send_disabled</code>). GET also returns <code>features {resend, stripe, lob}</code> and each message's delivery fields. Guards in <code>logic.ts</code> mirror <code>cleanbill/agent/store.py</code>; every mutating action writes <code>audit_log</code> (<code>actor='ops'</code>). Nothing here files with TCAD or charges.</td>
 <td class="c">**Built**</td>
 </tr>
 <tr class="odd">
@@ -178,10 +178,10 @@ run.py · validate.py · packet.py<br />
 <tr class="odd">
 <td class="c">17</td>
 <td>Mail (Lob) &amp; email (Resend)</td>
-<td>—</td>
-<td>—</td>
-<td>Sending letters from module 6; sending approved <code>messages</code>; receiving inbound replies. <strong>No code exists.</strong></td>
-<td class="c">**Gap**</td>
+<td>Resend API from the ops function (e-mail) · — (mail)</td>
+<td class="mono">supabase/functions/ops/index.ts (send) · _shared/email.ts · _shared/email_template.ts (generated)</td>
+<td><strong>E-mail (SPEC-10, ADR 0022): built</strong> — the ops <code>send</code> action (module 10) is the only sender; one template (<code>cleanbill/email/base.html</code>) rendered identically by Python and Deno (parity snapshot <code>tests/fixtures/email_snapshot.json</code>); delivery state by the <code>webhooks</code> function (module 20). Live once Charlie's Resend account, DNS records and the <code>RESEND_*</code> secrets exist (SPEC-10 §7, E4–E5). <strong>Mail (Lob, letters from module 6): no code</strong> — SPEC-11. Inbound e-mail parsing: O-08, out of scope.</td>
+<td class="c">**Partial**</td>
 </tr>
 <tr class="even">
 <td class="c">18</td>
@@ -197,6 +197,14 @@ run.py · validate.py · packet.py<br />
 <td>CSS custom properties · generated Python / TS constants · Node lint</td>
 <td class="mono">apps/web/src/styles/{tokens,theme-handoff,theme-brief}.css<br />apps/web/src/app/globals.css (component sheet)<br />apps/web/src/app/(design)/design-system/ + components/DesignSystem.tsx<br />apps/web/public/brand/*<br />apps/web/scripts/design-lint.mjs<br />cleanbill/brand.py · cleanbill/brand_tokens.py (generated) · cleanbill/brand_assets.py · cleanbill/fonts/ · cleanbill/email/<br />supabase/functions/_shared/brand.ts (generated)<br />docs/DESIGN-SYSTEM.md</td>
 <td><strong>One brand definition, every surface reads it</strong> (ADR 0019). <code>tokens.css</code> holds the semantic tokens and the theme-independent primitives; the colour / type primitives live in two theme files with identical names (<code>handoff</code> = the SPEC-07 set, the default; <code>brief</code> = the brand brief's palette and type pairing — O-13 is a one-line switch, <code>DEFAULT_THEME</code> in <code>layout.tsx</code>; <code>?theme=</code> overrides per browser). Components and JSX read semantic tokens only; the lint (CI job <code>design-system</code>) fails on any colour or font literal outside <code>src/styles/</code> and on a token that does not resolve in every theme. <code>python -m cleanbill.brand --sync</code> generates the print (reportlab / Pillow), edge-function (pdf-lib) and web constants from the same file (CI-checked like <code>findings.ts</code>): letters, the packet data sheet, both Form 50-114 audit pages and the e-mail template (<code>cleanbill/email/base.html</code>, wrapped around every outbound message from Task 4 on) carry the wordmark and the theme's colours; DM Sans is vendored (OFL). <code>/design-system</code> is the living style guide (tokens from the live CSS, every component state, the status map, assets, the e-mail template, the theme toggle) — the Sep 26 design review looks at it. <code>docs/DESIGN-SYSTEM.md</code> is the written guide with the WCAG contrast table for both themes (<code>python -m cleanbill.brand --contrast</code>; <code>tests/test_brand.py</code> fails if a pairing drops below its minimum).</td>
+<td class="c">**Built**</td>
+</tr>
+<tr class="even">
+<td class="c">20</td>
+<td>webhooks</td>
+<td>Supabase Edge Function · Deno/TS</td>
+<td class="mono">supabase/functions/webhooks/{index,logic,logic_test}.ts<br />_shared/webhook_sig.ts (+ _test)</td>
+<td><strong>Inbound provider callbacks (SPEC-10 §4.3, ADR 0022).</strong> <code>POST /webhooks/resend</code>, <code>verify_jwt=false</code> (providers cannot send a Supabase JWT): verifies the Svix signature (<code>svix-id</code> / <code>svix-timestamp</code> / <code>svix-signature</code>, HMAC-SHA256 over <code>id.timestamp.body</code> with <code>RESEND_WEBHOOK_SECRET</code>, 5-minute skew, constant-time compare) → 401 and a log line otherwise; looks the message up by <code>provider_message_id = data.email_id</code>; sets <code>delivery_status</code> (<code>email.sent|delivered|delivery_delayed|bounced|complained</code> → <code>sent|delivered|delayed|bounced|complained</code>; opens / clicks never change it — tracking is off), appends <code>{type, at, detail}</code> to <code>delivery_detail</code> (capped at 50), writes <code>events</code> kind <code>email_bounced</code> / <code>email_complained</code> with the claim code, and upserts <code>system_status.resend_webhook</code> on every accepted event (the console's Mail tile). Unknown ids → 200 (Resend retries on non-2xx). Registered through Resend's API once deployed (E5). SPEC-11 adds the Lob route here.</td>
 <td class="c">**Built**</td>
 </tr>
 </tbody>
@@ -261,6 +269,11 @@ run.py · validate.py · packet.py<br />
 <td>Agent blast radius</td>
 <td>Tools cannot send, file, charge or delete; status transitions whitelisted; drafts that claim un-happened actions are rejected; max 12 turns.</td>
 <td class="c">**In place**</td>
+</tr>
+<tr class="even">
+<td>Outbound e-mail</td>
+<td>Only the ops <code>send</code> action (password-gated) e-mails a customer, only an approved message, only with <code>RESEND_ENABLED=true</code>; double sends blocked by <code>where sent_at is null</code> + Resend's <code>Idempotency-Key</code>; the packet attachment is read from the private bucket with the service client and never linked. Delivery webhooks are Svix-signed (401 otherwise) and can only move delivery state, never send. No open / click tracking (ADR 0022).</td>
+<td class="c">**In place** (code) — live after SPEC-10 E4/E5</td>
 </tr>
 <tr class="odd">
 <td>Secrets in code</td>
@@ -415,9 +428,9 @@ Type is the Postgres type. "Set by" names the module that writes the column (num
 
 | Table.column                                                                                           | Definition                                                                                                                                                                                                                                                                                                                    | Set by         |
 |--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
-| messages (claim_id, direction, channel, subject, body, intent, agent_draft, approved_by/\_at, sent_at) | Every communication, drafted or real. `direction` inbound\|outbound; `channel` email\|sms\|letter\|portal (the claim page's reply box, `POST /claim/reply`)\|note; `intent` needs_dl_update \| ready_to_submit \| needs_review \| filed \| approved \| refund_notice \| denied \| reply \| other. `agent_draft=true` waits for a human; `sent_at` set by the Resend send (G-5). | 9, 12, 10, G-5 |
-| events (at, claim_code, kind, detail)                                                                  | Funnel telemetry keyed by claim code. Kinds written by the API: `view, view_miss, claim_submitted, typed_precheck, dl_fix_uploaded, inquiry` (the last with `claim_code` null, SPEC-07); posted by the page through `POST /claim/events` (allowlist, `detail.source = "page"`): `validation_shown, dl_fix_started, dl_fix_uploaded, typed_precheck, card_saved, card_skipped, packet_viewed` (SPEC-06 §5, SPEC-02 §5). `card_saved` becomes server-written in SPEC-03. `ops_auth_fail` (`detail.ip`) counts failed ops passwords for the 20/IP/hour limiter (SPEC-09).                                                                                                                            | 8, SPEC-06     |
-| system_status (key, value, updated_at)                                                                 | One row per subsystem, written at the end of each GitHub Actions run through `POST /ops {action: system_status}` (SPEC-09 D1, ADR 0020): `deploy` (commit, run, step outcomes: migrations, functions, parity, selftest), `agent_run` (outcome, claims processed, cost), `etl` (outcome, leads). Read by `GET /ops` as `system[]`; the console's Health section shows each row with its age. RLS on; service role only. Migration `20260917210000_system_status.sql`, which also adds the SQL functions `ops_events_by_kind(since)` and `ops_events_by_day(since)` for the funnel.                                                                                                                                                                                                                                                                       | SPEC-09        |
+| messages (claim_id, direction, channel, subject, body, intent, agent_draft, approved_by/\_at, sent_at, provider, provider_message_id, delivery_status, delivery_detail) | Every communication, drafted or real. `direction` inbound\|outbound; `channel` email\|sms\|letter\|portal (the claim page's reply box, `POST /claim/reply`)\|note; `intent` needs_dl_update \| ready_to_submit \| needs_review \| filed \| approved \| refund_notice \| denied \| reply \| other. `agent_draft=true` waits for a human. **SPEC-10 (migration `20260918212142_messages_delivery.sql`):** the ops `send` action sets `sent_at`, `provider` (`resend`), `provider_message_id` (unique — the webhook's key), `delivery_status='sent'`; the `webhooks` function moves `delivery_status` (`sent\|delivered\|delayed\|bounced\|complained`) and appends `{type, at, detail}` to `delivery_detail` (jsonb array, default `[]`). | 9, 12, 10, 20, SPEC-10 |
+| events (at, claim_code, kind, detail)                                                                  | Funnel telemetry keyed by claim code. Kinds written by the API: `view, view_miss, claim_submitted, typed_precheck, dl_fix_uploaded, inquiry` (the last with `claim_code` null, SPEC-07); posted by the page through `POST /claim/events` (allowlist, `detail.source = "page"`): `validation_shown, dl_fix_started, dl_fix_uploaded, typed_precheck, card_saved, card_skipped, packet_viewed` (SPEC-06 §5, SPEC-02 §5). `card_saved` becomes server-written in SPEC-03. `ops_auth_fail` (`detail.ip`) counts failed ops passwords for the 20/IP/hour limiter (SPEC-09). `email_bounced` / `email_complained` (`detail: {message_id, email_id, reason}`, with the claim code) are written by the `webhooks` function (SPEC-10) — the claims list badges the claim.                                                                                                                            | 8, SPEC-06     |
+| system_status (key, value, updated_at)                                                                 | One row per subsystem, written at the end of each GitHub Actions run through `POST /ops {action: system_status}` (SPEC-09 D1, ADR 0020): `deploy` (commit, run, step outcomes: migrations, functions, parity, selftest), `agent_run` (outcome, claims processed, cost), `etl` (outcome, leads), and `resend_webhook` (SPEC-10: the last accepted delivery event — type, at, email id, known) written by the `webhooks` function. Read by `GET /ops` as `system[]`; the console's Health section shows each row with its age. RLS on; service role only. Migration `20260917210000_system_status.sql`, which also adds the SQL functions `ops_events_by_kind(since)` and `ops_events_by_day(since)` for the funnel.                                                                                                                                                                                                                                                                       | SPEC-09        |
 | audit_log (at, actor, action, entity, entity_id, detail)                                               | Who did what to which row. Actors: claim-api, process-claim, ops, agent, purge job, monitor (SPEC-05).                                                                                                                                                                                                                        | all            |
 | app_settings (key, value, updated_at)                                                                  | Service-role-only fallback for secrets (`ANTHROPIC_API_KEY`, `OPS_PASSWORD` — rotated Sep 12).                                                                                                                                                                                                                                | manual         |
 
@@ -563,8 +576,9 @@ All routes are on the `claim` function; the claim code is the credential; every 
 
 | Route | Purpose | Returns |
 |---|---|---|
-| `GET /ops?status=&limit=` | The whole console in one call. | `{ok, kpis, funnel:{by_kind_7d, by_kind_all, by_day_30d, steps}, claims[], inquiries[], system[], generated_at}` — claims carry the extraction without the DL number, structured findings, the latest filing (`packet.url` signed for 10 minutes, `submitted_at`, `channel`) and every message. |
+| `GET /ops?status=&limit=` | The whole console in one call. | `{ok, kpis, funnel:{by_kind_7d, by_kind_all, by_day_30d, steps}, claims[], inquiries[], system[], features:{resend, stripe, lob}, generated_at}` — claims carry the extraction without the DL number, structured findings, the latest filing (`packet.url` signed for 10 minutes, `submitted_at`, `channel`) and every message (with `provider_message_id`, `delivery_status`, `delivery_detail[]`, SPEC-10). `features` reads the vendor switches from the function secrets. |
 | `POST /ops {action:"approve"\|"discard", message_id}` | Shadow mode: approve flips `agent_draft=false`; discard deletes. | `{ok}` |
+| `POST /ops {action:"send", message_id}` | SPEC-10 (ADR 0022). E-mails an approved, unsent outbound message to the claim's account address through Resend, wrapped in the Clean Bill template, the packet attached for `ready_to_submit` / `filed`; audit `message_send` (`{resend_id, attached, to_domain, intent}`) or `message_send_failed` (`{status, error}`). | `{ok, sent_at, provider_message_id, attached}`; 409 `send_disabled` (flag off) / `draft_not_approved` / `already_sent` / `not_outbound` / `not_email` / `no_email` / `empty_message` / `packet_too_large`; 404 `not_found`; 502 `provider_error {message}` / `packet_unavailable`; 503 when `RESEND_API_KEY` is missing |
 | `POST /ops {action:"mark_filed", claim_id, channel?}` | SPEC-05 task 1. Only from `ready_to_submit`: latest filing gets `submitted_at` + `channel` (`email` default), claim and lead → `filed`, the followups.md "filed" draft is written. | `{ok, status:"filed", filing_id, message_id}`; 409 `no_filing` / `mark_filed_not_allowed_from_…` |
 | `POST /ops {action:"reprocess", claim_id}` | Re-kick `process-claim` for a claim stuck in `submitted` / `processing` (RUNBOOK §9.5). | `{ok, kicked:true}`; 409 otherwise |
 | `POST /ops {action:"withdraw", claim_id}` | Any open status → `withdrawn`. | `{ok, status:"withdrawn"}`; 409 from a closed status |
@@ -576,6 +590,30 @@ All routes are on the `claim` function; the claim code is the credential; every 
 
 `process-claim` (service role only) takes `{claim_id, typed_confirmation?}`. The pure routing decision (`followUpMode`), the pre-check and the `typed_id` blob shape live in `supabase/functions/claim/logic.ts` and are unit-tested; the rule table parity test is `supabase/functions/_shared/findings_test.ts` ↔ `tests/test_findings.py`.
 
+
+### 5.9 Outbound e-mail and delivery webhooks (SPEC-10, ADR 0022)
+
+**Send (operator, from the `/ops` drawer).** The agent or `mark_filed` writes an outbound `messages` draft → the operator
+reads it and clicks **Approve** (`agent_draft=false`, `approved_by='ops'`) → **Send** appears only when `GET /ops` reports
+`features.resend` and the account has an e-mail → `POST /ops {action: "send", message_id}` → guards (`logic.ts
+guardSend`: outbound, e-mail channel, approved, unsent, an address, the flag) → `renderEmail(subject, body)`
+(`_shared/email.ts`, byte-identical to `cleanbill.email.render_email`) → for `ready_to_submit` / `filed` the latest
+`filings.packet_path` is downloaded from the private `packets` bucket and attached as `Form-50-114-<code>.pdf` (refused
+above 20 MB) → `POST https://api.resend.com/emails` with `Idempotency-Key: msg-<message_id>`, `from: Clean Bill
+<hello@cleanbillco.com>`, `reply_to: hello@cleanbillco.com`, tags `intent` / `claim_code`, header `X-Entity-Ref-ID`, 20 s
+timeout → on 2xx `update messages set sent_at, provider='resend', provider_message_id, delivery_status='sent' where id and
+sent_at is null` (0 rows → `already_sent`), audit `message_send` → the row reads "sent · time · id". On a provider error
+nothing changes but the audit row `message_send_failed`. No personalisation at send time: the approved body is what goes
+out. With `RESEND_ENABLED` unset the action answers 409 `send_disabled` and the console keeps the Copy-only line.
+
+**Delivery (Resend → `webhooks` function).** Resend posts `email.sent | delivered | delivery_delayed | bounced |
+complained` (opens / clicks only if tracking were on — it is off) to `POST /webhooks/resend` → Svix signature verified
+(`_shared/webhook_sig.ts`; 401 + log otherwise) → `messages` looked up by `provider_message_id = data.email_id` →
+`delivery_status` moved, `{type, at, detail}` appended to `delivery_detail`, `system_status.resend_webhook` upserted →
+`bounced` / `complained` also insert `events` kind `email_bounced` / `email_complained` with the claim code → `/ops` shows
+the state on the message row (reason on hover) and a **bounced** badge on the claim in the list. Unknown ids → 200 (logged).
+Charlie's part (SPEC-10 §7): the Resend account, the root domain verified with the Return-Path on `send.`, DMARC `p=none`,
+a mailbox for `hello@`; Claude Code registers the webhook through Resend's API and sets the secrets (E5).
 
 ## Glossary
 
@@ -671,7 +709,17 @@ All routes are on the `claim` function; the claim code is the credential; every 
 
 **Lead / Tier 1/2/3** — a property we believe is owed a refund / two refund years, one, none.
 
-**Lob / Resend / Stripe** — print-and-mail API / email-sending API / payments API (card on file = SetupIntent; charge = PaymentIntent).
+**Lob / Resend / Stripe** — print-and-mail API / email-sending API (the ops `send` action, SPEC-10; webhooks via Svix) / payments API (card on file = SetupIntent; charge = PaymentIntent).
+
+**Bounce / complaint** — the receiving server rejected the message (bad address, full box) / the recipient marked it as spam; both arrive by webhook and badge the claim in `/ops`.
+
+**DKIM / SPF / DMARC** — DomainKeys Identified Mail (a signature proving the mail came from the domain) / Sender Policy Framework (the DNS record listing servers allowed to send for a domain) / Domain-based Message Authentication, Reporting and Conformance (the policy record telling receivers what to do when SPF/DKIM fail, and where to send reports). Resend's DKIM and SPF live on `send.cleanbillco.com`; the root's SPF names only the mailbox provider.
+
+**Idempotency-Key** — a request header that makes a repeated API call return the first result instead of acting twice; every Resend send carries `msg-<message_id>`.
+
+**Return-Path** — the address bounces go to; Resend puts it on the `send.` subdomain so the root MX stays free for the human mailbox.
+
+**Svix** — the webhook-delivery service Resend uses; its signature scheme (`svix-id`, `svix-timestamp`, `svix-signature`, HMAC-SHA256) is what `_shared/webhook_sig.ts` verifies.
 
 **MCP** — Model Context Protocol; the connector through which Claude operates Supabase directly.
 
@@ -725,7 +773,7 @@ All routes are on the `claim` function; the claim code is the credential; every 
 
 **verify_jwt** — a Supabase function setting requiring a valid key on every call; on for process-claim, off for the public claim API.
 
-**Webhook** — an HTTP call a vendor (Lob, Stripe) makes to us when something happens.
+**Webhook** — an HTTP call a vendor (Resend, Lob, Stripe) makes to us when something happens (delivered, bounced); received by the `webhooks` edge function.
 
 **Vercel / Next.js** — hosting platform and the React web framework it is built for; the customer front-end (T-12).
 

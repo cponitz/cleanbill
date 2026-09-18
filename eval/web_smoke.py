@@ -9,7 +9,8 @@ Drives headless Chromium (phone viewport) through:
   C. agreement    /agreement/<code> fills the situs from the API
   D. site         every SPEC-07 marketing page renders without a page error; /claim opens a code into the confirm state;
                   the home hero's address form posts an inquiry (skipped with --skip-inquiry until the API is deployed)
-Scenario E (SPEC-09) drives /ops with OPS_PASSWORD from .env (skipped without it).
+Scenario E (SPEC-09) drives /ops with OPS_PASSWORD from .env (skipped without it); with RESEND_ENABLED=true and SMOKE_INBOX
+(an address Charlie controls) it also sends the synthetic claim's approved draft to that inbox (SPEC-10; skipped otherwise).
 Only ever touches the synthetic lead CB-TEST-0001 / property 999000001 (reset here with the service-role key, mirroring
 eval/reset_test_lead.sql). Screenshots land in eval/out/web/.
 
@@ -78,6 +79,15 @@ class TestData:
 
     def set_situs(self, situs: dict) -> None:
         self.sb.table("properties").update(situs).eq("prop_id", TEST_PROP).execute()
+
+    def set_account_email(self, email: str) -> None:
+        """SPEC-10 smoke: point the synthetic claim's account (and the claim row) at the inbox the send should reach."""
+        lead = self.sb.table("leads").select("id").eq("claim_code", TEST_CODE).single().execute().data
+        claims = self.sb.table("claims").select("id, customer_id").eq("lead_id", lead["id"]).execute().data
+        for c in claims:
+            self.sb.table("claims").update({"email": email}).eq("id", c["id"]).execute()
+            if c.get("customer_id"):
+                self.sb.table("customers").update({"email": email}).eq("id", c["customer_id"]).execute()
 
 
 def shot(page: Page, name: str) -> None:
@@ -166,10 +176,12 @@ def site_pages(page: Page, base: str, results: dict, skip_inquiry: bool) -> bool
     return ok
 
 
-def ops_console(page: Page, base: str, results: dict) -> bool:
+def ops_console(page: Page, base: str, results: dict, data: "TestData | None" = None) -> bool:
     """Scenario E (SPEC-09 D2): the operator console at /ops — login, KPIs, approve a draft on the synthetic claim,
     mark an inquiry handled, preview a walkthrough claim, health renders; and the grep test: no DL number and no card
-    data anywhere on the page or in the API response. Needs OPS_PASSWORD in .env; skipped (reported) without it."""
+    data anywhere on the page or in the API response. Needs OPS_PASSWORD in .env; skipped (reported) without it.
+    SPEC-10: with RESEND_ENABLED=true and SMOKE_INBOX set, the approved draft is sent to that inbox and sent_at is asserted
+    through GET /ops; with the flag off the Send button must be absent."""
     key = os.environ.get("OPS_PASSWORD")
     if not key:
         results["E_skipped"] = "OPS_PASSWORD not set"
@@ -200,6 +212,27 @@ def ops_console(page: Page, base: str, results: dict) -> bool:
         page.wait_for_function("document.querySelectorAll('[data-testid=draft]').length === " + str(results["E_drafts_before"] - 1), timeout=20000)
     results["E_drafts_after"] = page.locator("[data-testid=draft]").count()
     ok &= results["E_drafts_before"] >= 1 and results["E_drafts_after"] == results["E_drafts_before"] - 1
+    # SPEC-10: Send on the approved message — only with the flag on and an inbox to send to
+    api_base = os.environ.get("NEXT_PUBLIC_API_BASE", "https://letrfpwskjbgnyacesgv.supabase.co/functions/v1")
+    inbox = os.environ.get("SMOKE_INBOX")
+    resend_on = os.environ.get("RESEND_ENABLED") == "true"
+    if resend_on and inbox and data is not None:
+        data.set_account_email(inbox)
+        page.click("[data-testid=btn-refresh]")
+        page.wait_for_selector("[data-testid=btn-send]:not([disabled])", timeout=20000)
+        page.click("[data-testid=btn-send]")
+        page.wait_for_selector("[data-testid=message][data-sent=true]", timeout=30000)
+        shot(page, "E_02b_sent")
+        claim = next((c for c in page.request.get(f"{api_base}/ops?limit=50", headers={"x-ops-key": key}).json()["claims"] if c.get("claim_code") == TEST_CODE), None)
+        sent = [m for m in (claim or {}).get("messages", []) if m.get("sent_at")]
+        results["E_sent_messages"] = len(sent)
+        results["E_sent_provider"] = sent[0].get("provider_message_id") if sent else None
+        ok &= len(sent) >= 1 and bool(results["E_sent_provider"])
+    else:
+        results["E_send_skipped"] = "RESEND_ENABLED/SMOKE_INBOX not set" if not (resend_on and inbox) else "no test data handle"
+        if not resend_on:
+            results["E_send_hidden"] = page.locator("[data-testid=btn-send]").count() == 0
+            ok &= bool(results["E_send_hidden"])
     page.click("[data-testid=claim-drawer] .drawer-close")
     # inquiries: mark the newest unhandled one handled (scenario D posted one)
     pending = page.locator("[data-testid=inquiry-row][data-handled=false]")
@@ -305,7 +338,7 @@ def _scenarios(page: Page, base: str, data: TestData, results: dict, stripe_on: 
         shot(page, "A_09_status")
 
         # ---- E. the operator console (SPEC-09) — after A so the synthetic claim carries a draft --------------------
-        ok &= ops_console(page, base, results)
+        ok &= ops_console(page, base, results, data)
 
         # ---- B. fix screen (SPEC-02 §1/§2) ---------------------------------------------------------------------------
         data.reset(BRODIE)

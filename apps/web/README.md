@@ -93,6 +93,16 @@ iPhone photos chosen from the library can be HEIC. The API rejects HEIC (the ext
 Route group `(ops)`, `robots: noindex`, no link from the site. The ops password is typed into the login card, kept in
 `sessionStorage` for the tab and sent as `x-ops-key` on every call to `GET/POST /ops` (`src/lib/ops.ts`); three
 consecutive 403s clear it and show the login again. Sections: Funnel (KPI tiles, step strip, events by kind and by day),
-Claims (filter / search, drawer with packet link, findings, drafts with Approve / Discard / Copy, Mark filed / Reprocess /
-Withdraw), Inquiries (Mark handled with a note), New claim (preview → Create → code + link), Health (last deploy / agent
-run / ETL, Run selftest). Smoke: scenario E in `eval/web_smoke.py` (needs `OPS_PASSWORD` in `.env`).
+Claims (filter / search, drawer with packet link, findings, drafts with Approve / Discard / Copy, sent or approved
+messages with **Send** / Copy and the delivery state, Mark filed / Reprocess / Withdraw), Inquiries (Mark handled with a
+note), New claim (preview → Create → code + link), Health (mail on / off + last webhook, last deploy / agent run / ETL,
+Run selftest). Smoke: scenario E in `eval/web_smoke.py` (needs `OPS_PASSWORD` in `.env`).
+
+**Send (SPEC-10, ADR 0022).** `GET /ops` returns `features.resend`; when it is true every approved, unsent outbound e-mail in
+the drawer shows **Send** (`data-testid="btn-send"`, disabled with "no e-mail on the account" when the account has none).
+Send posts `{action: "send", message_id}`; the function wraps the body in the Clean Bill template, attaches the packet for
+`ready_to_submit` / `filed`, and sends through Resend from `hello@cleanbillco.com`. The row then reads "sent · time" with
+the Resend id, and the delivery state (delivered / delayed / bounced / complained, reason on hover) arrives by webhook; a
+bounce also badges the claim in the list. With the flag off nothing changes: Send is hidden and Copy remains. The page
+holds no Resend secret — the send happens in the function. Smoke E sends the synthetic claim's approved draft when both
+`RESEND_ENABLED=true` and `SMOKE_INBOX` are in `.env` (it points the synthetic account at that inbox first).

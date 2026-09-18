@@ -19,20 +19,22 @@ jobs:
         run: python -m cleanbill.findings --emit-ts --emit-snapshot --check
       - name: generated brand files must be current and both themes must pass the contrast table (SPEC-08 Part C, ADR 0019)
         run: python -m cleanbill.brand --sync --check && python -m cleanbill.brand --contrast > /dev/null
+      - name: e-mail parity snapshot must be current (SPEC-10 E1 — the Deno renderer is checked against it)
+        run: python -m cleanbill.email --emit-snapshot --check
   deno:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with: { deno-version: v2.x }
-      - run: deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts supabase/functions/ops/logic_test.ts
+      - run: deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/_shared/email_test.ts supabase/functions/_shared/webhook_sig_test.ts supabase/functions/claim/logic_test.ts supabase/functions/ops/logic_test.ts supabase/functions/webhooks/logic_test.ts
       - name: edge functions type-check
         # The jsr edge-runtime type shim references npm packages that are not installed here, so each entrypoint is
         # checked from a copy with that one import line removed (the runtime provides those globals in production).
         run: |
           set -e
-          for f in claim process-claim ops selftest; do sed '/edge-runtime.d.ts/d' supabase/functions/$f/index.ts > supabase/functions/$f/index.check.ts; done
-          deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/claim/logic.ts supabase/functions/*/index.check.ts
+          for f in claim process-claim ops selftest webhooks; do sed '/edge-runtime.d.ts/d' supabase/functions/$f/index.ts > supabase/functions/$f/index.check.ts; done
+          deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/claim/logic.ts supabase/functions/webhooks/logic.ts supabase/functions/*/index.check.ts
           rm supabase/functions/*/index.check.ts
   design-system:
     # SPEC-08 Part C lint: no colour or font literal outside apps/web/src/styles, every semantic token resolves in every

@@ -5,7 +5,7 @@
 | `ARCHITECTURE.md` | Module reference, data model v2, process flows, glossary — the technical half of the handbook | This repo; update in the same PR as any structural change |
 | `RUNBOOK.md` | Operating the prototype: URLs, daily loop, commands, statuses, troubleshooting | This repo |
 | `DESIGN-SYSTEM.md` | The Clean Bill design system: principles, tokens, themes, components, accessibility / print / e-mail rules, the contrast table | This repo (SPEC-08 Part C); rendered live at `/design-system` |
-| `specs/SPEC-01…09.md` | Feature handoffs from the Cowork project (copied here when work starts) | Cowork project `claude/specs/` until copied; then this repo |
+| `specs/SPEC-01…10.md` | Feature handoffs from the Cowork project (copied here when work starts) | Cowork project `claude/specs/` until copied; then this repo |
 | `brand/brand-brief.md` | The Clean Bill brand and copy brief (voice, palette proposal, motif) — input to SPEC-08 Part C | Cowork project `claude/`; copied here by SPEC-08 |
 | `plans/` | Development plans as handed to Claude Code (`phase1-v3.2.md`) | Cowork project; copied here when work starts |
 | `adr/` | Architecture decision records (T-nn) | This repo |

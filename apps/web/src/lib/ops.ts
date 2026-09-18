@@ -7,7 +7,16 @@ export const OPS_KEY_STORAGE = "cb-ops-key";
 export const MAX_403 = 3;   // three consecutive 403s clear the stored key and show the login again
 
 export type Finding = { code: string; severity: "blocking" | "warning" | "info"; field?: string; message: string; detail?: Record<string, unknown> };
-export type OpsMessage = { id: string; subject: string | null; body: string | null; intent: string | null; agent_draft: boolean; direction: "inbound" | "outbound"; channel: string; approved_at: string | null; sent_at: string | null; created_at: string };
+export type DeliveryStatus = "sent" | "delivered" | "delayed" | "bounced" | "complained";
+export type DeliveryDetail = { type: string; at: string; detail: Record<string, unknown> | null };
+export type OpsMessage = {
+  id: string; subject: string | null; body: string | null; intent: string | null; agent_draft: boolean; direction: "inbound" | "outbound"; channel: string;
+  approved_at: string | null; sent_at: string | null; created_at: string;
+  // SPEC-10: set by the ops `send` action and moved by the Resend webhook
+  provider_message_id?: string | null; delivery_status?: DeliveryStatus | null; delivery_detail?: DeliveryDetail[];
+};
+export type OpsFeatures = { resend: boolean; stripe: boolean; lob: boolean };
+export const NO_FEATURES: OpsFeatures = { resend: false, stripe: false, lob: false };
 export type OpsClaim = {
   id: string; customer_id: string | null; account: { id: string; email: string; card_on_file: boolean } | null;
   status: string; status_reason: string | null; full_name: string | null; email: string | null; phone: string | null;
@@ -24,12 +33,13 @@ export type OpsData = {
   ok: true; kpis: OpsKpis;
   funnel: { by_kind_7d: Record<string, number>; by_kind_all: Record<string, number>; by_day_30d: Array<{ day: string; kind: string; n: number }>; steps: Array<{ step: string; count: number; pct: number | null }> };
   claims: OpsClaim[]; inquiries: OpsInquiry[]; system: OpsSystem[]; generated_at: string;
+  features?: OpsFeatures;   // which vendors are switched on (SPEC-10 Resend; SPEC-03 Stripe; SPEC-11 Lob) — absent from an older function build
 };
 export type NewClaimMatch = {
   prop_id: number; situs_full: string; owner_name: string | null; hs_exempt: boolean; ov65_exempt: boolean; appraised_value: number | null; deed_date: string | null;
   lead: { claim_code: string; status: string; tier: number; refund_years: number[]; est_refund_total: number; est_forward_annual: number; estimate_unconfirmed: boolean; link: string } | null;
 };
-export type OpsError = { ok: false; error: string; status?: string; hint?: string; http: number };
+export type OpsError = { ok: false; error: string; status?: string; hint?: string; message?: string; http: number };
 
 export function readKey(): string | null {
   try { return sessionStorage.getItem(OPS_KEY_STORAGE); } catch { return null; }
@@ -43,7 +53,7 @@ export function clearKey(): void {
 
 async function asJson<T>(r: Response): Promise<T | OpsError> {
   const j = await r.json().catch(() => ({})) as Record<string, unknown>;
-  if (!r.ok || j.ok === false) return { ok: false, error: String(j.error ?? `http_${r.status}`), status: j.status as string | undefined, hint: j.hint as string | undefined, http: r.status };
+  if (!r.ok || j.ok === false) return { ok: false, error: String(j.error ?? `http_${r.status}`), status: j.status as string | undefined, hint: j.hint as string | undefined, message: j.message as string | undefined, http: r.status };
   return j as T;
 }
 
@@ -68,7 +78,33 @@ export const can = {
   markFiled: (s: string) => s === "ready_to_submit",
   reprocess: (s: string) => s === "submitted" || s === "processing",
   withdraw: (s: string) => OPEN.includes(s),
+  /** SPEC-10: an approved, unsent outbound e-mail (the flag and the account's address are checked where the button renders). */
+  send: (m: OpsMessage) => m.direction === "outbound" && m.channel === "email" && !m.agent_draft && !m.sent_at,
 };
+
+/** The account's address a send goes to: the customer account (v2), or the claim's own for a row without one. */
+export function sendAddress(c: OpsClaim): string | null {
+  return c.account?.email ?? c.email ?? null;
+}
+
+/** A bounce or complaint on any message of the claim — the warning badge in the claims list. */
+export function hasBounce(c: OpsClaim): boolean {
+  return c.messages.some((m) => m.delivery_status === "bounced" || m.delivery_status === "complained");
+}
+
+/** The provider's reason from the last delivery event, for the hover on the delivery badge. */
+export function deliveryReason(m: OpsMessage): string {
+  const last = (m.delivery_detail ?? []).at(-1);
+  if (!last) return "";
+  const d = last.detail ?? {};
+  const msg = d.message ?? d.reason;
+  if (typeof msg === "string" && msg) return `${last.type} · ${msg}`;
+  const parts = [d.type, d.subType].filter((x): x is string => typeof x === "string" && !!x);
+  return parts.length ? `${last.type} · ${parts.join(" / ")}` : last.type;
+}
+
+/** The badge tone per delivery status (the status map in lib/status.ts is for claims; this is the message's). */
+export const DELIVERY_BADGE: Record<DeliveryStatus, string> = { sent: "badge-neutral", delivered: "badge-ok", delayed: "badge-sand", bounced: "badge-bad", complained: "badge-bad" };
 
 export const CLAIM_STATUSES = ["submitted", "processing", "ready_to_submit", "needs_dl_update", "needs_review", "filed", "approved", "denied", "refunded", "paid", "withdrawn"];
 export const FUNNEL_KINDS = ["view", "typed_precheck", "validation_shown", "dl_fix_started", "dl_fix_uploaded", "card_saved", "card_skipped", "packet_viewed", "inquiry"];

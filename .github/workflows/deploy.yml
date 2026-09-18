@@ -1,5 +1,5 @@
 name: deploy (main)
-# Supabase is deployed only from main (CLAUDE.md): push pending migrations, deploy the four edge functions from this tree,
+# Supabase is deployed only from main (CLAUDE.md): push pending migrations, deploy the five edge functions from this tree,
 # then prove parity — `supabase db diff --linked` must be empty (SPEC-04 §8). Needs repository secrets
 # SUPABASE_ACCESS_TOKEN (a personal access token from supabase.com/dashboard/account/tokens) and SUPABASE_DB_PASSWORD
 # (the project's database password). Optional OPS_PASSWORD runs the end-to-end selftest afterwards.
