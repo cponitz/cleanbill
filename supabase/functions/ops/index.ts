@@ -1,20 +1,27 @@
 // ops API (JSON) — the operator console's only backend (SPEC-09 D1, ADR 0020). Password-gated via the x-ops-key
 // header or ?key=; 20 failed keys per IP per hour → 429 (counted as events of kind ops_auth_fail).
-//   GET  /ops?status=&limit=   -> {ok, kpis, funnel, claims, inquiries, system}
-//   POST /ops {action, …}      -> approve | discard {message_id} · mark_filed {claim_id, channel} · reprocess {claim_id}
+//   GET  /ops?status=&limit=   -> {ok, kpis, funnel, claims, inquiries, system, features}
+//   POST /ops {action, …}      -> approve | discard | send {message_id} · mark_filed {claim_id, channel} · reprocess {claim_id}
 //                                 · withdraw {claim_id} · inquiry_handled {inquiry_id, notes} · new_claim {prop_id | address, create}
 //                                 · run_selftest {scenario} · system_status {key, value} (workflows report their last run)
 // Every mutating action writes audit_log (actor 'ops'); the status guards are in logic.ts (mirror of cleanbill/agent/store.py).
-// Nothing here sends, files with TCAD or charges (shadow mode; B-13).
+// `send` (SPEC-10, ADR 0022) is the ONE place that e-mails a customer: an operator's click on an approved message, through
+// Resend, only with RESEND_ENABLED=true. Nothing here files with TCAD or charges (shadow mode; B-13).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { encodeBase64 } from "jsr:@std/encoding@1/base64";
 import { clientIp, serviceClient } from "./db.ts";
-import { CLAIM_STATUSES, claimLink, filedDraft, FUNNEL_KINDS, funnelSteps, guardAction, maskSelftest, parseChannel, parseLimit, SELFTEST_SCENARIOS, addressKey, scoreMatch } from "./logic.ts";
+import { BRAND, SUPPORT_EMAIL } from "../_shared/db.ts";
+import { renderEmail } from "../_shared/email.ts";
+import { CLAIM_STATUSES, claimLink, filedDraft, FUNNEL_KINDS, funnelSteps, guardAction, maskSelftest, parseChannel, parseLimit, SELFTEST_SCENARIOS, addressKey, scoreMatch, attachmentPlan, featureFlags, guardSend, MAX_ATTACHMENT_BYTES, resendPayload } from "./logic.ts";
 
 type SB = ReturnType<typeof serviceClient>;
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type, x-ops-key", "cache-control": "no-store" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "content-type": "application/json; charset=utf-8", ...CORS } });
 const SITE_BASE = Deno.env.get("BRAND_URL") ?? "https://cleanbillco.com";
 const AUTH_FAILS_PER_HOUR = 20;
+const RESEND_BASE_URL = (Deno.env.get("RESEND_BASE_URL") ?? "https://api.resend.com").replace(/\/$/, "");
+const RESEND_TIMEOUT_MS = 20_000;
+const features = () => featureFlags((k) => Deno.env.get(k));
 
 async function opsKey(sb: SB): Promise<string> {
   const env = Deno.env.get("OPS_PASSWORD"); if (env) return env;
@@ -60,6 +67,58 @@ async function markFiled(sb: SB, claimId: string, channelRaw: unknown): Promise<
   const { data: msg } = await sb.from("messages").insert({ claim_id: c.id, direction: "outbound", channel: "email", subject: draft.subject, body: draft.body, intent: draft.intent, agent_draft: true }).select("id").single();
   await audit(sb, "mark_filed", "claims", c.id, { filing_id: fil.id, channel, message_id: msg?.id ?? null, from: c.status });
   return json({ ok: true, status: "filed", filing_id: fil.id, message_id: msg?.id ?? null });
+}
+
+/** SPEC-10: e-mail an approved message to the claim's account through Resend. Guards in logic.ts (guardSend); the packet
+ *  rides ready_to_submit / filed; `update … where sent_at is null` plus Resend's Idempotency-Key make a double-click send
+ *  once. On a provider error nothing changes but the audit row. */
+async function sendMessage(sb: SB, messageId: string): Promise<Response> {
+  const enabled = features().resend;
+  const { data: m } = await sb.from("messages").select("id, claim_id, direction, channel, agent_draft, sent_at, intent, subject, body").eq("id", messageId).maybeSingle();
+  let email: string | null = null, code: string | null = null, packetPath: string | null = null;
+  if (m) {
+    const { data: c } = await sb.from("claims").select("id, email, customers(email), leads(claim_code)").eq("id", m.claim_id).maybeSingle();
+    const row = c as { email: string | null; customers?: { email: string | null } | null; leads?: { claim_code: string } | null } | null;
+    email = row?.customers?.email ?? row?.email ?? null;   // the account's address (v2); the claim's own only for a pre-v2 row without an account
+    code = row?.leads?.claim_code ?? null;
+    const { data: fil } = await sb.from("filings").select("packet_path").eq("claim_id", m.claim_id).order("generated_at", { ascending: false }).limit(1).maybeSingle();
+    packetPath = fil?.packet_path ?? null;
+  }
+  const g = guardSend(m, email, enabled);
+  if (!g.ok) return json({ ok: false, error: g.error }, g.status);
+  const msg = m!;
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) { await audit(sb, "message_send_failed", "messages", msg.id, { status: 0, error: "RESEND_API_KEY not set" }); return json({ ok: false, error: "provider_error", message: "RESEND_API_KEY is not set" }, 503); }
+
+  const { html, text } = renderEmail(msg.subject!, msg.body!);   // personalisation is already in the approved body; no substitution here
+  let attachment: { filename: string; content: string } | null = null;
+  const plan = attachmentPlan(msg.intent, packetPath, code);
+  if (plan) {
+    const { data: blob, error } = await sb.storage.from("packets").download(plan.path);
+    if (error || !blob) { await audit(sb, "message_send_failed", "messages", msg.id, { status: 0, error: `packet download: ${error?.message ?? "empty"}` }); return json({ ok: false, error: "packet_unavailable", path: plan.path }, 502); }
+    if (blob.size > MAX_ATTACHMENT_BYTES) return json({ ok: false, error: "packet_too_large", bytes: blob.size, max: MAX_ATTACHMENT_BYTES }, 409);
+    attachment = { filename: plan.filename, content: encodeBase64(await blob.arrayBuffer()) };
+  }
+  const payload = resendPayload({ brand: BRAND, supportEmail: SUPPORT_EMAIL, to: email!, subject: msg.subject!, html, text, attachment, intent: msg.intent, claimCode: code, messageId: msg.id });
+
+  let res: Response | null = null, failure = "";
+  try {
+    res = await fetch(`${RESEND_BASE_URL}/emails`, {
+      method: "POST", headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json", "idempotency-key": `msg-${msg.id}` },
+      body: JSON.stringify(payload), signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
+    });
+  } catch (e) { failure = String((e as Error)?.message ?? e); }
+  const result = res ? await res.json().catch(() => ({})) as Record<string, unknown> : {};
+  if (!res || !res.ok || typeof result.id !== "string") {
+    const message = failure || String(result.message ?? result.error ?? `http ${res?.status ?? 0}`);
+    await audit(sb, "message_send_failed", "messages", msg.id, { status: res?.status ?? 0, error: message.slice(0, 500), attached: !!attachment });
+    return json({ ok: false, error: "provider_error", message: message.slice(0, 500) }, 502);
+  }
+  const now = new Date().toISOString();
+  const { data: claimed } = await sb.from("messages").update({ sent_at: now, provider: "resend", provider_message_id: result.id, delivery_status: "sent" }).eq("id", msg.id).is("sent_at", null).select("id");
+  if (!claimed?.length) return json({ ok: false, error: "already_sent" }, 409);   // a concurrent click got there first (same Resend id — idempotent)
+  await audit(sb, "message_send", "messages", msg.id, { resend_id: result.id, attached: !!attachment, to_domain: email!.split("@")[1] ?? null, intent: msg.intent });
+  return json({ ok: true, sent_at: now, provider_message_id: result.id, attached: !!attachment });
 }
 
 async function reprocess(sb: SB, claimId: string): Promise<Response> {
@@ -163,6 +222,7 @@ async function post(sb: SB, want: string, body: Record<string, unknown>): Promis
       await audit(sb, `message_${action}`, "messages", mid);
       return json({ ok: true });
     }
+    case "send": return body.message_id ? sendMessage(sb, String(body.message_id)) : json({ ok: false, error: "bad_request" }, 400);
     case "mark_filed": return body.claim_id ? markFiled(sb, String(body.claim_id), body.channel) : json({ ok: false, error: "bad_request" }, 400);
     case "reprocess": return body.claim_id ? reprocess(sb, String(body.claim_id)) : json({ ok: false, error: "bad_request" }, 400);
     case "withdraw": return body.claim_id ? withdraw(sb, String(body.claim_id)) : json({ ok: false, error: "bad_request" }, 400);
@@ -232,14 +292,14 @@ async function dashboard(sb: SB, url: URL): Promise<Response> {
       findings: Array.isArray(c.findings) && c.findings.length ? c.findings : ((d?.validation as { findings?: unknown[] } | null)?.findings ?? []),
       extraction_cost_usd: d?.extraction_cost_usd ?? null,
       packet: fil ? { url: fil.packet_path ? signed.get(fil.packet_path) ?? null : null, form_version: fil.form_version, generated_at: fil.generated_at, submitted_at: fil.submitted_at, channel: fil.channel } : null,
-      messages: (msgs ?? []).filter((m) => m.claim_id === c.id).map((m) => ({ id: m.id, subject: m.subject, body: m.body, intent: m.intent, agent_draft: m.agent_draft, direction: m.direction, channel: m.channel, approved_at: m.approved_at, sent_at: m.sent_at, created_at: m.created_at })),
+      messages: (msgs ?? []).filter((m) => m.claim_id === c.id).map((m) => ({ id: m.id, subject: m.subject, body: m.body, intent: m.intent, agent_draft: m.agent_draft, direction: m.direction, channel: m.channel, approved_at: m.approved_at, sent_at: m.sent_at, created_at: m.created_at, provider_message_id: m.provider_message_id ?? null, delivery_status: m.delivery_status ?? null, delivery_detail: Array.isArray(m.delivery_detail) ? m.delivery_detail : [] })),
     };
   });
 
   const { data: inquiries } = await sb.from("inquiries").select("id, created_at, kind, address, email, company, properties, bills, source_path, handled_at, notes").order("handled_at", { ascending: true, nullsFirst: true }).order("created_at", { ascending: false }).limit(200);
   kpis.inquiries_open = (inquiries ?? []).filter((i) => !i.handled_at).length;
   const { data: system } = await sb.from("system_status").select("key, value, updated_at").order("key");
-  return json({ ok: true, kpis, funnel, claims, inquiries: inquiries ?? [], system: system ?? [], generated_at: new Date().toISOString() });
+  return json({ ok: true, kpis, funnel, claims, inquiries: inquiries ?? [], system: system ?? [], features: features(), generated_at: new Date().toISOString() });
 }
 
 Deno.serve(async (req: Request) => {

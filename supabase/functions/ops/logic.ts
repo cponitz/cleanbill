@@ -4,6 +4,7 @@
 //   • the "we submitted" draft (copy/followups.md "filed — confirmation", verbatim with the placeholders filled)
 //   • address matching for the walkthrough "new claim" search over the published properties
 //   • the funnel step strip and the masking of the selftest result
+//   • outbound e-mail (SPEC-10): the send guards, the packet attachment rule, the Resend payload, the feature flags
 
 /** Mirror of cleanbill/agent/store.py ALLOWED_TRANSITIONS — change both. */
 export const ALLOWED_TRANSITIONS: Record<string, string[]> = {
@@ -21,7 +22,7 @@ export const CLAIM_STATUSES = ["submitted", "processing", "ready_to_submit", "ne
 export const FILING_CHANNELS = ["email", "portal", "mail"] as const;
 export type FilingChannel = (typeof FILING_CHANNELS)[number];
 export const SELFTEST_SCENARIOS = ["match", "mismatch", "mismatch_then_fix"];
-export const MUTATING_ACTIONS = ["approve", "discard", "mark_filed", "reprocess", "withdraw", "inquiry_handled", "new_claim", "run_selftest", "system_status"] as const;
+export const MUTATING_ACTIONS = ["approve", "discard", "send", "mark_filed", "reprocess", "withdraw", "inquiry_handled", "new_claim", "run_selftest", "system_status"] as const;
 export type OpsAction = (typeof MUTATING_ACTIONS)[number];
 
 export function canTransition(from: string, to: string): boolean {
@@ -104,4 +105,67 @@ export function parseLimit(v: string | null, dflt = 200, max = 500): number {
 /** The selftest result as the dashboard may show it: no IP addresses. */
 export function maskSelftest(j: unknown): unknown {
   return JSON.parse(JSON.stringify(j).replace(/"signature_ip":"[^"]*"/g, '"signature_ip":"…"'));
+}
+
+// ---- outbound e-mail (SPEC-10; ADR 0022) ---------------------------------------------------------------------------
+// Every send is an operator's click on an approved message (B-10 shadow mode); the agent has no send tool.
+export type SendableMessage = { id: string; direction: string; channel: string; agent_draft: boolean | null; sent_at: string | null; intent: string | null; subject: string | null; body: string | null };
+export type SendGuard = { ok: true } | { ok: false; error: string; status: number };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const isEmail = (v: unknown): v is string => typeof v === "string" && EMAIL_RE.test(v.trim());
+
+/** Why a message may not go out. `enabled` is RESEND_ENABLED === "true" (409 send_disabled when off — Send is hidden then).
+ *  A concurrent double-click passes this guard twice; the `update … where sent_at is null` in the action and Resend's
+ *  Idempotency-Key make the second call return already_sent without a second e-mail. */
+export function guardSend(m: SendableMessage | null, accountEmail: unknown, enabled: boolean): SendGuard {
+  if (!enabled) return { ok: false, error: "send_disabled", status: 409 };
+  if (!m) return { ok: false, error: "not_found", status: 404 };
+  if (m.direction !== "outbound") return { ok: false, error: "not_outbound", status: 409 };
+  if (m.channel !== "email") return { ok: false, error: "not_email", status: 409 };
+  if (m.agent_draft !== false) return { ok: false, error: "draft_not_approved", status: 409 };
+  if (m.sent_at) return { ok: false, error: "already_sent", status: 409 };
+  if (!isEmail(accountEmail)) return { ok: false, error: "no_email", status: 409 };
+  if (!m.subject?.trim() || !m.body?.trim()) return { ok: false, error: "empty_message", status: 409 };
+  return { ok: true };
+}
+
+/** Intents whose e-mail carries the filled Form 50-114 when the claim has a packet. */
+export const ATTACH_INTENTS = ["ready_to_submit", "filed"];
+/** Resend accepts 40 MB after base64; we refuse above 20 MB of PDF (the packets bucket caps files at 25 MB anyway). */
+export const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+
+export function attachmentName(claimCode: string | null | undefined): string {
+  return `Form-50-114-${(claimCode ?? "packet").replace(/[^A-Za-z0-9_-]/g, "_")}.pdf`;
+}
+
+/** The storage path and filename to attach, or null when this message carries no packet. */
+export function attachmentPlan(intent: string | null, packetPath: string | null | undefined, claimCode: string | null | undefined): { path: string; filename: string } | null {
+  if (!intent || !ATTACH_INTENTS.includes(intent) || !packetPath) return null;
+  return { path: packetPath, filename: attachmentName(claimCode) };
+}
+
+const tagValue = (v: string | null | undefined) => (v ?? "none").replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 256);   // Resend: ASCII letters, digits, _ and - only
+
+export type ResendPayload = {
+  from: string; to: string[]; reply_to: string; subject: string; html: string; text: string;
+  attachments?: Array<{ filename: string; content: string }>;
+  tags: Array<{ name: string; value: string }>; headers: Record<string, string>;
+};
+
+/** The body of POST /emails. `from` is "<brand> <support e-mail>" and replies go to the same human inbox (B-19, O-08). */
+export function resendPayload(a: { brand: string; supportEmail: string; to: string; subject: string; html: string; text: string; attachment?: { filename: string; content: string } | null; intent: string | null; claimCode: string | null | undefined; messageId: string }): ResendPayload {
+  const p: ResendPayload = {
+    from: `${a.brand} <${a.supportEmail}>`, to: [a.to.trim()], reply_to: a.supportEmail, subject: a.subject, html: a.html, text: a.text,
+    tags: [{ name: "intent", value: tagValue(a.intent) }, { name: "claim_code", value: tagValue(a.claimCode) }],
+    headers: { "X-Entity-Ref-ID": a.messageId },
+  };
+  if (a.attachment) p.attachments = [a.attachment];
+  return p;
+}
+
+/** Which vendors are switched on, from the function secrets (RESEND_ENABLED; STRIPE_ENABLED and LOB_ENABLED are SPEC-03 / SPEC-11). */
+export function featureFlags(env: (k: string) => string | undefined): { resend: boolean; stripe: boolean; lob: boolean } {
+  const on = (k: string) => env(k) === "true";
+  return { resend: on("RESEND_ENABLED"), stripe: on("STRIPE_ENABLED"), lob: on("LOB_ENABLED") };
 }
