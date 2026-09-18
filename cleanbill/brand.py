@@ -2,13 +2,14 @@
 
 The design system's single source of truth is apps/web/src/styles/tokens.css plus the default theme file
 (apps/web/src/styles/theme-<name>.css, the name being DEFAULT_THEME in apps/web/src/app/layout.tsx). This module
-reads those files and generates three files that other surfaces import, so no colour or font is typed twice:
+reads those files and generates four files that other surfaces import, so no colour, font or brand string is typed twice:
 
   cleanbill/brand_tokens.py                        constants for reportlab (letters, packet data sheet, audit page) and Pillow
-  supabase/functions/_shared/brand.ts        the same colours for pdf-lib (the Form 50-114 audit page in process-claim)
-  apps/web/src/styles/brand.generated.ts     the few values the web app needs outside CSS (theme colour for the browser UI)
+  supabase/functions/_shared/brand.ts              the same colours for pdf-lib (the Form 50-114 audit page in process-claim)
+  supabase/functions/_shared/email_template.ts     cleanbill/email/base.html + the e-mail strings, for the Deno renderer (SPEC-10 E1)
+  apps/web/src/styles/brand.generated.ts           the few values the web app needs outside CSS (theme colour for the browser UI)
 
-    python -m cleanbill.brand --sync              regenerate the three files
+    python -m cleanbill.brand --sync              regenerate the four files
     python -m cleanbill.brand --sync --check      exit 1 when any generated file is stale (CI)
     python -m cleanbill.brand --assets            render apps/web/public/brand/* (wordmark, mark, favicons, OG image, e-mail header)
     python -m cleanbill.brand --contrast          print the WCAG contrast table for both themes (pasted into docs/DESIGN-SYSTEM.md)
@@ -30,9 +31,11 @@ TOKENS_CSS = STYLES / "tokens.css"
 LAYOUT_TSX = ROOT / "apps" / "web" / "src" / "app" / "layout.tsx"
 FONTS_DIR = Path(__file__).resolve().parent / "fonts"
 FONT_FILES = {"regular": "DMSans-Regular.ttf", "medium": "DMSans-Medium.ttf", "semibold": "DMSans-SemiBold.ttf", "bold": "DMSans-Bold.ttf"}
+EMAIL_TEMPLATE = Path(__file__).resolve().parent / "email" / "base.html"
 GENERATED = {
     "py": Path(__file__).resolve().parent / "brand_tokens.py",
     "ts": ROOT / "supabase" / "functions" / "_shared" / "brand.ts",
+    "email": ROOT / "supabase" / "functions" / "_shared" / "email_template.ts",
     "web": STYLES / "brand.generated.ts",
 }
 BRAND_NAME = "Clean Bill"
@@ -40,6 +43,13 @@ LEGAL_NAME = "Clean Bill Co."
 SUPPORT_EMAIL = "hello@cleanbillco.com"
 SITE = "https://cleanbillco.com"
 DISCLAIMER = "THIS DOCUMENT IS AN ADVERTISEMENT OF SERVICES. IT IS NOT AN OFFICIAL DOCUMENT OF THE STATE OF TEXAS."
+# The e-mail footer strings (SPEC-08 C5; SPEC-10 E1). base.html carries the same sentences with {{brand}} / {{support_email}}
+# placeholders; the text alternative is built from these, in Python and (through email_template.ts) in TypeScript.
+EMAIL_HEADER_URL = f"{SITE}/brand/email-header.png"
+EMAIL_NOT_AFFILIATED = (f"{BRAND_NAME} is a private company in Austin, Texas. We are not affiliated with the Travis Central Appraisal "
+                        f"District, the Travis County Tax Office or any government agency. Filing with TCAD is free, and you can do it yourself.")
+EMAIL_QUESTIONS = f"Questions? Reply to this e-mail or write {SUPPORT_EMAIL} · {SITE}"
+EMAIL_TEXT_FOOTER = f"{DISCLAIMER}\n\n{EMAIL_NOT_AFFILIATED}\n\n{EMAIL_QUESTIONS}"
 
 # The semantic colour tokens the adapters expose (tokens.css defines these; every theme must resolve them).
 SEMANTIC_COLORS = [
@@ -184,6 +194,32 @@ def render_ts(theme: str, colors: dict[str, str]) -> str:
     return "\n".join(lines)
 
 
+def render_email_ts(theme: str) -> str:
+    """cleanbill/email/base.html and the e-mail strings as a Deno module, so _shared/email.ts renders exactly what
+    cleanbill.email.render_email renders (parity: tests/fixtures/email_snapshot.json, _shared/email_test.ts)."""
+    import json
+    js = lambda v: json.dumps(v, ensure_ascii=False)  # noqa: E731 — a valid JS string literal
+    return "\n".join([
+        f"// {HEADER.format(theme=theme)}",
+        "// Also regenerated when cleanbill/email/base.html changes. The Clean Bill e-mail template and its strings for the Deno",
+        "// renderer (_shared/email.ts, SPEC-10 E1); the colours come from brand.ts. Python and TypeScript must render byte-identical",
+        "// output for every case in tests/fixtures/email_snapshot.json.",
+        "",
+        f"export const EMAIL_BASE_HTML = {js(EMAIL_TEMPLATE.read_text())};",
+        f"export const BRAND_NAME = {js(BRAND_NAME)};",
+        f"export const LEGAL_NAME = {js(LEGAL_NAME)};",
+        f"export const SUPPORT_EMAIL = {js(SUPPORT_EMAIL)};",
+        f"export const SITE = {js(SITE)};",
+        f"export const EMAIL_HEADER_URL = {js(EMAIL_HEADER_URL)};",
+        f"export const DISCLAIMER = {js(DISCLAIMER)};",
+        f"export const EMAIL_NOT_AFFILIATED = {js(EMAIL_NOT_AFFILIATED)};",
+        f"export const EMAIL_QUESTIONS = {js(EMAIL_QUESTIONS)};",
+        "/** The text alternative's footer: disclaimer, not-affiliated line, support line. */",
+        f"export const EMAIL_TEXT_FOOTER = {js(EMAIL_TEXT_FOOTER)};",
+        "",
+    ])
+
+
 def render_web(theme: str, colors: dict[str, str]) -> str:
     return "\n".join([
         f"// {HEADER.format(theme=theme)}",
@@ -202,7 +238,7 @@ def render_web(theme: str, colors: dict[str, str]) -> str:
 def generated_contents() -> dict[str, str]:
     theme = default_theme()
     colors = colors_for(theme)
-    return {"py": render_py(theme, colors), "ts": render_ts(theme, colors), "web": render_web(theme, colors)}
+    return {"py": render_py(theme, colors), "ts": render_ts(theme, colors), "email": render_email_ts(theme), "web": render_web(theme, colors)}
 
 
 def sync(check: bool) -> int:
@@ -362,7 +398,7 @@ def assets() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--sync", action="store_true", help="regenerate brand_tokens.py, _shared/brand.ts, brand.generated.ts")
+    ap.add_argument("--sync", action="store_true", help="regenerate brand_tokens.py, _shared/brand.ts, _shared/email_template.ts, brand.generated.ts")
     ap.add_argument("--check", action="store_true", help="with --sync: fail if any generated file is stale")
     ap.add_argument("--assets", action="store_true", help="render apps/web/public/brand/*")
     ap.add_argument("--contrast", action="store_true", help="print the contrast table for every theme")
