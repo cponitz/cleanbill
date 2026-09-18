@@ -21,3 +21,5 @@ One file per technical decision (T-nn in the handbook). The product was renamed 
 - [0017](./0017-web-app-is-a-browser-only-client-of-the-claim-api.md) — the customer web app is a browser-only client of the claim API (2026-09-14)
 - [0018](./0018-site-design-system-brand-token-inquiries-code-keyed-portal.md) — the SPEC-07 site: design tokens in CSS, one brand token, lead capture instead of address lookup, a code-keyed portal (2026-09-16)
 - [0019](./0019-brand-as-tokens-and-themes-print-and-email-adapters-generated.md) — brand as tokens + themes; print and e-mail adapters generated from the same file (2026-09-17)
+- [0020](./0020-ops-console-in-the-web-app-password-gate-and-status-reporting-through-the-ops-api.md) — the operator console moves into the web app; a password gate until O-05; every system reports through the ops API (2026-09-17)
+- [0022](./0022-outbound-email-operator-send-via-resend-one-template-two-renderers-signed-webhooks.md) — outbound e-mail: operator-initiated Resend send from the ops API, one template rendered identically in Python and TypeScript, delivery state by signed webhook, root domain verified with Return-Path on `send.` (2026-09-18)

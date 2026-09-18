@@ -2,11 +2,12 @@
 // The operator console (/ops, SPEC-09 D2). One page, five anchored sections — Funnel · Claims · Inquiries · New claim ·
 // Health — built on the design system's component sheet (kpi, table, badge, toolbar, drawer). Phone-usable: the
 // walkthrough is watched from a phone. The ops password lives in sessionStorage for the tab; three consecutive 403s
-// clear it and show the login again. Nothing here sends e-mail (Task 4): an approved draft is copied with one button.
+// clear it and show the login again. E-mail (SPEC-10): an approved message is sent with one click — Send, next to Copy —
+// only when the API reports features.resend; the agent never sends (shadow mode), and a draft has to be approved first.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { BRAND } from "@/lib/copy";
 import { moneyFloor, shortDate } from "@/lib/format";
-import { ago, can, CLAIM_STATUSES, clearKey, FUNNEL_KINDS, isErr, MAX_403, type NewClaimMatch, type OpsClaim, type OpsData, type OpsError, opsGet, opsPost, readKey, storeKey } from "@/lib/ops";
+import { ago, can, CLAIM_STATUSES, clearKey, DELIVERY_BADGE, deliveryReason, FUNNEL_KINDS, hasBounce, isErr, MAX_403, type NewClaimMatch, NO_FEATURES, type OpsClaim, type OpsData, type OpsError, type OpsFeatures, type OpsMessage, opsGet, opsPost, readKey, sendAddress, storeKey } from "@/lib/ops";
 
 // The stored password as an external store (sessionStorage), so the page never sets state inside an effect.
 const keyListeners = new Set<() => void>();
@@ -26,7 +27,7 @@ const KPI_TILES: Array<[keyof OpsData["kpis"], string, string?]> = [
 const SCENARIOS = ["match", "mismatch", "mismatch_then_fix"];
 
 function errText(e: OpsError): string {
-  return e.http === 429 ? "Too many failed passwords from this connection. Try again in an hour." : e.http === 403 ? "Wrong password." : `${e.error}${e.hint ? ` — ${e.hint}` : ""}`;
+  return e.http === 429 ? "Too many failed passwords from this connection. Try again in an hour." : e.http === 403 ? "Wrong password." : `${e.error}${e.hint ? ` — ${e.hint}` : ""}${e.message ? ` — ${e.message}` : ""}`;
 }
 
 export function Ops() {
@@ -109,6 +110,8 @@ export function Ops() {
     return [c.claim_code, c.full_name, c.email, c.situs_full, c.owner_name].some((v) => (v ?? "").toUpperCase().includes(s));
   });
   const current = selected ? data.claims.find((c) => c.id === selected) ?? null : null;
+  const features: OpsFeatures = data.features ?? NO_FEATURES;
+  const mailRow = data.system.find((s) => s.key === "resend_webhook");
 
   return (
     <div className="wrap" style={{ paddingTop: 16, paddingBottom: 80 }}>
@@ -160,7 +163,7 @@ export function Ops() {
                       <td className="mono">{c.claim_code}</td>
                       <td><b>{c.full_name ?? "—"}</b><br /><span className="fine">{c.situs_full}</span></td>
                       <td><StatusBadge status={c.status} /></td>
-                      <td>{blocking ? <span className="badge badge-bad">{blocking} blocking</span> : null} {warn ? <span className="badge badge-sand">{warn} warning</span> : null} {!blocking && !warn ? <span className="fine">none</span> : null}{c.messages.some((m) => m.agent_draft) && <span className="badge badge-teal" style={{ marginLeft: 4 }}>draft</span>}</td>
+                      <td>{blocking ? <span className="badge badge-bad">{blocking} blocking</span> : null} {warn ? <span className="badge badge-sand">{warn} warning</span> : null} {!blocking && !warn ? <span className="fine">none</span> : null}{c.messages.some((m) => m.agent_draft) && <span className="badge badge-teal" style={{ marginLeft: 4 }}>draft</span>}{hasBounce(c) && <span className="badge badge-bad" style={{ marginLeft: 4 }} title="An e-mail to this customer bounced or was marked as spam" data-testid="badge-bounced">bounced</span>}</td>
                       <td className="num">{moneyFloor(c.est_refund_total)}</td>
                       <td className="fine">{shortDate(c.created_at)}</td>
                     </tr>
@@ -190,8 +193,14 @@ export function Ops() {
       </Section>
 
       {/* ---- 5. Health ---------------------------------------------------------------------------------------------- */}
-      <Section id="health" title="Health" sub="The last deploy, agent run and ETL as the workflows reported them, and the end-to-end selftest on demand.">
+      <Section id="health" title="Health" sub="The last deploy, agent run and ETL as the workflows reported them, the mail channel, and the end-to-end selftest on demand.">
         <div className="kpis" data-testid="health">
+          <div className={`kpi ${features.resend ? "" : "kpi-empty"}`} data-testid="health-mail" data-resend={features.resend}>
+            <span className="kpi-label">mail</span>
+            <span className="kpi-value" style={{ fontSize: 20 }}>{features.resend ? "on" : "off"}</span>
+            <span className="kpi-sub">{features.resend ? "Resend · Send shows on approved e-mails" : "Send hidden — copy approved e-mails into your mail client"} · last webhook {mailRow ? `${ago(mailRow.updated_at)} · ${String(mailRow.value.type ?? "")}` : "never"}</span>
+            {mailRow && <details className="fine"><summary>details</summary><pre className="mono" style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>{JSON.stringify(mailRow.value, null, 1)}</pre></details>}
+          </div>
           {["deploy", "agent_run", "etl"].map((k) => {
             const row = data.system.find((s) => s.key === k);
             const v = row?.value ?? {};
@@ -212,7 +221,7 @@ export function Ops() {
       {/* ---- claim drawer ------------------------------------------------------------------------------------------ */}
       <div className="drawer" data-open={!!current} aria-hidden={!current} data-testid="claim-drawer">
         <div className="drawer-bg" onClick={() => setSelected(null)} />
-        {current && <ClaimDetail c={current} busy={busy} onClose={() => setSelected(null)} act={act} />}
+        {current && <ClaimDetail c={current} busy={busy} onClose={() => setSelected(null)} act={act} features={features} />}
       </div>
     </div>
   );
@@ -342,7 +351,7 @@ function Selftest({ keyValue }: { keyValue: string }) {
   );
 }
 
-function ClaimDetail({ c, busy, onClose, act }: { c: OpsClaim; busy: string | null; onClose: () => void; act: (label: string, body: Record<string, unknown>) => Promise<boolean> }) {
+function ClaimDetail({ c, busy, onClose, act, features }: { c: OpsClaim; busy: string | null; onClose: () => void; act: (label: string, body: Record<string, unknown>) => Promise<boolean>; features: OpsFeatures }) {
   const [channel, setChannel] = useState("email");
   const [copied, setCopied] = useState<string | null>(null);
   const ex = c.extracted ?? {};
@@ -394,7 +403,7 @@ function ClaimDetail({ c, busy, onClose, act }: { c: OpsClaim; busy: string | nu
               </div>
             </div>
           ))}
-          {others.length > 0 && <ul className="m-0 flex list-none flex-col gap-1 p-0">{others.map((m) => <li key={m.id} className="fine">{m.direction === "inbound" ? "←" : "→"} {m.subject ?? m.intent} · {shortDate(m.created_at)}{m.approved_at ? " · approved" : ""}{m.sent_at ? " · sent" : " · not sent (copy it into your mail client until Task 4)"}<button type="button" className="btn btn-sm btn-neutral" style={{ marginLeft: 8 }} onClick={() => navigator.clipboard?.writeText(`${m.subject}\n\n${m.body}`)}>Copy</button></li>)}</ul>}
+          {others.length > 0 && <ul className="m-0 flex list-none flex-col gap-1 p-0">{others.map((m) => <MessageRow key={m.id} m={m} email={sendAddress(c)} resend={features.resend} busy={busy} act={act} />)}</ul>}
         </div>
         <div>
           <div className="eyebrow eyebrow-sm">Actions</div>
@@ -404,10 +413,27 @@ function ClaimDetail({ c, busy, onClose, act }: { c: OpsClaim; busy: string | nu
             <button type="button" className="btn btn-sm btn-neutral" disabled={!can.reprocess(c.status)} aria-busy={busy === "Reprocess"} onClick={() => act("Reprocess", { action: "reprocess", claim_id: c.id })} data-testid="btn-reprocess">Reprocess</button>
             <button type="button" className="btn btn-sm btn-bad" disabled={!can.withdraw(c.status)} aria-busy={busy === "Withdraw"} onClick={() => { if (confirm(`Withdraw claim ${c.claim_code}? The customer is not notified.`)) void act("Withdraw", { action: "withdraw", claim_id: c.id }); }} data-testid="btn-withdraw">Withdraw</button>
           </div>
-          <p className="fine mt-2">Mark filed only from <i>ready to submit</i> (sets the filing date and drafts the &ldquo;submitted&rdquo; e-mail); Reprocess only for a claim stuck in <i>received</i>; Withdraw from any open status. Nothing here sends e-mail.</p>
+          <p className="fine mt-2">Mark filed only from <i>ready to submit</i> (sets the filing date and drafts the &ldquo;submitted&rdquo; e-mail); Reprocess only for a claim stuck in <i>received</i>; Withdraw from any open status. E-mail goes out only from <b>Send</b> on an approved message above{features.resend ? "" : " (hidden: Resend is off)"}.</p>
         </div>
         <p className="fine">{BRAND} · claim {c.id}</p>
       </div>
     </aside>
+  );
+}
+
+/** One sent-or-approved message in the drawer (SPEC-10): Send (approved, unsent, flag on, an address on the account), the
+ *  delivery state from the webhook with the provider's reason on hover, and Copy always. */
+function MessageRow({ m, email, resend, busy, act }: { m: OpsMessage; email: string | null; resend: boolean; busy: string | null; act: (label: string, body: Record<string, unknown>) => Promise<boolean> }) {
+  const sendable = can.send(m);
+  const sentAt = m.sent_at ? new Date(m.sent_at) : null;
+  const status = m.delivery_status ?? null;
+  return (
+    <li className="fine" data-testid="message" data-sent={!!m.sent_at} data-delivery={status ?? ""}>
+      {m.direction === "inbound" ? "←" : "→"} {m.subject ?? m.intent} · {shortDate(m.created_at)}{m.approved_at ? " · approved" : ""}
+      {sentAt ? <> · sent {shortDate(m.sent_at)} {sentAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}{status && status !== "sent" && <> <span className={`badge ${DELIVERY_BADGE[status]}`} title={deliveryReason(m)} data-testid="delivery">{status}</span></>}{m.provider_message_id && <span className="mono" style={{ fontSize: 11 }} title="Resend id"> · {m.provider_message_id.slice(0, 8)}</span>}</>
+        : sendable && resend ? (email ? " · approved, not sent" : " · no e-mail on the account") : " · not sent (copy it into your mail client)"}
+      {sendable && resend && <button type="button" className="btn btn-sm" style={{ marginLeft: 8 }} disabled={!email || busy === "Send"} aria-busy={busy === "Send"} title={email ? `Send to ${email}` : "no e-mail on the account"} onClick={() => act("Send", { action: "send", message_id: m.id })} data-testid="btn-send">Send</button>}
+      <button type="button" className="btn btn-sm btn-neutral" style={{ marginLeft: 8 }} onClick={() => navigator.clipboard?.writeText(`${m.subject}\n\n${m.body}`)}>Copy</button>
+    </li>
   );
 }

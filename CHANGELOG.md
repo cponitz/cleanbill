@@ -6,6 +6,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions are git
 ## [Unreleased]
 
 ### Added
+- **SPEC-10 E1–E3: outbound e-mail from `/ops` through Resend** (ADR 0022; closes G-5 once E4/E5 wire the account).
+  **E1 — one template, two renderers, one parity test:** `python -m cleanbill.brand --sync` also generates
+  `supabase/functions/_shared/email_template.ts` (the contents of `cleanbill/email/base.html` plus the footer strings —
+  `--sync --check` fails when stale); `_shared/email.ts` is a line-for-line port of `cleanbill.email.render_email`;
+  `tests/fixtures/email_snapshot.json` (`python -m cleanbill.email --emit-snapshot [--check]`, nine cases: URLs, every
+  HTML-special character, whitespace, empty body, the 120-character preheader cut, explicit preheader / header, non-ASCII)
+  is asserted byte-for-byte by `tests/test_brand.py` and `_shared/email_test.ts`. **E2 — send action, webhooks, migration:**
+  `POST /ops {action: "send", message_id}` e-mails an approved, unsent outbound message to the claim's account address from
+  `Clean Bill <hello@cleanbillco.com>` (`reply_to` the same inbox), wrapped in the template, the packet attached as
+  `Form-50-114-<code>.pdf` for `ready_to_submit` / `filed` (refused above 20 MB), with `Idempotency-Key: msg-<id>`, tags
+  `intent` / `claim_code`, header `X-Entity-Ref-ID`, 20 s timeout; guards in `logic.ts` (`guardSend`, eight Deno tests:
+  flag off → 409 `send_disabled`, draft → `draft_not_approved`, `already_sent`, `not_outbound`, `not_email`, `no_email`,
+  `empty_message`, `not_found`); the row is claimed with `update … where sent_at is null` so a double-click sends once; on
+  2xx `sent_at`, `provider='resend'`, `provider_message_id`, `delivery_status='sent'` + audit `message_send`, on a provider
+  error only audit `message_send_failed`. `GET /ops` gains `features {resend, stripe, lob}` (from the secrets) and per-message
+  `provider_message_id` / `delivery_status` / `delivery_detail`. New edge function **`webhooks`** (`verify_jwt=false`):
+  `POST /webhooks/resend` verifies the Svix signature (`_shared/webhook_sig.ts`: HMAC-SHA256 over `id.timestamp.body`,
+  5-minute skew, constant-time compare; three tests — good, bad, stale), maps `email.sent | delivered | delivery_delayed |
+  bounced | complained` to `delivery_status`, appends `{type, at, detail}` to `delivery_detail`, writes `events` kind
+  `email_bounced` / `email_complained` with the claim code, upserts `system_status.resend_webhook`; unknown ids → 200; opens
+  / clicks never change the status (tracking stays off). `RESEND_BASE_URL` lets a test point the function at a fake.
+  **E3 — `/ops`:** **Send** (`data-testid="btn-send"`) next to Copy on approved unsent e-mails when `features.resend`,
+  disabled with "no e-mail on the account"; busy state; the row turns "sent · time · id" and shows delivered / delayed /
+  bounced / complained with Resend's reason on hover; a bounce badges the claim in the list; Health gains a **Mail** tile
+  (on / off, last webhook). With the flag off Send is hidden and the copy-into-your-mail-client line stays. Smoke scenario E
+  asserts Send is absent with the flag off and, with `RESEND_ENABLED=true` + `SMOKE_INBOX` in `.env`, points the synthetic
+  account at that inbox, sends, and asserts `sent_at` / `provider_message_id` through `GET /ops`. **Data model:** migration
+  `20260918212142_messages_delivery.sql` — `messages` + `provider` (check `resend`), `provider_message_id` (unique),
+  `delivery_status` (check), `delivery_detail jsonb default '[]'`; `events.kind` + `email_bounced`, `email_complained`;
+  `check_schema.sql` asserts them. `config.toml` + `[functions.webhooks]`; CI runs the three new Deno test files and
+  type-checks `webhooks`; `deploy.yml` deploys five functions. Docs: ARCHITECTURE §3.1 (rows 10, 17, new 20), §3.3, §4.1,
+  §5.8, new §5.9, glossary; RUNBOOK §9.2 / §9.5; `apps/web/README.md`; ADR 0022; `docs/specs/SPEC-10`. Tests: Python +1
+  (59), Deno +16 (56). No wording change to any customer copy; no send happens until Charlie's E4 (Resend account, DNS,
+  mailbox) and E5 (secrets, webhook registration) — until then nothing changes for the operator.
 - **SPEC-08 Part C: the Clean Bill design system** (R5; ADR 0019; `docs/DESIGN-SYSTEM.md`). One brand definition every
   surface reads. **Tokens:** `apps/web/src/styles/tokens.css` (spacing, radii, motion, type scale, and every semantic
   token `--color-*`, `--shadow-*`, `--ring`, `--font-*`); the colour / type primitives live in two theme files with the
