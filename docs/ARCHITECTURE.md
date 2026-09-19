@@ -86,10 +86,10 @@ cleanbill/estimator/rates.py</td>
 <td class="c">6</td>
 <td>Letter generator</td>
 <td>Python · reportlab · qrcode</td>
-<td class="mono">cleanbill/letters/generate.py<br />
+<td class="mono">cleanbill/letters/generate.py<br />cleanbill/letters/batch.py<br />cleanbill/letters/lob.py<br />
 copy/letter_variant_*.md</td>
-<td>Renders a one-page Letter-size PDF per lead: 14-pt bold §41.0051 disclaimer, refund math rounded down to $100, the taxing units that owe the refund, "file free yourself" line, QR + short URL with the claim code, A/B variants. Lob-ready format. No send path yet.</td>
-<td class="c">**Partial**</td>
+<td><code>generate.py</code> renders a one-page Letter-size PDF per lead: 14-pt bold §41.0051 disclaimer, refund math rounded down to $100, the taxing units that owe the refund, "file free yourself" line, QR + short URL with the claim code, A/B variants; the recipient block at a fixed window position (<code>RECIPIENT_TOP_IN</code>) and the entity / return-address line (<code>brand.LEGAL_NAME</code>, <code>brand.RETURN_ADDRESS</code>) in the footer. <strong>Batch and send path (SPEC-11, ADR 0023):</strong> <code>batch.py</code> runs on the Mac — selection from the published <code>leads</code> ⋈ <code>properties</code> with the §3.5 guard rails (never unconfirmed, non-<code>new</code>, HS-exempt, address-suppressed, the test account, an incomplete address, or the exclude file), a stratified seeded draw by market-value band, A/B interleaved, Lob address verification (<code>lob.py</code>: <code>us_verifications</code>, <code>letters</code> multipart with <code>Idempotency-Key &lt;batch&gt;:&lt;code&gt;</code>, 5 req/s, 429 / 5xx retries), one <code>mail_pieces</code> row per piece after Lob's 200, then <code>leads.status='mailed'</code> / <code>mailed_at</code> / <code>letter_variant</code>; <code>--dry-run</code> (summary, CSV, sample PDFs), <code>--to-override</code> (the proof; leads untouched), <code>--window-check</code> (Lob test render). Flow §5.2.</td>
+<td class="c">**Built** — live after SPEC-11 L4/L5</td>
 </tr>
 <tr class="odd">
 <td class="c">7</td>
@@ -178,10 +178,10 @@ run.py · validate.py · packet.py<br />
 <tr class="odd">
 <td class="c">17</td>
 <td>Mail (Lob) &amp; email (Resend)</td>
-<td>Resend API from the ops function (e-mail) · — (mail)</td>
-<td class="mono">supabase/functions/ops/index.ts (send) · _shared/email.ts · _shared/email_template.ts (generated)</td>
-<td><strong>E-mail (SPEC-10, ADR 0022): built</strong> — the ops <code>send</code> action (module 10) is the only sender; one template (<code>cleanbill/email/base.html</code>) rendered identically by Python and Deno (parity snapshot <code>tests/fixtures/email_snapshot.json</code>); delivery state by the <code>webhooks</code> function (module 20). Live once Charlie's Resend account, DNS records and the <code>RESEND_*</code> secrets exist (SPEC-10 §7, E4–E5). <strong>Mail (Lob, letters from module 6): no code</strong> — SPEC-11. Inbound e-mail parsing: O-08, out of scope.</td>
-<td class="c">**Partial**</td>
+<td>Resend API from the ops function (e-mail) · Lob API from the Mac batch (mail)</td>
+<td class="mono">supabase/functions/ops/index.ts (send) · _shared/email.ts · _shared/email_template.ts (generated) · cleanbill/letters/{batch,lob}.py</td>
+<td><strong>E-mail (SPEC-10, ADR 0022): built</strong> — the ops <code>send</code> action (module 10) is the only sender; one template (<code>cleanbill/email/base.html</code>) rendered identically by Python and Deno (parity snapshot <code>tests/fixtures/email_snapshot.json</code>); delivery state by the <code>webhooks</code> function (module 20). Live once Charlie's Resend account, DNS records and the <code>RESEND_*</code> secrets exist (SPEC-10 §7, E4–E5). <strong>Mail (SPEC-11, ADR 0023): built</strong> — module 6's batch is the only Lob call site (the Mac, the service key, <code>LOB_API_KEY</code>); a live send needs <code>LOB_ENABLED=true</code> + <code>--send</code> + <code>--confirm-footer</code> + a real return address; delivery by <code>POST /webhooks/lob</code> (module 20) into <code>mail_pieces</code>. Live once Charlie's Lob account, keys, return address and webhook exist (SPEC-11 §7, L4–L5). Inbound e-mail parsing: O-08, out of scope.</td>
+<td class="c">**Built** — live after SPEC-10 E4/E5 and SPEC-11 L4/L5</td>
 </tr>
 <tr class="even">
 <td class="c">18</td>
@@ -203,8 +203,8 @@ run.py · validate.py · packet.py<br />
 <td class="c">20</td>
 <td>webhooks</td>
 <td>Supabase Edge Function · Deno/TS</td>
-<td class="mono">supabase/functions/webhooks/{index,logic,logic_test}.ts<br />_shared/webhook_sig.ts (+ _test)</td>
-<td><strong>Inbound provider callbacks (SPEC-10 §4.3, ADR 0022).</strong> <code>POST /webhooks/resend</code>, <code>verify_jwt=false</code> (providers cannot send a Supabase JWT): verifies the Svix signature (<code>svix-id</code> / <code>svix-timestamp</code> / <code>svix-signature</code>, HMAC-SHA256 over <code>id.timestamp.body</code> with <code>RESEND_WEBHOOK_SECRET</code>, 5-minute skew, constant-time compare) → 401 and a log line otherwise; looks the message up by <code>provider_message_id = data.email_id</code>; sets <code>delivery_status</code> (<code>email.sent|delivered|delivery_delayed|bounced|complained</code> → <code>sent|delivered|delayed|bounced|complained</code>; opens / clicks never change it — tracking is off), appends <code>{type, at, detail}</code> to <code>delivery_detail</code> (capped at 50), writes <code>events</code> kind <code>email_bounced</code> / <code>email_complained</code> with the claim code, and upserts <code>system_status.resend_webhook</code> on every accepted event (the console's Mail tile). Unknown ids → 200 (Resend retries on non-2xx). Registered through Resend's API once deployed (E5). SPEC-11 adds the Lob route here.</td>
+<td class="mono">supabase/functions/webhooks/{index,logic,logic_test,lob,lob_test}.ts<br />_shared/webhook_sig.ts (+ _test)</td>
+<td><strong>Inbound provider callbacks (SPEC-10 §4.3, ADR 0022; SPEC-11 §4.2, ADR 0023).</strong> <code>POST /webhooks/resend</code>, <code>verify_jwt=false</code> (providers cannot send a Supabase JWT): verifies the Svix signature (<code>svix-id</code> / <code>svix-timestamp</code> / <code>svix-signature</code>, HMAC-SHA256 over <code>id.timestamp.body</code> with <code>RESEND_WEBHOOK_SECRET</code>, 5-minute skew, constant-time compare) → 401 and a log line otherwise; looks the message up by <code>provider_message_id = data.email_id</code>; sets <code>delivery_status</code> (<code>email.sent|delivered|delivery_delayed|bounced|complained</code> → <code>sent|delivered|delayed|bounced|complained</code>; opens / clicks never change it — tracking is off), appends <code>{type, at, detail}</code> to <code>delivery_detail</code> (capped at 50), writes <code>events</code> kind <code>email_bounced</code> / <code>email_complained</code> with the claim code, and upserts <code>system_status.resend_webhook</code> on every accepted event (the console's Mail tile). Unknown ids → 200 (Resend retries on non-2xx). Registered through Resend's API once deployed (E5). <strong><code>POST /webhooks/lob</code> (SPEC-11):</strong> verifies <code>Lob-Signature</code> (hex HMAC-SHA256 of <code>&lt;Lob-Signature-Timestamp&gt;.&lt;body&gt;</code> with <code>LOB_WEBHOOK_SECRET</code>; seconds or milliseconds; 5-minute skew) → 401 otherwise; looks the piece up by <code>lob_id = reference_id</code>; moves <code>mail_pieces.status</code> forward only (<code>created → rendered → mailed → in_transit → in_local_area → processed_for_delivery</code>; <code>re_routed</code> / <code>returned_to_sender</code> / <code>deleted</code> always apply), appends <code>{type, at, detail}</code> to <code>events</code> (capped at 50), stamps <code>delivered_at</code> on <code>processed_for_delivery</code>, and on <code>returned_to_sender</code> sets the lead <code>suppressed</code> and writes <code>events</code> kind <code>mail_returned</code>; upserts <code>system_status.lob_webhook</code>. Registered in the Lob dashboard (no API; SPEC-11 §7 step 6). Test mode emits <code>letter.created</code> / <code>rendered_pdf</code> only.</td>
 <td class="c">**Built**</td>
 </tr>
 </tbody>
@@ -274,6 +274,11 @@ run.py · validate.py · packet.py<br />
 <td>Outbound e-mail</td>
 <td>Only the ops <code>send</code> action (password-gated) e-mails a customer, only an approved message, only with <code>RESEND_ENABLED=true</code>; double sends blocked by <code>where sent_at is null</code> + Resend's <code>Idempotency-Key</code>; the packet attachment is read from the private bucket with the service client and never linked. Delivery webhooks are Svix-signed (401 otherwise) and can only move delivery state, never send. No open / click tracking (ADR 0022).</td>
 <td class="c">**In place** (code) — live after SPEC-10 E4/E5</td>
+</tr>
+<tr class="odd">
+<td>Outbound mail</td>
+<td>Only <code>cleanbill.letters.batch</code> on the Mac creates Lob letters, only from the published leads, only past the §3.5 guard rails (unconfirmed, non-new, HS-exempt, suppressed, test, incomplete or excluded addresses never), and with a live key only with <code>LOB_ENABLED=true</code> + <code>--send</code> + <code>--confirm-footer</code> = the entity line + a real return address. Idempotency-Key per piece; the <code>mail_pieces</code> row is written only after Lob's 200. Names and addresses stay on the Mac (git-ignored CSV / PDFs); the summary prints counts. Delivery webhooks are Lob-signed (401 otherwise) and can only move piece state or suppress a lead, never send (ADR 0023).</td>
+<td class="c">**In place** (code) — live after SPEC-11 L4/L5</td>
 </tr>
 <tr class="odd">
 <td>Secrets in code</td>
@@ -346,7 +351,7 @@ Type is the Postgres type. "Set by" names the module that writes the column (num
 | est_refund_total / est_refund_by_year / est_forward_annual | numeric / jsonb / numeric | Sum of estimated savings across refund years (rounded down to \$100 before display) / per-year totals / forward annual saving at the latest rate table.                                                    | 3             |
 | estimate_unconfirmed                                       | boolean                   | True when any of the property's taxing units lacks a confirmed rate table. Gates mailing (O-03, decided).                                                                                                  | 3             |
 | status                                                     | lead_status               | Funnel state (Figure 4.2): new → mailed → opened → claimed → filed → approved → refunded → closed; suppressed.                                                                                             | 5, 8, SPEC-05 |
-| letter_variant / mailed_at / opened_at                     | text / timestamptz        | A/B creative and drop time (written by the Lob batch, G-7) / first successful claim-page load.                                                                                                             | G-7, 8        |
+| letter_variant / mailed_at / opened_at                     | text / timestamptz        | A/B creative and drop time, written by `cleanbill.letters.batch` after Lob accepts the piece (SPEC-11; the record is `mail_pieces`) / first successful claim-page load. `status='suppressed'` is also written by the Lob webhook on `letter.returned_to_sender`. | 6, 20, 8      |
 | created_at / updated_at                                    | timestamptz               | Row timestamps; `updated_at` maintained by trigger.                                                                                                                                                        | trigger       |
 
 #### customers — v2 · the person / account (was: the engagement) — live since migration `20260913220000_data_model_v2`; `email` is `citext`
@@ -424,13 +429,31 @@ Type is the Postgres type. "Set by" names the module that writes the column (num
 | source_path / ip / ua | text / inet / text | The page the form was on and the request's origin (rate limit: 30 per IP per hour via `events` kind `inquiry`). | 15 |
 | handled_at / notes | timestamptz / text | Set by the operator when answered. **No reader yet** — rows are listed only in the database until `ops` shows them. | — |
 
+#### mail_pieces — SPEC-11 · one row per letter Lob was asked to print — migration `20260918220224_mail_pieces`
+
+| Column | Type | Definition | Set by |
+|---|---|---|---|
+| id / lead_id / claim_code | uuid PK / uuid FK → leads / text | The piece and the lead it went to (`claim_code` denormalised for the funnel events). | 6 |
+| batch | text | The run's name (`2026-10-05-t1`, `proof-…`, `test-…`); also the Lob `Idempotency-Key` prefix and `metadata[batch]`. | 6 |
+| variant | text (`A`\|`B`) | The creative mailed. | 6 |
+| lob_id | text UNIQUE | Lob's `ltr_…`; the webhook's lookup key. Null for `address_rejected`. | 6 |
+| status | text (check) | `address_rejected` (verification said no; the lead stays `new`) · `created → rendered → mailed → in_transit → in_local_area → processed_for_delivery` (forward only) · `re_routed`, `returned_to_sender`, `deleted` (always apply). | 6, 20 |
+| to_override | boolean | True for proof letters mailed to Charlie's own address (`--to-override`): never counted on `/ops`, never touch a lead. | 6 |
+| to_address / address_verification | jsonb | Lob's inline `to` (the verified components) / the `us_verifications` verdict and analysis — never the raw input echo. | 6 |
+| pdf_sha256 | text | SHA-256 of the PDF sent (the file itself stays under `data/out/batches/<batch>/` on the Mac). | 6 |
+| expected_delivery_date / delivered_at | date / timestamptz | From Lob's create response / stamped once by the `letter.processed_for_delivery` webhook. | 6, 20 |
+| events / last_event_at | jsonb (default `[]`) / timestamptz | `{type, at, detail}` per webhook (capped at 50; detail = tracking name / location / details, never an address). | 20 |
+| created_at | timestamptz | Insert time = when Lob accepted the piece. | 6 |
+
+RLS on, service role only. SQL functions for `/ops`: `ops_mail_kpis()` (mailed · delivered · returned · rejected, proofs excluded) and `ops_mail_by_batch()` (per batch: n, first `created_at`, delivered, returned, rejected, proof). `supabase/ci/check_schema.sql` asserts the table, the unique `lob_id` and both functions.
+
 #### messages · events · audit_log · app_settings
 
 | Table.column                                                                                           | Definition                                                                                                                                                                                                                                                                                                                    | Set by         |
 |--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
 | messages (claim_id, direction, channel, subject, body, intent, agent_draft, approved_by/\_at, sent_at, provider, provider_message_id, delivery_status, delivery_detail) | Every communication, drafted or real. `direction` inbound\|outbound; `channel` email\|sms\|letter\|portal (the claim page's reply box, `POST /claim/reply`)\|note; `intent` needs_dl_update \| ready_to_submit \| needs_review \| filed \| approved \| refund_notice \| denied \| reply \| other. `agent_draft=true` waits for a human. **SPEC-10 (migration `20260918212142_messages_delivery.sql`):** the ops `send` action sets `sent_at`, `provider` (`resend`), `provider_message_id` (unique — the webhook's key), `delivery_status='sent'`; the `webhooks` function moves `delivery_status` (`sent\|delivered\|delayed\|bounced\|complained`) and appends `{type, at, detail}` to `delivery_detail` (jsonb array, default `[]`). | 9, 12, 10, 20, SPEC-10 |
-| events (at, claim_code, kind, detail)                                                                  | Funnel telemetry keyed by claim code. Kinds written by the API: `view, view_miss, claim_submitted, typed_precheck, dl_fix_uploaded, inquiry` (the last with `claim_code` null, SPEC-07); posted by the page through `POST /claim/events` (allowlist, `detail.source = "page"`): `validation_shown, dl_fix_started, dl_fix_uploaded, typed_precheck, card_saved, card_skipped, packet_viewed` (SPEC-06 §5, SPEC-02 §5). `card_saved` becomes server-written in SPEC-03. `ops_auth_fail` (`detail.ip`) counts failed ops passwords for the 20/IP/hour limiter (SPEC-09). `email_bounced` / `email_complained` (`detail: {message_id, email_id, reason}`, with the claim code) are written by the `webhooks` function (SPEC-10) — the claims list badges the claim.                                                                                                                            | 8, SPEC-06     |
-| system_status (key, value, updated_at)                                                                 | One row per subsystem, written at the end of each GitHub Actions run through `POST /ops {action: system_status}` (SPEC-09 D1, ADR 0020): `deploy` (commit, run, step outcomes: migrations, functions, parity, selftest), `agent_run` (outcome, claims processed, cost), `etl` (outcome, leads), and `resend_webhook` (SPEC-10: the last accepted delivery event — type, at, email id, known) written by the `webhooks` function. Read by `GET /ops` as `system[]`; the console's Health section shows each row with its age. RLS on; service role only. Migration `20260917210000_system_status.sql`, which also adds the SQL functions `ops_events_by_kind(since)` and `ops_events_by_day(since)` for the funnel.                                                                                                                                                                                                                                                                       | SPEC-09        |
+| events (at, claim_code, kind, detail)                                                                  | Funnel telemetry keyed by claim code. Kinds written by the API: `view, view_miss, claim_submitted, typed_precheck, dl_fix_uploaded, inquiry` (the last with `claim_code` null, SPEC-07); posted by the page through `POST /claim/events` (allowlist, `detail.source = "page"`): `validation_shown, dl_fix_started, dl_fix_uploaded, typed_precheck, card_saved, card_skipped, packet_viewed` (SPEC-06 §5, SPEC-02 §5). `card_saved` becomes server-written in SPEC-03. `ops_auth_fail` (`detail.ip`) counts failed ops passwords for the 20/IP/hour limiter (SPEC-09). `email_bounced` / `email_complained` (`detail: {message_id, email_id, reason}`, with the claim code) are written by the `webhooks` function (SPEC-10) — the claims list badges the claim. `mail_returned` (`detail: {lob_id, batch, piece_id, name}`, with the claim code) is written by the Lob route on `letter.returned_to_sender` (SPEC-11).                                                                                                                            | 8, SPEC-06     |
+| system_status (key, value, updated_at)                                                                 | One row per subsystem, written at the end of each GitHub Actions run through `POST /ops {action: system_status}` (SPEC-09 D1, ADR 0020): `deploy` (commit, run, step outcomes: migrations, functions, parity, selftest), `agent_run` (outcome, claims processed, cost), `etl` (outcome, leads), `resend_webhook` (SPEC-10: the last accepted delivery event — type, at, email id, known) and `lob_webhook` (SPEC-11: type, at, event id, lob id, known, batch), both written by the `webhooks` function. Read by `GET /ops` as `system[]`; the console's Health section shows each row with its age. RLS on; service role only. Migration `20260917210000_system_status.sql`, which also adds the SQL functions `ops_events_by_kind(since)` and `ops_events_by_day(since)` for the funnel.                                                                                                                                                                                                                                                                       | SPEC-09        |
 | audit_log (at, actor, action, entity, entity_id, detail)                                               | Who did what to which row. Actors: claim-api, process-claim, ops, agent, purge job, monitor (SPEC-05).                                                                                                                                                                                                                        | all            |
 | app_settings (key, value, updated_at)                                                                  | Service-role-only fallback for secrets (`ANTHROPIC_API_KEY`, `OPS_PASSWORD` — rotated Sep 12).                                                                                                                                                                                                                                | manual         |
 
@@ -477,7 +500,7 @@ Type is the Postgres type. "Set by" names the module that writes the column (num
 
 ![state-machines](figures/state-machines.svg)
 
-**Figure 4.2 — Lead and claim lifecycles.** The lead funnel is what the ops KPIs count; the claim state is what the agent and the operator work. Amber dashed states are designed in §5.7 (SPEC-05) and have no writer until it ships.
+**Figure 4.2 — Lead and claim lifecycles.** The lead funnel is what the ops KPIs count; the claim state is what the agent and the operator work. `mailed` is written by the Lob batch (SPEC-11) and `suppressed` also by a returned letter. Amber dashed states are designed in §5.7 (SPEC-05) and have no writer until it ships.
 
 Section 5
 
@@ -500,9 +523,25 @@ Seven flows cover the whole business. Flows 5.1–5.5 exist in code and are desc
 
 **Why the heuristic is what it is.** "Mailing address equals situs" is the same test Williamson CAD used in its own 2020 unclaimed-exemption outreach, and it is the only owner-occupancy signal in the roll. It under-counts (owners whose mail goes to a PO box or a spouse's office) and over-counts (landlords who use the rental as their mailing address). The 25-lead verification pack exists to measure precision by hand; the Gate-1 threshold was ≥ 80%. **Re-running is safe:** the publisher never overwrites an existing lead, so claim codes already printed stay valid.
 
-### 5.2 Outreach (not yet operational)
+### 5.2 Outreach — the mailing (SPEC-11, ADR 0023; Mac)
 
-Intended flow: select a batch (tier, value band, taxing-unit confirmed, not previously mailed) → `generate.py` renders one PDF per lead with the §41.0051 block, the specific taxing units that owe the refund, the estimate rounded down to \$100, a QR to `claim.html?c=CODE` and the code in print → Lob API creates a letter per PDF → on Lob's "mailed" webhook, set `leads.status = mailed`, `mailed_at`, `letter_variant`. Two creatives (A: refund-dollar-led, B: exemption-led) split 50/50 for the 1,000-piece test. **What exists:** the generator and copy. **What does not:** batch selection, Lob calls, the webhook, and any way to record that a letter went out.
+    python -m cleanbill.letters.batch --batch 2026-10-05-t1 --tier 1 --n 1000 --seed 20261005 [--dry-run | --send --confirm-footer "Clean Bill Co."]
+      leads ⋈ properties (paged, service key; tier, status='new', mailed_at null)
+      ─▶ guard rails (§3.5): never estimate_unconfirmed (B-18) · hs_exempt · address_suppressed · the test account / CB-TEST- ·
+         an incomplete TX address · a prop_id in data/out/exclude.csv · a lead not `new`      → excluded counts by reason
+      ─▶ stratified seeded sample by market-value band (100–200k … 750k+), proportional to the eligible population; A/B interleaved
+      ─▶ Lob us_verifications per lead → deliverable / deliverable_unnecessary_unit mailed with the verified components;
+         anything else → mail_pieces status='address_rejected' (lead stays new)
+      ─▶ generate.py renders one PDF per lead (recipient block at the window position; §41.0051 block; the units that owe the
+         refund; estimate rounded down; QR + https://cleanbillco.com/claim/<code>; footer with brand.LEGAL_NAME + RETURN_ADDRESS)
+      ─▶ --send: POST /v1/letters (multipart PDF, to = verified, from = RETURN_ADDRESS, top_first_page, usps_first_class,
+         use_type=marketing, Idempotency-Key <batch>:<code>) ─▶ on 200: insert mail_pieces (lob_id, sha256, verification …)
+         then update leads set status='mailed', mailed_at, letter_variant          (proof: --to-override → to_override=true, leads untouched)
+      ─▶ summary (counts only: bands, variants, cities, units, median / total estimate, rejected, cost) + data/out/batches/<batch>/ (git-ignored)
+    Lob webhooks ─▶ POST /webhooks/lob ─▶ mail_pieces.status / events / delivered_at; returned_to_sender → lead suppressed + events mail_returned
+    /ops ─▶ mailed · delivered · returned tiles (ops_mail_kpis), the batch table (ops_mail_by_batch), the drawer's letter line
+
+A dry run and its send share the seed, so the operator reads the summary of exactly the leads that will be mailed. Re-running the same `--batch` skips leads that already have a piece; an error after Lob's retries stops the run and prints the resume command. Two creatives (A: refund-dollar-led, B: exemption-led) split 50/50 for the 1,000-piece test (B-07). Guard rails a live key adds: `LOB_ENABLED=true`, `--send`, `--confirm-footer` = `brand.LEGAL_NAME`, a real `brand.RETURN_ADDRESS`. Charlie's part: SPEC-11 §7 (account, keys, return address, entity name, exclude file, webhook registration, O-12); the address-window check and the physical proof are recorded in `docs/reports/2026-09-18-lob-proof.md`.
 
 ### 5.3 Claim submission and processing (real time)
 
@@ -576,7 +615,7 @@ All routes are on the `claim` function; the claim code is the credential; every 
 
 | Route | Purpose | Returns |
 |---|---|---|
-| `GET /ops?status=&limit=` | The whole console in one call. | `{ok, kpis, funnel:{by_kind_7d, by_kind_all, by_day_30d, steps}, claims[], inquiries[], system[], features:{resend, stripe, lob}, generated_at}` — claims carry the extraction without the DL number, structured findings, the latest filing (`packet.url` signed for 10 minutes, `submitted_at`, `channel`) and every message (with `provider_message_id`, `delivery_status`, `delivery_detail[]`, SPEC-10). `features` reads the vendor switches from the function secrets. |
+| `GET /ops?status=&limit=` | The whole console in one call. | `{ok, kpis, funnel:{by_kind_7d, by_kind_all, by_day_30d, steps, leads_mailed}, claims[], inquiries[], system[], features:{resend, stripe, lob}, mail:{batches[], rejected}, generated_at}` — SPEC-11: `kpis.mailed` / `delivered` / `returned` come from `mail_pieces` (`ops_mail_kpis`; proofs and rejected addresses excluded), `funnel.leads_mailed` is the lead count cross-check, `mail.batches` is `ops_mail_by_batch`, and each claim carries `letter:{variant, mailed_at, delivered_at, status, batch}` (the lead's denormalised fields + its latest real piece); — claims carry the extraction without the DL number, structured findings, the latest filing (`packet.url` signed for 10 minutes, `submitted_at`, `channel`) and every message (with `provider_message_id`, `delivery_status`, `delivery_detail[]`, SPEC-10). `features` reads the vendor switches from the function secrets. |
 | `POST /ops {action:"approve"\|"discard", message_id}` | Shadow mode: approve flips `agent_draft=false`; discard deletes. | `{ok}` |
 | `POST /ops {action:"send", message_id}` | SPEC-10 (ADR 0022). E-mails an approved, unsent outbound message to the claim's account address through Resend, wrapped in the Clean Bill template, the packet attached for `ready_to_submit` / `filed`; audit `message_send` (`{resend_id, attached, to_domain, intent}`) or `message_send_failed` (`{status, error}`). | `{ok, sent_at, provider_message_id, attached}`; 409 `send_disabled` (flag off) / `draft_not_approved` / `already_sent` / `not_outbound` / `not_email` / `no_email` / `empty_message` / `packet_too_large`; 404 `not_found`; 502 `provider_error {message}` / `packet_unavailable`; 503 when `RESEND_API_KEY` is missing |
 | `POST /ops {action:"mark_filed", claim_id, channel?}` | SPEC-05 task 1. Only from `ready_to_submit`: latest filing gets `submitted_at` + `channel` (`email` default), claim and lead → `filed`, the followups.md "filed" draft is written. | `{ok, status:"filed", filing_id, message_id}`; 409 `no_filing` / `mark_filed_not_allowed_from_…` |
@@ -645,6 +684,8 @@ a mailbox for `hello@`; Claude Code registers the webhook through Resend's API a
 
 **Anthropic Messages API** — the interface our code uses to call Claude models (with tools, vision, structured output, prompt caching).
 
+**Batch (mail)** — one named run of `cleanbill.letters.batch` (`2026-10-05-t1`); the Lob `Idempotency-Key` prefix and the `mail_pieces.batch` value.
+
 **Batch runtime** — where scheduled jobs run (GitHub Actions here).
 
 **Bucket** — a folder-like container in Supabase Storage; ours are private.
@@ -709,7 +750,11 @@ a mailbox for `hello@`; Claude Code registers the webhook through Resend's API a
 
 **Lead / Tier 1/2/3** — a property we believe is owed a refund / two refund years, one, none.
 
-**Lob / Resend / Stripe** — print-and-mail API / email-sending API (the ops `send` action, SPEC-10; webhooks via Svix) / payments API (card on file = SetupIntent; charge = PaymentIntent).
+**Deliverability** — Lob's verdict per address (`deliverable`, `deliverable_unnecessary_unit` → mailed; `deliverable_incorrect_unit`, `deliverable_missing_unit`, `undeliverable` → `address_rejected`), based on USPS DPV (Delivery Point Validation).
+
+**Lob / Resend / Stripe** — print-and-mail API (the Mac batch, SPEC-11; `Lob-Signature` webhooks) / email-sending API (the ops `send` action, SPEC-10; webhooks via Svix) / payments API (card on file = SetupIntent; charge = PaymentIntent).
+
+**mail_pieces** — the table with one row per letter Lob was asked to print (SPEC-11): status, verification, PDF hash, webhook trail.
 
 **Bounce / complaint** — the receiving server rejected the message (bad address, full box) / the recipient marked it as spam; both arrive by webhook and badge the claim in `/ops`.
 
@@ -717,7 +762,15 @@ a mailbox for `hello@`; Claude Code registers the webhook through Resend's API a
 
 **Idempotency-Key** — a request header that makes a repeated API call return the first result instead of acting twice; every Resend send carries `msg-<message_id>`.
 
+**Proof (mail)** — a small live send to Charlie's own address (`--to-override`) before a batch; rows with `mail_pieces.to_override=true`, never counted, never touching a lead.
+
+**Return address** — `brand.RETURN_ADDRESS`: the sender printed on the envelope and in the letter's footer; undeliverable mail comes back to it. The placeholder (zip `00000`) blocks live sends.
+
 **Return-Path** — the address bounces go to; Resend puts it on the `send.` subdomain so the root MX stays free for the human mailbox.
+
+**Seed** — the number (`--seed`) that makes the batch's random draw reproducible: a dry run and its send pick the same leads.
+
+**Stratified sample** — a draw that keeps each market-value band's share equal to its share of the eligible list, so the test measures the whole list's response.
 
 **Svix** — the webhook-delivery service Resend uses; its signature scheme (`svix-id`, `svix-timestamp`, `svix-signature`, HMAC-SHA256) is what `_shared/webhook_sig.ts` verifies.
 
@@ -773,7 +826,11 @@ a mailbox for `hello@`; Claude Code registers the webhook through Resend's API a
 
 **verify_jwt** — a Supabase function setting requiring a valid key on every call; on for process-claim, off for the public claim API.
 
-**Webhook** — an HTTP call a vendor (Resend, Lob, Stripe) makes to us when something happens (delivered, bounced); received by the `webhooks` edge function.
+**Webhook** — an HTTP call a vendor (Resend, Lob, Stripe) makes to us when something happens (delivered, bounced, returned); received by the `webhooks` edge function.
+
+**Window zone / `top_first_page`** — the area of the first page Lob requires free of other ink so the recipient address shows through the double-window envelope (vs. `insert_blank_page`, an extra sheet); the recipient block's position is `RECIPIENT_TOP_IN` in `generate.py`.
+
+**Value band** — a market-value range used for stratification (`100–200k`, `200–350k`, `350–500k`, `500–750k`, `750k+`).
 
 **Vercel / Next.js** — hosting platform and the React web framework it is built for; the customer front-end (T-12).
 

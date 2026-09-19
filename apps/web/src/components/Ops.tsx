@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { BRAND } from "@/lib/copy";
 import { moneyFloor, shortDate } from "@/lib/format";
-import { ago, can, CLAIM_STATUSES, clearKey, DELIVERY_BADGE, deliveryReason, FUNNEL_KINDS, hasBounce, isErr, MAX_403, type NewClaimMatch, NO_FEATURES, type OpsClaim, type OpsData, type OpsError, type OpsFeatures, type OpsMessage, opsGet, opsPost, readKey, sendAddress, storeKey } from "@/lib/ops";
+import { ago, can, CLAIM_STATUSES, clearKey, DELIVERY_BADGE, deliveryReason, FUNNEL_KINDS, hasBounce, isErr, letterLine, MAX_403, type NewClaimMatch, NO_FEATURES, type OpsClaim, type OpsData, type OpsError, type OpsFeatures, type OpsMessage, opsGet, opsPost, readKey, sendAddress, storeKey } from "@/lib/ops";
 
 // The stored password as an external store (sessionStorage), so the page never sets state inside an effect.
 const keyListeners = new Set<() => void>();
@@ -20,7 +20,7 @@ import { Logo, StatusBadge, StatusPill } from "./ui";
 
 const SECTIONS: Array<[string, string]> = [["funnel", "Funnel"], ["claims", "Claims"], ["inquiries", "Inquiries"], ["new-claim", "New claim"], ["health", "Health"]];
 const KPI_TILES: Array<[keyof OpsData["kpis"], string, string?]> = [
-  ["leads_loaded", "Leads loaded"], ["mailed", "Mailed"], ["page_views", "Page views"], ["opened", "Opened"], ["claimed", "Claimed"],
+  ["leads_loaded", "Leads loaded"], ["mailed", "Mailed"], ["delivered", "Delivered"], ["returned", "Returned", "kpi-warn"], ["page_views", "Page views"], ["opened", "Opened"], ["claimed", "Claimed"],
   ["ready_to_submit", "Ready to submit", "kpi-accent"], ["needs_dl_update", "Needs DL update", "kpi-warn"], ["needs_review", "Needs review", "kpi-warn"],
   ["filed", "Filed"], ["approved", "Approved"], ["refunded", "Refunded"], ["inquiries_open", "Open inquiries", "kpi-warn"],
 ];
@@ -112,6 +112,8 @@ export function Ops() {
   const current = selected ? data.claims.find((c) => c.id === selected) ?? null : null;
   const features: OpsFeatures = data.features ?? NO_FEATURES;
   const mailRow = data.system.find((s) => s.key === "resend_webhook");
+  const lobRow = data.system.find((s) => s.key === "lob_webhook");
+  const batches = data.mail?.batches ?? [];
 
   return (
     <div className="wrap" style={{ paddingTop: 16, paddingBottom: 80 }}>
@@ -129,7 +131,7 @@ export function Ops() {
       <Section id="funnel" title="Funnel" sub="Lead and claim counts, then the last 7 days of page events by kind and the step conversion.">
         <div className="kpis" data-testid="ops-kpis">
           {KPI_TILES.map(([k, label, cls]) => (
-            <div key={k} className={`kpi ${cls ?? ""}`} data-testid={`kpi-${k}`}><span className="kpi-label">{label}</span><span className="kpi-value">{data.kpis[k].toLocaleString("en-US")}</span></div>
+            <div key={k} className={`kpi ${cls ?? ""}`} data-testid={`kpi-${k}`}><span className="kpi-label">{label}</span><span className="kpi-value">{(data.kpis[k] ?? 0).toLocaleString("en-US")}</span>{k === "mailed" && data.funnel.leads_mailed !== undefined && <span className="kpi-sub">{data.funnel.leads_mailed.toLocaleString("en-US")} leads marked mailed</span>}</div>
           ))}
         </div>
         <div className="kpis mt-3">
@@ -193,13 +195,19 @@ export function Ops() {
       </Section>
 
       {/* ---- 5. Health ---------------------------------------------------------------------------------------------- */}
-      <Section id="health" title="Health" sub="The last deploy, agent run and ETL as the workflows reported them, the mail channel, and the end-to-end selftest on demand.">
+      <Section id="health" title="Health" sub="The last deploy, agent run and ETL as the workflows reported them, the e-mail and letter channels, and the end-to-end selftest on demand.">
         <div className="kpis" data-testid="health">
           <div className={`kpi ${features.resend ? "" : "kpi-empty"}`} data-testid="health-mail" data-resend={features.resend}>
             <span className="kpi-label">mail</span>
             <span className="kpi-value" style={{ fontSize: 20 }}>{features.resend ? "on" : "off"}</span>
             <span className="kpi-sub">{features.resend ? "Resend · Send shows on approved e-mails" : "Send hidden — copy approved e-mails into your mail client"} · last webhook {mailRow ? `${ago(mailRow.updated_at)} · ${String(mailRow.value.type ?? "")}` : "never"}</span>
             {mailRow && <details className="fine"><summary>details</summary><pre className="mono" style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>{JSON.stringify(mailRow.value, null, 1)}</pre></details>}
+          </div>
+          <div className={`kpi ${features.lob ? "" : "kpi-empty"}`} data-testid="health-letters" data-lob={features.lob}>
+            <span className="kpi-label">letters</span>
+            <span className="kpi-value" style={{ fontSize: 20 }}>{features.lob ? "on" : "off"}</span>
+            <span className="kpi-sub">{features.lob ? "Lob live sends allowed from the Mac batch" : "Lob off — test-mode batches only"} · last batch {batches[0] ? `${batches[0].batch} · ${batches[0].n} pieces` : "none"} · last webhook {lobRow ? `${ago(lobRow.updated_at)} · ${String(lobRow.value.type ?? "")}` : "never"}</span>
+            {lobRow && <details className="fine"><summary>details</summary><pre className="mono" style={{ whiteSpace: "pre-wrap", fontSize: 11 }}>{JSON.stringify(lobRow.value, null, 1)}</pre></details>}
           </div>
           {["deploy", "agent_run", "etl"].map((k) => {
             const row = data.system.find((s) => s.key === k);
@@ -214,6 +222,20 @@ export function Ops() {
               </div>
             );
           })}
+        </div>
+        <div className="table-wrap" data-testid="mail-batches">
+          <table className="table table-dense">
+            <thead><tr><th>Mail batch</th><th className="num">Pieces</th><th>Sent</th><th className="num">Delivered</th><th className="num">Returned</th><th className="num">Address rejected</th></tr></thead>
+            <tbody>
+              {batches.length === 0 ? <tr><td colSpan={6} className="fine">No letters sent yet — the batch runs from the Mac (RUNBOOK §9.3).</td></tr> : batches.map((b) => (
+                <tr key={b.batch} data-testid="mail-batch" data-batch={b.batch}>
+                  <td className="mono">{b.batch}{b.proof && <span className="badge badge-neutral" style={{ marginLeft: 6 }}>proof</span>}</td>
+                  <td className="num">{b.n.toLocaleString("en-US")}</td><td className="fine">{b.sent_at ? shortDate(b.sent_at) : "—"}</td>
+                  <td className="num">{b.delivered.toLocaleString("en-US")}</td><td className="num">{b.returned ? <span className="badge badge-sand">{b.returned}</span> : 0}</td><td className="num">{b.rejected}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         <Selftest keyValue={key} />
       </Section>
@@ -367,7 +389,7 @@ function ClaimDetail({ c, busy, onClose, act, features }: { c: OpsClaim; busy: s
       <div className="drawer-body">
         {c.status_reason && <p className="fine">{c.status_reason}</p>}
         <div className="ledger">
-          <div className="ledger-row"><span>Property</span><b>{c.situs_full}</b></div>
+          <div className="ledger-row"><span>Property</span><b>{c.situs_full}{c.letter && <span className="fine" data-testid="letter-line"> · {letterLine(c.letter, shortDate)}</span>}</b></div>
           <div className="ledger-row"><span>Owner of record</span><b>{c.owner_name}</b></div>
           <div className="ledger-row"><span>Customer</span><b>{c.full_name} · {c.email}{c.phone ? ` · ${c.phone}` : ""}</b></div>
           <div className="ledger-row"><span>Estimate</span><b className="num">{moneyFloor(c.est_refund_total)}</b></div>

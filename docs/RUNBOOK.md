@@ -36,7 +36,7 @@ Section 9
 ### 9.3 Commands (from the repo folder on the Mac)
 
     pip install -e .[dev] && python -m pytest -q                                     # Python tests (49 on main at 2026-09-17)
-    deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/claim/logic_test.ts supabase/functions/ops/logic_test.ts   # Deno tests (40)
+    deno test --no-check --allow-read supabase/functions/process-claim/validate_test.ts supabase/functions/_shared/findings_test.ts supabase/functions/_shared/email_test.ts supabase/functions/_shared/webhook_sig_test.ts supabase/functions/claim/logic_test.ts supabase/functions/ops/logic_test.ts supabase/functions/webhooks/logic_test.ts supabase/functions/webhooks/lob_test.ts   # Deno tests (61)
     python -m cleanbill.findings --emit-ts --emit-snapshot            # regenerate _shared/findings.ts + the G-9 snapshot after editing cleanbill/findings.py (CI checks with --check)
     python -m cleanbill.brand --sync                                    # regenerate brand_tokens.py / _shared/brand.ts / brand.generated.ts from apps/web/src/styles/tokens.css (CI checks with --check)
     python -m cleanbill.brand --assets                                  # re-render apps/web/public/brand/* after a token change (needs `pip install fonttools` for the wordmark SVG)
@@ -48,6 +48,15 @@ Section 9
         --db data/tcad.duckdb                                                  # regenerate cleanbill/estimator/rates/units.json (rates + exemptions)
     python -m cleanbill.etl.leads --db data/tcad.duckdb --as-of 2026-09-09 --out data/out/leads.csv   # prints summary JSON
     python -m cleanbill.etl.publish --leads data/out/leads.csv --dry-run                    # then without --dry-run
+    # ---- letters (SPEC-11; needs LOB_API_KEY in .env — test_… renders only, live_… prints; LOB_ENABLED=true for a live send) ----
+    python -m cleanbill.letters.batch --batch 2026-10-05-t1 --tier 1 --n 1000 --variant-split 50 --seed 20261005 --dry-run --unit-cost 0.98
+                                                                       # summary (bands, variants, cities, units, cost), data/out/batches/<batch>/<batch>.csv + 10 sample PDFs; nothing written
+    python -m cleanbill.letters.batch --window-check                   # one test-mode letter; downloads Lob's render for the address-window check (docs/reports/2026-09-18-lob-proof.md)
+    python -m cleanbill.letters.batch --batch proof-2026-09-25 --n 5 --to-override "Clean Bill Co.|<line 1>|<line 2>|<city>|TX|<zip>" --send --confirm-footer "Clean Bill Co."
+                                                                       # the physical proof: five letters to your own address; leads untouched (mail_pieces.to_override)
+    python -m cleanbill.letters.batch --batch 2026-10-05-t1 --tier 1 --n 1000 --seed 20261005 --send --confirm-footer "Clean Bill Co."
+                                                                       # the batch: same seed as the dry run = same leads; resumable (re-run the same command after an error)
+    psql/SQL: eval/reset_mail_batch.sql                                # reset a TEST-MODE batch (deletes its mail_pieces rows, leads back to new); never for a live batch
     python -m cleanbill.ops.new_claim --address "3675 DUVAL ST"        # preview; add --create to mint a code + link
     python -m cleanbill.agent.run --store supabase --claim <uuid>      # run the agent on one claim, see the trace
     python -m cleanbill.agent.run --store fixtures                      # dry run over 5 fixture claims (needs API key)
@@ -95,3 +104,8 @@ Section 9
 | **Send** missing on an approved e-mail      | Resend is off (`RESEND_ENABLED` not `true`), or the account has no e-mail | Health → Mail tile says *off*; SPEC-10 §7 / E5 sets the secrets. "no e-mail on the account" → add the address, then Send. |
 | Send fails with `provider_error`            | Resend rejected it (domain not verified, key revoked, 4xx) or timed out | The banner carries Resend's message; `audit_log` has `message_send_failed`; nothing was recorded as sent — fix and click again (the same Idempotency-Key makes a retry safe). |
 | Health → Mail "last webhook never" after a send | The webhook is not registered, or `RESEND_WEBHOOK_SECRET` is wrong (401s in the function log) | Function logs for `webhooks`; re-register via Resend's API (SPEC-10 §4.3) and set the secret. |
+| Batch says `refused: …`                     | A guard rail (SPEC-11 §3.5): live key without `LOB_ENABLED=true`, `--confirm-footer` ≠ `Clean Bill Co.`, or `brand.RETURN_ADDRESS` still the placeholder | The message names the rail. Set the `.env` flag, pass the exact entity line, or fill `RETURN_ADDRESS` in `cleanbill/brand.py` (then `python -m cleanbill.brand --sync`). |
+| Batch stopped with `Lob error on CB-…`      | Lob rejected a letter after 3 retries (4xx: a bad address or option; 5xx / network) | Nothing is half-written: the row is inserted only after Lob's 200. Fix the cause and re-run the same command — leads already in the batch are skipped. |
+| **Mailed** tile lower than the leads marked mailed (the sub-line) | A lead was marked by hand, or a test-mode batch was reset half-way | `select * from ops_mail_by_batch();` vs `select count(*) from leads where status='mailed'`; `eval/reset_mail_batch.sql` for a test batch. |
+| Health → letters "last webhook never" after a live batch | The Lob webhook is not registered (Lob has no API for it — dashboard, SPEC-11 §7 step 6) or `LOB_WEBHOOK_SECRET` is wrong (401s) | Function logs for `webhooks`; register the URL in the Lob dashboard (Live), `supabase secrets set LOB_WEBHOOK_SECRET=…`. Test mode emits `letter.created` / `rendered_pdf` only. |
+| A batch row shows **returned**              | USPS returned a letter; the lead is now `suppressed` (never re-mailed) and `events` has `mail_returned` | Nothing to do unless the return address itself is wrong (check the envelope that came back). |

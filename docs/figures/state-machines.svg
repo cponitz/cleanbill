@@ -7,7 +7,7 @@
   <text x="10" y="10" font-size="9.5" font-weight="700" fill="#1F3864">LEAD STATUS (leads.status) — who moves it</text>
   <g>
     <rect x="10" y="30" width="80" height="26" rx="13" fill="#F1F4F9" stroke="#1F3864"/><text x="50" y="47" text-anchor="middle" font-weight="700">new</text>
-    <rect x="125" y="30" width="80" height="26" rx="13" fill="#fff" stroke="#C08A2E" stroke-dasharray="4 3"/><text x="165" y="47" text-anchor="middle" font-weight="700" fill="#C08A2E">mailed</text>
+    <rect x="125" y="30" width="80" height="26" rx="13" fill="#F1F4F9" stroke="#1F3864"/><text x="165" y="47" text-anchor="middle" font-weight="700">mailed</text>
     <rect x="240" y="30" width="80" height="26" rx="13" fill="#F1F4F9" stroke="#1F3864"/><text x="280" y="47" text-anchor="middle" font-weight="700">opened</text>
     <rect x="355" y="30" width="80" height="26" rx="13" fill="#F1F4F9" stroke="#1F3864"/><text x="395" y="47" text-anchor="middle" font-weight="700">claimed</text>
     <rect x="470" y="30" width="80" height="26" rx="13" fill="#fff" stroke="#C08A2E" stroke-dasharray="4 3"/><text x="510" y="47" text-anchor="middle" font-weight="700" fill="#C08A2E">filed → approved</text>
@@ -23,8 +23,8 @@
   
   <g fill="#6B7686">
     <text x="50" y="70" text-anchor="middle">publisher</text>
-    <text x="380" y="82" text-anchor="middle" font-size="7.5">The arc new → opened is the claim-page GET; "mailed" is skipped until the Lob batch writes it (G-7).</text>
-    <text x="165" y="70" text-anchor="middle">Lob send (gap)</text>
+    <text x="380" y="82" text-anchor="middle" font-size="7.5">The Lob batch (SPEC-11) writes mailed; the arc new → opened is the claim-page GET for a code opened before or without a letter (walkthroughs). A returned letter → suppressed.</text>
+    <text x="165" y="70" text-anchor="middle">Lob batch (Mac)</text>
     <text x="280" y="70" text-anchor="middle">claim API GET</text>
     <text x="395" y="70" text-anchor="middle">claim API POST</text>
     <text x="510" y="70" text-anchor="middle">nothing writes these yet</text>

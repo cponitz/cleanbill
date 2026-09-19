@@ -24,16 +24,21 @@ export type OpsClaim = {
   claim_code: string | null; est_refund_total: number | null; prop_id: number | null; situs_full: string | null; owner_name: string | null;
   extracted: Record<string, unknown> | null; findings: Finding[]; extraction_cost_usd: number | null;
   packet: { url: string | null; form_version: string | null; generated_at: string; submitted_at: string | null; channel: string | null } | null;
+  /** SPEC-11: the letter that started this claim — the lead's variant / drop time and the mail piece's delivery state. */
+  letter?: { variant: string | null; mailed_at: string | null; delivered_at: string | null; status: string | null; batch: string | null } | null;
   messages: OpsMessage[];
 };
 export type OpsInquiry = { id: string; created_at: string; kind: string; address: string | null; email: string | null; company: string | null; properties: number | null; bills: string[] | null; source_path: string | null; handled_at: string | null; notes: string | null };
 export type OpsSystem = { key: string; value: Record<string, unknown>; updated_at: string };
-export type OpsKpis = { leads_loaded: number; mailed: number; page_views: number; opened: number; claimed: number; ready_to_submit: number; needs_dl_update: number; needs_review: number; filed: number; approved: number; refunded: number; inquiries_open: number };
+export type OpsKpis = { leads_loaded: number; mailed: number; delivered: number; returned: number; page_views: number; opened: number; claimed: number; ready_to_submit: number; needs_dl_update: number; needs_review: number; filed: number; approved: number; refunded: number; inquiries_open: number };
+/** SPEC-11: one row per mailing batch from mail_pieces (ops_mail_by_batch); `proof` = mailed to Charlie's own address. */
+export type OpsMailBatch = { batch: string; n: number; sent_at: string | null; delivered: number; returned: number; rejected: number; proof: boolean };
 export type OpsData = {
   ok: true; kpis: OpsKpis;
-  funnel: { by_kind_7d: Record<string, number>; by_kind_all: Record<string, number>; by_day_30d: Array<{ day: string; kind: string; n: number }>; steps: Array<{ step: string; count: number; pct: number | null }> };
+  funnel: { by_kind_7d: Record<string, number>; by_kind_all: Record<string, number>; by_day_30d: Array<{ day: string; kind: string; n: number }>; steps: Array<{ step: string; count: number; pct: number | null }>; leads_mailed?: number };
   claims: OpsClaim[]; inquiries: OpsInquiry[]; system: OpsSystem[]; generated_at: string;
   features?: OpsFeatures;   // which vendors are switched on (SPEC-10 Resend; SPEC-03 Stripe; SPEC-11 Lob) — absent from an older function build
+  mail?: { batches: OpsMailBatch[]; rejected: number };   // SPEC-11 — absent from an older function build
 };
 export type NewClaimMatch = {
   prop_id: number; situs_full: string; owner_name: string | null; hs_exempt: boolean; ov65_exempt: boolean; appraised_value: number | null; deed_date: string | null;
@@ -105,6 +110,17 @@ export function deliveryReason(m: OpsMessage): string {
 
 /** The badge tone per delivery status (the status map in lib/status.ts is for claims; this is the message's). */
 export const DELIVERY_BADGE: Record<DeliveryStatus, string> = { sent: "badge-neutral", delivered: "badge-ok", delayed: "badge-sand", bounced: "badge-bad", complained: "badge-bad" };
+
+/** SPEC-11: "Letter B · mailed Oct 5 · delivered Oct 9" for the drawer's property line (the claim's origin). */
+export function letterLine(l: OpsClaim["letter"], fmt: (iso: string) => string): string {
+  if (!l) return "";
+  const parts = [`Letter ${l.variant ?? "?"}`];
+  if (l.mailed_at) parts.push(`mailed ${fmt(l.mailed_at)}`);
+  if (l.delivered_at) parts.push(`delivered ${fmt(l.delivered_at)}`);
+  else if (l.status === "returned_to_sender") parts.push("returned");
+  else if (l.status && l.status !== "created" && l.status !== "mailed") parts.push(l.status.replace(/_/g, " "));
+  return parts.join(" · ");
+}
 
 export const CLAIM_STATUSES = ["submitted", "processing", "ready_to_submit", "needs_dl_update", "needs_review", "filed", "approved", "denied", "refunded", "paid", "withdrawn"];
 export const FUNNEL_KINDS = ["view", "typed_precheck", "validation_shown", "dl_fix_started", "dl_fix_uploaded", "card_saved", "card_skipped", "packet_viewed", "inquiry"];
